@@ -3,7 +3,7 @@
  *
  * SHA-1/HMAC message authentication code, header
  *
- * Copyright (c) 1999-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *

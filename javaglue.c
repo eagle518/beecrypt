@@ -419,43 +419,50 @@ void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_setup(JNIEnv* env, jclass
 
 void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_setIV(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray ivArray)
 {
-	jsize ivsize = (*env)->GetArrayLength(env, ivArray);
-
-	if (ivsize > 0)
+	if (ivArray == (jbyteArray) 0)
 	{
-		jbyte* iv = (*env)->GetByteArrayElements(env, ivArray, (jboolean*) 0);
-	
-		if (iv == (jbyte*) 0)
-		{
-			jclass ex = (*env)->FindClass(env, JAVA_OUT_OF_MEMORY_ERROR);
-			if (ex)
-				(*env)->ThrowNew(env, ex, MSG_OUT_OF_MEMORY);
-			return;
-		}
-	
-		if (!WORDS_BIGENDIAN || ((int) iv & 0x3) || (ivsize & 0x3))
-		{	/* unaligned */
-			int size = (ivsize + 3) >> 2;
-			uint32* data = (uint32*) malloc(size * sizeof(uint32));
+		((const blockCipher*) ciph)->setiv((blockCipherParam*) param, 0);
+	}
+	else
+	{
+		jsize ivsize = (*env)->GetArrayLength(env, ivArray);
 
-			if (data == (uint32*) 0)
+		if (ivsize > 0)
+		{
+			jbyte* iv = (*env)->GetByteArrayElements(env, ivArray, (jboolean*) 0);
+		
+			if (iv == (jbyte*) 0)
 			{
 				jclass ex = (*env)->FindClass(env, JAVA_OUT_OF_MEMORY_ERROR);
-				(*env)->ReleaseByteArrayElements(env, ivArray, iv, JNI_ABORT);
 				if (ex)
 					(*env)->ThrowNew(env, ex, MSG_OUT_OF_MEMORY);
 				return;
 			}
+		
+			if (!WORDS_BIGENDIAN || ((int) iv & 0x3) || (ivsize & 0x3))
+			{	/* unaligned */
+				int size = (ivsize + 3) >> 2;
+				uint32* data = (uint32*) malloc(size * sizeof(uint32));
 
-			decodeIntsPartial(data, iv, ivsize);
-			((const blockCipher*) ciph)->setiv((blockCipherParam*) param, data);
-			free(data);
+				if (data == (uint32*) 0)
+				{
+					jclass ex = (*env)->FindClass(env, JAVA_OUT_OF_MEMORY_ERROR);
+					(*env)->ReleaseByteArrayElements(env, ivArray, iv, JNI_ABORT);
+					if (ex)
+						(*env)->ThrowNew(env, ex, MSG_OUT_OF_MEMORY);
+					return;
+				}
+
+				decodeIntsPartial(data, iv, ivsize);
+				((const blockCipher*) ciph)->setiv((blockCipherParam*) param, data);
+				free(data);
+			}
+			else
+			{	/* aligned */
+				((const blockCipher*) ciph)->setiv((blockCipherParam*) param, (uint32*) iv);
+			}
+			(*env)->ReleaseByteArrayElements(env, ivArray, iv, JNI_ABORT);
 		}
-		else
-		{	/* aligned */
-			((const blockCipher*) ciph)->setiv((blockCipherParam*) param, (uint32*) iv);
-		}
-		(*env)->ReleaseByteArrayElements(env, ivArray, iv, JNI_ABORT);
 	}
 }
 

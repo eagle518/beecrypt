@@ -3,7 +3,7 @@
  *
  * Multiprecision integer assembler-optimized routined for 32 bit cpu, header
  *
- * Copyright (c) 1999-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -57,12 +57,23 @@ extern "C" {
 #define ASM_MP32ADDSQRTRC
 #endif
 #if defined(ia64)
+#define ASM_MP32ZERO
+#define ASM_MP32COPY
 #define ASM_MP32ADD
 #define ASM_MP32SUB
 #define ASM_MP32SETMUL
 #define ASM_MP32ADDMUL
 #endif
 #if defined(powerpc)
+#define ASM_MP32ADDW
+#define ASM_MP32ADD
+#define ASM_MP32SUBW
+#define ASM_MP32SUB
+#define ASM_MP32SETMUL
+#define ASM_MP32ADDMUL
+#define ASM_MP32ADDSQRTRC
+#endif
+#if defined(sparcv9) || defined(sparcv8plus)
 #define ASM_MP32ADDW
 #define ASM_MP32ADD
 #define ASM_MP32SUBW

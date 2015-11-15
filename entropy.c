@@ -3,7 +3,7 @@
  *
  * entropy gathering routine for pseudo-random generator initialization
  *
- * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -30,6 +30,7 @@
 
 #if WIN32
 # include <mmsystem.h>
+# include <wincrypt.h>
 #else 
 # if HAVE_SYS_IOCTL_H
 #  include <sys/ioctl.h>
@@ -415,7 +416,7 @@ int entropy_console(uint32* data, int size)
 
 	printf("\nthanks\n");
 
-	sleep(1);
+	Sleep(1000);
 	
 	if (!FlushConsoleInputBuffer(hStdin))
 	{

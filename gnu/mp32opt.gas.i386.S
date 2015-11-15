@@ -5,7 +5,7 @@
  *
  * Compile target is GNU AS
  *
- * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998,1999,2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -25,25 +25,13 @@
  *
  */
 
+#include <gnu/config.gas.h>
+
 	.file "mp32opt.gas.i386.S"
 
 	.text
 
-	.align	4
-#if defined(CYGWIN)
-	.globl	_mp32addw
-	.def	_mp32addw
-	.scl	2
-	.type	32
-	.endef
-
-_mp32addw:
-#else
-	.global	mp32addw
-	.type	mp32addw,@function
-
-mp32addw:
-#endif
+C_FUNCTION(mp32addw)
 	pushl %edi
 
 	movl 8(%esp),%ecx
@@ -70,20 +58,7 @@ mp32addw:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32subw
-	.def	_mp32subw
-	.scl	2
-	.type	32
-	.endef
-
-_mp32subw:
-#else
-	.global	mp32subw
-	.type	mp32subw,@function
-
-mp32subw:
-#endif
+C_FUNCTION(mp32subw)
 	pushl %edi
 
 	movl 8(%esp),%ecx
@@ -109,20 +84,7 @@ mp32subw:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32add
-	.def	_mp32add
-	.scl	2
-	.type	32
-	.endef
-
-_mp32add:
-#else
-	.global	mp32add
-	.type	mp32add,@function
-
-mp32add:
-#endif
+C_FUNCTION(mp32add)
 	pushl %edi
 	pushl %esi
 
@@ -147,20 +109,7 @@ mp32add:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32sub
-	.def	_mp32sub
-	.scl	2
-	.type	32
-	.endef
-
-_mp32sub:
-#else
-	.global	mp32sub
-	.type	mp32sub,@function
-
-mp32sub:
-#endif
+C_FUNCTION(mp32sub)
 	pushl %edi
 	pushl %esi
 
@@ -184,20 +133,7 @@ mp32sub:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32multwo
-	.def	_mp32multwo
-	.scl	2
-	.type	32
-	.endef
-
-_mp32multwo:
-#else
-	.global	mp32multwo
-	.type	mp32multwo,@function
-
-mp32multwo:
-#endif
+C_FUNCTION(mp32multwo)
 	pushl %edi
 
 	movl 8(%esp),%ecx
@@ -219,20 +155,7 @@ mp32multwo:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32setmul
-	.def	_mp32setmul
-	.scl	2
-	.type	32
-	.endef
-
-_mp32setmul:
-#else
-	.global	mp32setmul
-	.type	mp32setmul,@function
-
-mp32setmul:
-#endif
+C_FUNCTION(mp32setmul)
 	pushl %edi
 	pushl %esi
 	pushl %ebx
@@ -265,20 +188,7 @@ mp32setmul:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32addmul
-	.def	_mp32addmul
-	.scl	2
-	.type	32
-	.endef
-
-_mp32addmul:
-#else
-	.global	mp32addmul
-	.type	mp32addmul,@function
-
-mp32addmul:
-#endif
+C_FUNCTION(mp32addmul)
 	pushl %edi
 	pushl %esi
 	pushl %ebx
@@ -313,20 +223,7 @@ mp32addmul:
 	popl %edi
 	ret
 
-#if defined(CYGWIN)
-	.globl	_mp32addsqrtrc
-	.def	_mp32addsqrtrc
-	.scl	2
-	.type	32
-	.endef
-
-_mp32addsqrtrc:
-#else
-	.global	mp32addsqrtrc
-	.type	mp32addsqrtrc,@function
-
-mp32addsqrtrc:
-#endif
+C_FUNCTION(mp32addsqrtrc)
 	pushl %edi
 	pushl %esi
 	pushl %ebx

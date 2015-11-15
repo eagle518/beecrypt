@@ -3,7 +3,7 @@
  *
  * BeeCrypt test and benchmark application
  *
- * Copyright (c) 1999-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -392,7 +392,11 @@ void testExpMods()
 			mp32nfree(&x);
 			mp32nfree(&tmp);
 		}
+		else
+			printf("random generator setup problem\n");
 	}
+	else
+		printf("random generator problem\n");
 
 	randomGeneratorContextFree(&rc);
 }
@@ -449,6 +453,20 @@ void testDLParams()
 	randomGeneratorContextFree(&rc);
 }
 
+#if 0
+int main()
+{
+	if (testVectorSHA())
+		printf("SHA works!\n");
+	else
+		exit(1);
+
+	if (testVectorExpMod())
+		printf("ExpMod works!\n");
+	else
+		exit(1);
+}
+#else
 int main()
 {
 	int i, j;
@@ -518,3 +536,4 @@ int main()
 
 	return 0;
 }
+#endif

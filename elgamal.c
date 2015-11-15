@@ -7,7 +7,7 @@
  *  "Handbook of Applied Cryptography"
  *  11.5.2 "The ElGamal signature scheme", p. 454-459
  *
- * Copyright (c) 1999-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -59,6 +59,7 @@
 #include "elgamal.h"
 #include "dldp.h"
 #include "mp32.h"
+#include "mp32barrett.h"
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
@@ -71,17 +72,18 @@ void elgv1sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, 
 	register uint32* u1data = n->wksp+size*4+4; /* leave enough workspace for a mulmod and addmod operation */
 	register uint32* u2data = u1data+size;
 
-	/* get a random odd k */
-	mp32brndoddres(p, kdata, rc);
+	/* get a random k, invertible modulo n, and store the inverse in u1 */
+	mp32brndinvres(n, kdata, rc);
+	mp32copy(n->size, u1data, n->data);
 
 	/* compute r = g^k mod p */
 	mp32bpowmod(p, g->size, g->data, size, kdata);
 	mp32nset(r, size, p->data);
 
-	/* compute u1 = inv(k) (mod n) */
-	mp32binv(p, size, kdata);
-	mp32copy(size, u1data, p->data);
-	
+	/* compute u2 = h(m) - x*r mod n */
+	mp32bmulmod(n, x->size, x->data, r->size, r->data);
+	mp32bneg(n);
+
 	/* to be completed */
 }
 

@@ -28,19 +28,34 @@
 
 #define _REENTRANT
 
-#if __INTEL__
-#define WORDS_BIGENDIAN		0
-#else
-#error Trying to compile for WIN32 on non-Intel hardware
+#if !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0400
 #endif
 
-#if __MWERKS__
+#include <Windows.h>
+
+#if defined(_MSC_VER)
+# if defined(_M_IX86)
+#  define WORDS_BIGENDIAN		0
+# else
+#  error Unknown CPU type in Microsoft Visual C
+# endif
+#elif __MWERKS__
+# if __INTEL__
+#  define WORDS_BIGENDIAN		0
+# else
+#  error Unknown CPU type in MetroWerks CodeWarrior
+# endif
+#else
+# error Unknown compiler for WIN32
+#endif
+
+#if defined(_MSC_VER) || __MWERKS__
 #define HAVE_ERRNO_H		1
 #define HAVE_STRING_H		1
 #define HAVE_STDLIB_H		1
 #define HAVE_ALLOCA_H		0
 #define HAVE_CTYPE_H		1
-#define HAVE_UNISTD_H		1
 #define HAVE_FCNTL_H		1
 #define HAVE_TIME_H			1
 
@@ -67,100 +82,44 @@
 #define HAVE_DEV_AUDIO		0
 #define HAVE_DEV_DSP		0
 #define HAVE_DEV_RANDOM		0
-
-#define SIZEOF_CHAR					1
-#define SIZEOF_UNSIGNED_CHAR		1
-#define SIZEOF_SHORT				2
-#define SIZEOF_UNSIGNED_SHORT		2
-#define SIZEOF_INT					4
-#define SIZEOF_UNSIGNED_INT			4
-#define SIZEOF_LONG					4
-#define SIZEOF_UNSIGNED_LONG		4
-#define SIZEOF_LONG_LONG			8
-#define SIZEOF_UNSIGNED_LONG_LONG	8
-
-#define SIZEOF_FLOAT				4
-#define SIZEOF_DOUBLE				8
 #else
 #error Not set up for this compiler
 #endif
 
-#if (SIZEOF_CHAR == 1)
-typedef char int8;
-typedef char javabyte;
-#else
-#error sizeof(char) not 1
-#endif
+#if __MWERKS__
+#define HAVE_UNISTD_H		1
+#define HAVE_MALLOC_H		1
 
-#if (SIZEOF_SHORT == 2)
-typedef short int16;
-typedef short javashort;
-#else
-#error sizeof(short) is not 2
-#endif
+#define HAVE_LONG_LONG		1
 
-#if (SIZEOF_INT == 4)
-typedef int int32;
-typedef int javaint;
-#elif (SIZEOF_LONG == 4)
-typedef int int32;
-typedef long javaint;
-#else
-#error compiler has no 32 bit integer
-#endif
+#define INT8_TYPE		char
+#define INT16_TYPE		short
+#define INT32_TYPE		int
+#define INT64_TYPE		long long
+#define UINT8_TYPE		unsigned char
+#define UINT16_TYPE		unsigned short
+#define UINT32_TYPE		unsigned int
+#define UINT64_TYPE		unsigned long long
+#define FLOAT4_TYPE		float
+#define DOUBLE8_TYPE	double
 
-#if (SIZEOF_LONG == 8)
-typedef long int64;
-typedef long javalong;
-#elif (SIZEOF_LONG_LONG == 8)
-typedef long long int64;
-typedef long long javalong;
-#else
-#error compiler has no 64 bit integer
-#endif
+#elif defined(_MSC_VER)
+#define HAVE_UNISTD_H		0
+#define HAVE_MALLOC_H		1
+#define alloca	_alloca
 
-#if (SIZEOF_FLOAT == 4)
-typedef float javafloat;
-#else
-#error compiler has no 32 bit float
-#endif
+#define HAVE_LONG_LONG		0
 
-#if (SIZEOF_DOUBLE == 8)
-typedef double javadouble;
-#else
-#error compiler has no 64 bit double;
+#define INT8_TYPE		__int8
+#define INT16_TYPE		__int16
+#define INT32_TYPE		__int32
+#define INT64_TYPE		__int64
+#define UINT8_TYPE		unsigned __int8
+#define UINT16_TYPE		unsigned __int16
+#define UINT32_TYPE		unsigned __int32
+#define UINT64_TYPE		unsigned __int64
+#define FLOAT4_TYPE		float
+#define DOUBLE8_TYPE	double
 #endif
-
-#if (SIZEOF_UNSIGNED_CHAR == 1)
-typedef unsigned char uint8;
-#else
-#error sizeof(unsigned char) is not 1
-#endif
-
-#if (SIZEOF_UNSIGNED_SHORT == 2)
-typedef unsigned short uint16;
-typedef unsigned short javachar;
-typedef unsigned short unicode;
-#else
-#error sizeof(unsigned short) is not 2
-#endif
-
-#if (SIZEOF_UNSIGNED_INT == 4)
-typedef unsigned int uint32;
-#elif (SIZEOF_UNSIGNED_LONG == 4)
-typedef unsigned long uint32;
-#else
-#error compiler has no 32 bit unsigned integer
-#endif
-
-#if (SIZEOF_UNSIGNED_LONG == 8)
-typedef unsigned long uint64;
-#elif (SIZEOF_UNSIGNED_LONG_LONG == 8)
-typedef unsigned long long uint64;
-#else
-#error compiler has no 64 bit unsigned integer
-#endif
-
-/* typedef uint8 byte */
 
 #endif

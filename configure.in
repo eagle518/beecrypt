@@ -6,21 +6,35 @@ dnl Check system type
 case $target_os in
   cygwin*)
     AC_DEFINE(CYGWIN)
+	AC_DEFINE(LEADING_UNDERSCORE)
     ;;
   darwin*)
     AC_DEFINE(DARWIN)
+	AC_DEFINE(LEADING_UNDERSCORE)
     ;;
   freebsd*)
     AC_DEFINE(FREEBSD)
+	AC_DEFINE(NO_UNDERSCORES)
     ;;
   linux*)
     AC_DEFINE(LINUX)
+	AC_DEFINE(NO_UNDERSCORES)
     ;;
   openbsd*)
     AC_DEFINE(OPENBSD)
+	AC_DEFINE(NO_UNDERSCORES)
+    ;;
+  osf*)
+    AC_DEFINE(OSF)
+    AC_DEFINE(NO_UNDERSCORES)
+    ;;
+  *qnx)
+    AC_DEFINE(QNX)
+    AC_DEFINE(NO_UNDERSCORES)
     ;;
   solaris*)
     AC_DEFINE(SOLARIS)
+	AC_DEFINE(NO_UNDERSCORES)
     ;;
   *)
     AC_MSG_WARN([Operating system type $target_os currently not supported and/or tested])
@@ -126,15 +140,21 @@ AC_ARG_ENABLE(debug, [  --enable-debug	creates debugging code [default=no]],
   ], [ ac_enable_debug=no])
 
 dnl Product and version
+MAJOR=1
+VERSION=$MAJOR.1.1
 PRODUCT=beecrypt
-VERSION=1.1.0
+SHARED_LIBRARY=lib$PRODUCT.so
+SHARED_LIBRARY_NAME=$SHARED_LIBRARY.$MAJOR
 AC_DEFINE_UNQUOTED(PRODUCT, "$PRODUCT")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
+AC_DEFINE_UNQUOTED(MAJOR, "$MAJOR")
 AC_DEFINE(JNIFLAGS, $JNIFLAGS)
 AC_SUBST(PRODUCT)
 AC_SUBST(VERSION)
+AC_SUBST(MAJOR)
 AC_SUBST(CC)
 AC_SUBST(CPP)
+AC_SUBST(LD)
 AC_SUBST(CONFASFLAGS)
 AC_SUBST(CONFCFLAGS)
 AC_SUBST(CONFCPPFLAGS)
@@ -199,72 +219,109 @@ AC_C_BIGENDIAN
 dnl Checks for compiler flags
 CONFCFLAGS=""
 CONFCPPFLAGS=""
+CONFLDFLAGS=""
+
+case $target_cpu in
+alpha*)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Dalpha"
+  ;;
+i386)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Di386"
+  ;;
+i486)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Di486"
+  ;;
+i586)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Di586"
+  ;;
+i686)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Di686"
+  ;;
+ia64)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Dia64"
+  ;;
+powerpc)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Dpowerpc"
+  ;;
+sparcv8plus)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Dsparcv8plus"
+  ;;
+sparcv9)
+  CONFCPPFLAGS="$CONFCPPFLAGS -Dsparcv9"
+  ;;
+x86)
+# QNX Neutrino doesn't list the exact cpu type
+  ;;
+esac
+
+if test "$ac_cv_prog_gcc" = yes; then
+  CONFCFLAGS="$CONFCFLAGS -shared"
+  CONFLDFLAGS="$CONFLDFLAGS -shared -dy -soname $SHARED_LIBRARY_NAME"
+elif test "$ac_cv_prog_SUNPRO_CC" = yes; then
+  CONFCFLAGS="$CONFCFLAGS -mt -KPIC"
+  CONFLDFLAGS="$CONFLDFLAGS -G -h $SHARED_LIBRARY_NAME"
+else
+  CONFCFLAGS="$CONFCFLAGS -shared"
+  CONFLDFLAGS="$CONFLDFLAGS -shared"
+fi
+
 if test "$ac_enable_debug" = yes; then
+  CONFCFLAGS="$CONFCFLAGS -g"
   if test "$ac_cv_prog_gcc" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -g -shared"
-  elif test "$ac_cv_prog_SUNPRO_CC" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -g -mt -KPIC"
-  else
-    CONFCFLAGS="$CONFCFLAGS -g -shared"
+    CONFCFLAGS="$CONFCFLAGS -Wall"
   fi
 else
   if test "$ac_cv_prog_gcc" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -O3 -shared"
+    CONFCFLAGS="$CONFCFLAGS -O3"
     case $target_cpu in
-    i386)
-      CONFCPPFLAGS="$CONFCPPFLAGS -Di386"
-      ;;
+# This optimization makes the mp32 routines slower by about 10%, so they're disabled
+#   alphaev6)
+#     CONFCFLAGS="$CONFCFLAGS -mcpu=ev6"
+#     ;;
     i486)
       CONFCFLAGS="$CONFCFLAGS -m486"
-      CONFCPPFLAGS="$CONFCPPFLAGS -Di486"
       ;;
     i586)
       CONFCFLAGS="$CONFCFLAGS -mpentium"
-      CONFCPPFLAGS="$CONFCPPFLAGS -Di586"
       ;;
     i686)
       CONFCFLAGS="$CONFCFLAGS -mpentiumpro"
-      CONFCPPFLAGS="$CONFCPPFLAGS -Di686"
       ;;
-    ia64)
-      CONFCPPFLAGS="$CONFCPPFLAGS -Dia64"
+    sparcv8plus)
+      CONFCFLAGS="$CONFCFLAGS -mcpu=ultrasparc"
       ;;
-    powerpc)
-      CONFCPPFLAGS="$CONFCPPFLAGS -Dpowerpc"
-      ;;
-    *)
-      AC_MSG_WARN([Don't know how to optimize for $target_cpu])
+    sparcv9)
+      CONFCFLAGS="$CONFCFLAGS -mcpu=ultrasparc"
       ;;
     esac
   elif test "$ac_cv_prog_SUNPRO_CC" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -fast -mt -KPIC"
+    CONFCFLAGS="$CONFCFLAGS -fast"
     case $target_cpu in
     sparcv8plus)
       CONFCFLAGS="$CONFCFLAGS -xchip=ultra -xarch=v8plus"
-      CONFCPPFLAGS="$CONFCPPFLAGS -Dsparcv8plus"
       ;;
     sparcv9)
       CONFCFLAGS="$CONFCFLAGS -xchip=ultra -xarch=v9"
       CONFCPPFLAGS="$CONFCPPFLAGS -Dsparcv9"
       ;;
-    *)
-      AC_MSG_WARN([Using generic optimization for $target_cpu])
-      ;;
     esac
   else
-    CONFCFLAGS="$CONFCFLAGS -O2 -shared"
+    CONFCFLAGS="$CONFCFLAGS -O2"
   fi
 fi
+
 case $target_os in
-  cygwin*)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DCYGWIN"
-    ;;
-  darwin*)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DDARWIN"
-    ;;
   freebsd*)
+	LD=$CC
     CONFCFLAGS="$CONFCFLAGS -pthread"
     CONFLDFLAGS="$CONFLDFLAGS -pthread"
+    ;;
+  osf*)
+	LD=$CC
+    CONFLDFLAGS="$CONFLDFLAGS -msym -soname $SHARED_LIBRARY_NAME"
+    ;;
+  *)
+    LD=ld
     ;;
 esac
 
@@ -300,6 +357,14 @@ case $target_os in
     AC_DEFINE(HAVE_DEV_URANDOM,1)
     AC_DEFINE(HAVE_DEV_TTY,1)
     ac_cv_entropy_device="dsp,random,urandom,tty"
+    ;;
+  osf*)
+    AC_DEFINE(HAVE_DEV_TTY,1)
+    ac_cv_entropy_device="tty"
+    ;;
+  *qnx)
+    AC_DEFINE(HAVE_DEV_TTY,1)
+    ac_cv_entropy_device="tty"
     ;;
   solaris*)
     AC_DEFINE(HAVE_DEV_AUDIO,1)

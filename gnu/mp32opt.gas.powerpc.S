@@ -25,11 +25,13 @@
  *
  */
 
+#include <gnu/config.gas.h>
+
 	.file "mp32opt.gas.powerpc.S"
 
 	.text
 
-#if defined(DARWIN)
+#if DARWIN
 # define reg0	r0
 # define reg3	r3
 # define reg4	r4
@@ -49,17 +51,13 @@
 # define reg9	%r9
 #endif
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32addw
-
 _mp32addw:
-#else
-	.global	mp32addw
-	.type	mp32addw,@function
-
-mp32addw:
-#endif
+	#else
+C_FUNCTION(mp32addw)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0
@@ -77,17 +75,13 @@ mp32addw:
 	addze reg3,reg0
 	blr
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32subw
-
 _mp32subw:
-#else
-	.global	mp32subw
-	.type	mp32subw,@function
-
-mp32subw:
-#endif
+	#else
+C_FUNCTION(mp32subw)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0
@@ -106,17 +100,13 @@ mp32subw:
 	neg reg3,reg3
 	blr
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32add
-
 _mp32add:
-#else
-	.global	mp32add
-	.type	mp32add,@function
-
-mp32add:
-#endif
+	#else
+C_FUNCTION(mp32add)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0
@@ -137,17 +127,13 @@ mp32add:
 	addze reg3,reg0
 	blr
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32sub
-
 _mp32sub:
-#else
-	.global	mp32sub
-	.type	mp32sub,@function
-
-mp32sub:
-#endif
+	#else
+C_FUNCTION(mp32sub)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0
@@ -169,17 +155,13 @@ mp32sub:
 	neg reg3,reg3
 	blr
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32setmul
-
 _mp32setmul:
-#else
-	.globl	mp32setmul
-	.type	mp32setmul,@function
-
-mp32setmul:
-#endif
+	#else
+C_FUNCTION(mp32setmul)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0
@@ -195,17 +177,13 @@ mp32setmul:
 	bdnz .L40
 	blr
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32addmul
-
 _mp32addmul:
-#else
-	.globl	mp32addmul
-	.type	mp32addmul,@function
-
-mp32addmul:
-#endif
+	#else
+C_FUNCTION(mp32addmul)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0
@@ -224,17 +202,13 @@ mp32addmul:
 	bdnz .L50
 	blr
 
-	.align	4
-#if defined(DARWIN)
+	#if DARWIN
+	.align	ALIGNMENT
 	.globl	_mp32addsqrtrc
-
 _mp32addsqrtrc:
-#else
-	.globl	mp32addsqrtrc
-	.type	mp32addsqrtrc,@function
-
-mp32addsqrtrc:
-#endif
+	#else
+C_FUNCTION(mp32addsqrtrc)
+	#endif
 	mtctr reg3
 	slwi reg0,reg3,2
 	add reg4,reg4,reg0

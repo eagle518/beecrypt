@@ -8,7 +8,7 @@
  *  Menezes, van Oorschot, Vanstone
  *  CRC Press
  *
- * Copyright (c) 1997-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -100,6 +100,18 @@ void mp32brndoddres(const mp32barrett* b, uint32* result, randomGeneratorContext
 			mp32setlsb(b->size, result);
 		}
 	} while (mp32leone(b->size, result));
+}
+
+void mp32brndinvres(const mp32barrett* b, uint32* result, randomGeneratorContext* rc)
+{
+	do
+	{
+		if (mp32even(b->size, b->modl))
+			mp32brndoddres(b, result, rc);
+		else
+			mp32brndres(b, result, rc);
+
+	} while (mp32binv(b, b->size, result) == 0);
 }
 
 void mp32bmodres(const mp32barrett* b, uint32* result, const uint32* xdata)

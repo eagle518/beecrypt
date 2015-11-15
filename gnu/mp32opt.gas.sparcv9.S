@@ -5,7 +5,7 @@
  *
  * Compile target is GNU AS
  *
- * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998,1999,2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -25,15 +25,13 @@
  *
  */
 
+#include <gnu/config.gas.h>
+
 	.file "mp32opt.gas.sparcv9.S"
 
 	.text
 
-	.align	8
-	.globl	mp32addw
-	.type	mp32addw,@function
-
-mp32addw:
+C_FUNCTION(mp32addw)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	mov %g0,%o0
@@ -52,11 +50,7 @@ mp32addw:
 	retl
 	movcs %icc,1,%o0
 
-	.align	8
-	.globl	mp32subw
-	.type	mp32subw,@function
-
-mp32subw:
+C_FUNCTION(mp32subw)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	mov %g0,%o0
@@ -75,11 +69,7 @@ mp32subw:
 	retl
 	movcs %icc,1,%o0
 
-	.align	8
-	.globl	mp32add
-	.type	mp32add,@function
-
-mp32add:
+C_FUNCTION(mp32add)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	addcc %g0,%g0,%o0
@@ -93,11 +83,7 @@ mp32add:
 	retl
 	movcs %icc,1,%o0
 
-	.align	8
-	.globl	mp32sub
-	.type	mp32sub,@function
-
-mp32sub:
+C_FUNCTION(mp32sub)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	addcc %g0,%g0,%o0
@@ -111,11 +97,7 @@ mp32sub:
 	retl
 	movcs %icc,1,%o0
 
-	.align	8
-	.globl	mp32setmul
-	.type	mp32setmul,@function
-
-mp32setmul:
+C_FUNCTION(mp32setmul)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	mov %g0,%o0
@@ -130,11 +112,7 @@ mp32setmul:
 	retl
 	nop
 
-	.align	8
-	.globl	mp32addmul
-	.type	mp32addmul,@function
-
-mp32addmul:
+C_FUNCTION(mp32addmul)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	mov %g0,%o0
@@ -151,11 +129,7 @@ mp32addmul:
 	retl
 	nop
 
-	.align	8
-	.globl	mp32addsqrtrc
-	.type	mp32addsqrtrc,@function
-
-mp32addsqrtrc:
+C_FUNCTION(mp32addsqrtrc)
 	sll %o0,2,%g1
 	sub %g1,4,%g1
 	add %o1,%g1,%o1

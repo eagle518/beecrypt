@@ -6,7 +6,7 @@
  * For more information on this algorithm, see:
  * NIST FIPS PUB 180-1
  *
- * Copyright (c) 1997-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -186,11 +186,11 @@ static void sha1Finish(register sha1Param *p)
 		*(ptr++) = 0;
 
 	#if WORDS_BIGENDIAN
-	p->data[14] = (p->length >> 29);
-	p->data[15] = (p->length << 3) & 0xffffffff;
+	p->data[14] = ((uint32)(p->length >> 29));
+	p->data[15] = ((uint32)((p->length << 3) & 0xffffffff));
 	#else
-	p->data[14] = swapu32(p->length >> 29);
-	p->data[15] = swapu32(p->length << 3) & 0xffffffff;
+	p->data[14] = swapu32((uint32)(p->length >> 29));
+	p->data[15] = swapu32((uint32)((p->length << 3) & 0xffffffff));
 	#endif
 
 	sha1Process(p);

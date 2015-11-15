@@ -1,6 +1,8 @@
 Note: timings are average values and may vary under different conditions, i.e. the amount of free memory, swapped memory, amount of cpu cache, etc. I've tried to make them as accurate as possible, within limits.
 Note: for block ciphers and hash functions, the test data will almost never completely fit completely in the processor cache, which gives a better estimate of real world performance.
 
+Note: the Alpha systems were provided by Compaq's Alpha testdrive program; many thanks to them for giving us access to their systems.
+
 Note: on Solaris 2.7, the compiler used was the WorkShop Compiler C 4.2
 Note: on RedHat Linux 6.2, the compiler used was egcs-2.91.66
 Note: on YellowDog Linux 1.2, the compiler used was gcc-2.95.2
@@ -10,7 +12,11 @@ The tests:
 
 Modular exponentiations, (1024 bits ^ 1024 bits) mod 1024 bits, 100 times, sorted according to speed (less is better)
 
+BeeCrypt 1.1.1/Tru64 Unix 5.0a     /Alpha EV6   500/  2 GB:  3.1 sec
+BeeCrypt 1.1.1/Mandrake Linux 7.0  /Pentium III 800/  4 GB:  3.3 sec
+BeeCrypt 1.1.1/FreeBSD 4.1         /Alpha EV6   667/  2 GB:  3.5 sec
 BeeCrypt 1.0.1/RedHat Linux 6.1    /Pentium III 600/256 MB:  4.4 sec
+BeeCrypt 1.1.1/RedHat Linux 6.2    /Alpha EV6   500/  2 GB:  4.6 sec
 BeeCrypt 1.0.2/Windows 2000        /Pentium III 450/128 MB:  5.8 sec
 BeeCrypt 1.0.1/Windows NT 4.0      /Pentium III 450/128 MB:  5.8 sec
 BeeCrypt 1.0.1/Windows 98          /Pentium III 450/128 MB:  5.8 sec
@@ -37,52 +43,70 @@ BeeCrypt 1.0.1/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB: 68.2 sec
 Remarks: both on Solaris and Linux, beecrypt is least 5 times faster for this operation than a commercial product we at one time considered using.
 
 Conclusions:
-1) the assembler-optimized code in beecrypt works pretty efficient on a pentium pro and higher
+1) the assembler-optimized code in beecrypt works pretty efficient on a pentium pro and higher.
 2) as of version 1.0.1 we now beat Java on every platform, including UltraSparc. On Linux, Java is twice as slow; on Windows, Java is almost four times slower.
+3) the PowerPC 604 is an excellent multi-precision integer cruncher with respect to its clock speed. The G3 apparently doesn't continue that line. Volunteers to run this test on a G4?
+4) Even without assembler-optimized code, the Alpha is very fast.
+5) Compaq's Alpha compilers produce extremely fast output for multi-precision integers; much better than gcc
 
-Since this operation is where servers really hurt (i.e. in SSL), it pays to make this operation as fast as possible
+Since this operation is where servers really hurt (i.e. in SSL), it pays to make this operation as fast as possible.
 
 Block cipher encryption (more is better)
 
 Blowfish ECB:
+BeeCrypt 1.1.1/Mandrake Linux 7.0  /Pentium III 800/  4GB:  25.00 MB/sec
 BeeCrypt 1.0.1/RedHat Linux 6.1    /Pentium III 600/256 MB: 19.75 MB/sec
 BeeCrypt 1.0.0/Windows 2000        /Pentium III 600/256 MB: 19.70 MB/sec
+BeeCrypt 1.1.1/FreeBSD 4.1         /Alpha EV6   667/  2 GB: 18.18 MB/sec
 BeeCrypt 0.9.5/RedHat Linux 6.2    /Pentium III 450/128 MB: 15.10 MB/sec
+BeeCrypt 1.1.1/Tru64 Unix 5.0a     /Alpha EV6   500/  2 GB: 14.55 MB/sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 450/128 MB: 14.50 MB/sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  400/      : 14.41 MB/sec
+BeeCrypt 1.1.1/RedHat Linux 6.2    /Alpha EV6   500/  2 GB: 13.78 MB/sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 350/128 MB: 11.25 MB/sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  250/ 96 MB:  8.88 MB/sec
+BeeCrypt 1.1.0/Darwin 1.0.2        /PowerPC 604 166/ 96 MB:  6.78 MB/sec
 BeeCrypt 1.0.0/RedHat Linux 6.1    /Pentium Pro 200/128 MB:  6.77 MB/sec
 BeeCrypt 1.0.0/Windows NT 4.0      /Pentium Pro 200/128 MB:  6.71 MB/sec
 BeeCrypt 0.9.5/Solaris 2.7         /UltraSparc  143/128 MB:  4.37 MB/sec
 BeeCrypt 0.9.5/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB:  2.38 MB/sec
 
 Blowfish CBC:
+BeeCrypt 1.1.1/Mandrake Linux 7.0  /Pentium III 800/  4GB:  25.00 MB/sec
 BeeCrypt 1.0.0/Windows 2000        /Pentium III 600/256 MB: 19.70 MB/sec
 BeeCrypt 1.0.1/RedHat Linux 6.1    /Pentium III 600/256 MB: 19.05 MB/sec
+BeeCrypt 1.1.1/FreeBSD 4.1         /Alpha EV6   667/  2 GB: 18.18 MB/sec
 BeeCrypt 0.9.5/RedHat Linux 6.2    /Pentium III 450/128 MB: 14.63 MB/sec
+BeeCrypt 1.1.1/Tru64 Unix 5.0a     /Alpha EV6   500/  2 GB: 14.50 MB/sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 450/128 MB: 14.50 MB/sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  400/      : 14.29 MB/sec
+BeeCrypt 1.1.1/RedHat Linux 6.2    /Alpha EV6   500/  2 GB: 13.56 MB/sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 350/128 MB: 11.25 MB/sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  250/ 96 MB:  8.79 MB/sec
 BeeCrypt 1.0.0/RedHat Linux 6.1    /Pentium Pro 200/128 MB:  6.72 MB/sec
 BeeCrypt 1.0.0/Windows NT 4.0      /Pentium Pro 200/128 MB:  6.71 MB/sec
+BeeCrypt 1.1.0/Darwin 1.0.2        /PowerPC 604 166/ 96 MB:  6.35 MB/sec
 BeeCrypt 0.9.5/Solaris 2.7         /UltraSparc  143/128 MB:  4.26 MB/sec
 BeeCrypt 0.9.5/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB:  2.19 MB/sec
 
 Hash functions (more is better)
 
 SHA-1:
+BeeCrypt 1.1.1/Mandrake Linux 7.0  /Pentium III 800/  4 GB: 39.00 MB/sec
 BeeCrypt 1.0.1/RedHat Linux 6.1    /Pentium III 600/256 MB: 28.83 MB/sec
 BeeCrypt 1.0.0/Windows 2000        /Pentium III 600/256 MB: 26.66 MB/sec
+BeeCrypt 1.1.1/FreeBSD 4.1         /Alpha EV6   667/  2 GB: 25.00 MB/sec
 BeeCrypt 1.0.0/RedHat Linux 6.2    /Pentium III 450/128 MB: 21.33 MB/sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  400/      : 20.78 MB/sec
 BeeCrypt 1.0.1/Windows NT 4.0      /Pentium III 450/128 MB: 19.50 MB/sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 450/128 MB: 19.50 MB/sec
+BeeCrypt 1.1.1/RedHat Linux 6.2    /Alpha EV6   500/  2 GB: 19.00 MB/sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 350/128 MB: 15.30 MB/sec
 BeeCrypt 0.9.5/RedHat Linux 6.2    /Pentium III 450/128 MB: 12.97 MB/sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  250/ 96 MB: 12.60 MB/sec
 BeeCrypt 1.0.0/RedHat Linux 6.1    /Pentium Pro 200/128 MB:  9.38 MB/sec
 BeeCrypt 1.0.0/Windows NT 4.0      /Pentium Pro 200/128 MB:  9.24 MB/sec
+BeeCrypt 1.1.0/Darwin 1.0.2        /PowerPC 604 166/ 96 MB:  7.64 MB/sec
 BeeCrypt 0.9.5/Solaris 2.7         /UltraSparc  143/128 MB:  4.70 MB/sec
 BeeCrypt 0.9.5/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB:  2.67 MB/sec
+

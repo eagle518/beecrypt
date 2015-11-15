@@ -25,6 +25,8 @@
  *
  */
 
+#include <gnu/config.gas.h>
+
 	.file "blowfishopt.gas.i586.S"
 
 	.text
@@ -83,21 +85,7 @@
 	xorl %edi,%ecx
 	.endm
 
-	.align	4
-#if defined(CYGWIN)
-	.globl	_blowfishEncrypt
-	.def	_blowfishEncrypt
-	.scl	2
-	.type	32
-	.endef
-
-_blowfishEncrypt:
-#else
-	.global	blowfishEncrypt
-	.type	blowfishEncrypt,@function
-
-blowfishEncrypt:
-#endif
+C_FUNCTION(blowfishEncrypt)
 	/* parameter one is the blowfish parameters; need to extract bp and set it up in esi */
 	pushl %edi
 	pushl %esi
@@ -140,21 +128,7 @@ blowfishEncrypt:
 	popl %edi
 	ret
 
-	.align	4
-#if defined(CYGWIN)
-	.globl	_blowfishDecrypt
-	.def	_blowfishDecrypt
-	.scl	2
-	.type	32
-	.endef
-
-_blowfishDecrypt:
-#else
-	.global	blowfishDecrypt
-	.type	blowfishDecrypt,@function
-
-blowfishDecrypt:
-#endif
+C_FUNCTION(blowfishDecrypt)
 	/* parameter one is the blowfish parameters; need to extract bp and set it up in ebp */
 	pushl %edi
 	pushl %esi

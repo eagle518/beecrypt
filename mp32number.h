@@ -3,7 +3,7 @@
  *
  * Multiprecision numbers, header
  *
- * Copyright (c) 1997-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *

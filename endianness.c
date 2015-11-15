@@ -3,7 +3,7 @@
  *
  * Endianness-dependant encoding/decoding - implementation
  *
- * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -47,37 +47,23 @@ uint16 swapu16(uint16 n)
 
 int32 swap32(int32 n)
 {
-	#if (SIZEOF_LONG == 4)
 	return (    ((n & 0xff) << 24) |
 				((n & 0xff00) << 8) |
 				((n & 0xff0000) >> 8) |
 				((n & 0xff000000) >> 24) );
-	#else
-	return (    ((n & 0xffL) << 24) |
-				((n & 0xff00L) << 8) |
-				((n & 0xff0000L) >> 8) |
-				((n & 0xff000000L) >> 24) );
-	#endif
 }
 
 uint32 swapu32(uint32 n)
 {
-	#if (SIZEOF_UNSIGNED_LONG == 4)
 	return (    ((n & 0xffU) << 24) |
 				((n & 0xff00U) << 8) |
 				((n & 0xff0000U) >> 8) |
 				((n & 0xff000000U) >> 24) );
-	#else
-	return (    ((n & 0xffUL) << 24) |
-				((n & 0xff00UL) << 8) |
-				((n & 0xff0000UL) >> 8) |
-				((n & 0xff000000UL) >> 24) );
-	#endif
 }
 
 int64 swap64(int64 n)
 {
-	#if (SIZEOF_LONG == 4)
+	#if HAVE_LONG_LONG
 	return (    ((n & 0xffLL) << 56) |
 				((n & 0xff00LL) << 40) |
 				((n & 0xff0000LL) << 24) |
@@ -95,7 +81,7 @@ int64 swap64(int64 n)
 				((n & 0xff0000000000L) >> 24) |
 				((n & 0xff000000000000L) >> 40) |
 				((n & 0xff00000000000000L) >> 56) );
-        #endif
+	#endif
 }
 
 int encodeByte(javabyte b, byte *data)

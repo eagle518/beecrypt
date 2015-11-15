@@ -1,3 +1,12 @@
+1.1.1:
+	- Changed autoconfig script for easier porting.
+	- Changed sources for easier compilation on Microsoft Visual C++; no assembler-optimization on this platform yet.
+	_ Fixed bug in javaglue when passing null IV to blockcipher.
+	- Shared library is now linked dynamically, with shared object name and version.
+	- Tested on Alpha Linux.
+	- Tested on Alpha FreeBSD.
+	- Added support for Compaq Alpha Tru64 Unix.
+	- Added initial support for QNX.
 
 1.1.0:
 	- Added glue for interfacing from BeeCrypt Java Cryptography Provider.

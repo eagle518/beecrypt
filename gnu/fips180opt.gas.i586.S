@@ -25,6 +25,8 @@
  *
  */
 
+#include <gnu/config.gas.h>
+
 	.file "fips180opt.gas.i586.S"
 
 	.text
@@ -102,21 +104,7 @@
 	movl %eax,\e
 	.endm
 
-	.align	4
-#if defined(CYGWIN)
-	.globl	_sha1Process
-	.def	_sha1Process
-	.scl	2
-	.type	32
-	.endef
-
-_sha1Process:
-#else
-	.global	sha1Process
-	.type	sha1Process,@function
-
-sha1Process:
-#endif
+C_FUNCTION(sha1Process)
 	pushl %edi
 	pushl %esi
 	pushl %ebx

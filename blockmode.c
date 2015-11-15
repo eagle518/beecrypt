@@ -3,7 +3,7 @@
  *
  * Block cipher operation modes, code
  *
- * Copyright (c) 2000, Virtual Unlimited B.V.
+ * Copyright (c) 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *

@@ -3,7 +3,7 @@
  *
  * Multiple precision numbers, code
  *
- * Copyright (c) 1997-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -115,9 +115,9 @@ void mp32nsetw(mp32number* n, uint32 val)
 
 void mp32nsethex(mp32number* n, const char* hex)
 {
-	int length = strlen(hex);
-	int size = (length+7) >> 3;
-	int rem = length & 0x7;
+	uint32 length = strlen(hex);
+	uint32 size = (length+7) >> 3;
+	uint8 rem = (uint8)(length & 0x7);
 
 	if (n->data)
 	{

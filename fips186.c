@@ -3,7 +3,7 @@
  *
  * NIST FIPS 186 pseudo-random generator, code
  *
- * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *

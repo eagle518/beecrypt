@@ -25,6 +25,8 @@
  *
  */
 
+#include <gnu/config.gas.h>
+
 #define saved_pfs	r14
 #define saved_lc	r15
 
@@ -38,11 +40,7 @@
 
 	.explicit
 
-	.align  32
-	.global mp32zero
-	.type   mp32zero,@function
-
-mp32zero:
+C_FUNCTION(mp32zero)
 	alloc saved_pfs = ar.pfs,2,0,0,0
 	mov saved_lc = ar.lc
 	sub size = in0,r0,1;;
@@ -56,28 +54,25 @@ mp32zero:
 	mov ar.pfs = saved_pfs
 	br.ret.sptk b0
 
-
-	.align  32
-	.global mp32copy
-	.type   mp32copy,@function
-
-mp32copy:
-	alloc r14 = ar.pfs,3,5,0,8
-	mov r15 = ar.lc
-	sub r16 = in0,r0,1
-	mov r17 = in1
-	mov r18 = in2;;
-	mov ar.lc = r16
-	mov ar.ec = 3
+C_FUNCTION(mp32copy)
+	alloc saved_pfs = ar.pfs,3,5,0,8
+	mov saved_lc = ar.lc
+	sub size = in0,r0,1
+	mov dst = in1
+	mov src = in2;;
+	mov ar.lc = size
+	mov ar.ec = 2
 	mov pr.rot = (1 << 16);;
 .L01:
-	(p16) ld4 r32 = [r18],4
-	(p18) st4 [r17] = r34,4
+	(p17) st4 [dst] = r33,4
+	(p16) ld4 r32 = [src],4;;
 	br.ctop.sptk .L01;;
-	mov ar.lc = r15
-	mov ar.pfs = r14
+	mov ar.lc = saved_lc
+	mov ar.pfs = saved_pfs
 	br.ret.sptk b0
 
+
+	.if	0
 
 	.if		0
 	.align	32
@@ -195,28 +190,25 @@ mp32setmul:
 	br.ret.sptk b0
 
 
-	.align	32
-	.global	mp32addmul
-	.type	mp32addmul,@function
-
-mp32addmul:
-	alloc r14 = ar.pfs,4,0,0,0
-	mov r15 = ar.lc
+C_FUNCTION(mp32addmul)
+	alloc saved_pfd = ar.pfs,4,0,0,0
+	mov saved_lc = ar.lc
 	# adjust size by -1
-	sub r16 = in0,r0,1
-	# load mul
-	# setf.sig f6 = r0
-	setf.sig f7 = in3
+	sub size = in0,r0,1
+	# load multiplier
 	# clear carry
 	mov r8 = r0;;
+	# mux multiplier
+	
 	# adjust addresses
-	shladd r17 = r16,2,in1
-	shladd r18 = r16,2,in2
+	shladd dst = size,2,in1
+	shladd src = size,2,in2
 	# load loop count
 	mov ar.lc = r16;;
 .L50:
-	ld4 r19 = [r17]
-	ld4 r20 = [r18],-4;;
+	ld4 r19 = [dst]
+	ld4 r20 = [dst],-4;;
+	mux2 r21=
 	setf.sig f8 = r8
 	setf.sig f32 = r20;;
 	# multiplication can only be done in f registers, but we do have a multiply-add
@@ -240,3 +232,4 @@ mp32addsqrtrc:
 	.endp	mp32addsqrtrc#
 	.endif
 
+	.endif

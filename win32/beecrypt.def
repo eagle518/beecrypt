@@ -30,6 +30,8 @@ EXPORTS
  b64dec
  blockCipherContextFree
  blockCipherContextInit
+ blockCipherContextSetup
+ blockCipherContextSetIV
  blockCipherCount
  blockCipherDefault
  blockCipherFind

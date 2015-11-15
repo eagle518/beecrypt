@@ -30,28 +30,32 @@
 #define _REENTRANT
 #endif
 
-#ifndef __cplusplus
-#undef inline
-#endif
-
-#define AIX			0
-#define BEOS		0
-#define CYGWIN		0
-#define FREEBSD		0
-#define HPUX		0
-#define LINUX		0
-#define MACOSX		0
-#define OPENBSD		0
-#define SOLARIS		0
-#define WIN32		0
-
-#define JAVAGLUE	0
-
 #if LINUX
 #define _LIBC_REENTRANT
 #endif
 
-#define WORDS_BIGENDIAN		0
+#ifndef __cplusplus
+#undef inline
+#endif
+
+#define AIX         0
+#define BEOS        0
+#define CYGWIN      0
+#define DARWIN      0
+#define FREEBSD     0
+#define HPUX        0
+#define LINUX       0
+#define MACOSX      0
+#define OPENBSD     0
+#define OSF         0
+#define QNX         0
+#define SOLARIS     0
+#define WIN32       0
+
+#define JAVAGLUE	0
+
+#define LEADING_UNDERSCORE	0
+#define WORDS_BIGENDIAN     0
 
 #define HAVE_ERRNO_H		0
 #define HAVE_STRING_H		0
@@ -103,81 +107,73 @@
 #define SIZEOF_DOUBLE				0
 
 #if (SIZEOF_CHAR == 1)
-typedef char int8;
-typedef char javabyte;
+#define INT8_TYPE	char
 #else
 #error sizeof(char) not 1
 #endif
 
 #if (SIZEOF_SHORT == 2)
-typedef short int16;
-typedef short javashort;
+#define INT16_TYPE	short
 #else
-#error sizeof(short) is not 2
+#error sizeof(short) not 2
 #endif
 
 #if (SIZEOF_INT == 4)
-typedef int int32;
-typedef int javaint;
+#define INT32_TYPE	int
 #elif (SIZEOF_LONG == 4)
-typedef int int32;
-typedef long javaint;
+#define INT32_TYPE	long
 #else
 #error compiler has no 32 bit integer
 #endif
 
 #if (SIZEOF_LONG == 8)
-typedef long int64;
-typedef long javalong;
+#define INT64_TYPE	long
+#define HAVE_LONG_LONG	0
 #elif (SIZEOF_LONG_LONG == 8)
-typedef long long int64;
-typedef long long javalong;
+#define INT64_TYPE	long long
+#define HAVE_LONG_LONG	1
 #else
 #error compiler has no 64 bit integer
 #endif
 
-#if (SIZEOF_FLOAT == 4)
-typedef float javafloat;
-#else
-#error compiler has no 32 bit float
-#endif
-
-#if (SIZEOF_DOUBLE == 8)
-typedef double javadouble;
-#else
-#error compiler has no 64 bit double;
-#endif
-
 #if (SIZEOF_UNSIGNED_CHAR == 1)
-typedef unsigned char uint8;
+#define UINT8_TYPE	unsigned char
 #else
-#error sizeof(unsigned char) is not 1
+#error sizeof(unsigned char) not 1
 #endif
 
 #if (SIZEOF_UNSIGNED_SHORT == 2)
-typedef unsigned short uint16;
-typedef unsigned short javachar;
-typedef unsigned short unicode;
+#define UINT16_TYPE	unsigned short
 #else
-#error sizeof(unsigned short) is not 2
+#error sizeof(unsigned short) not 2
 #endif
 
 #if (SIZEOF_UNSIGNED_INT == 4)
-typedef unsigned int uint32;
+#define UINT32_TYPE	unsigned int
 #elif (SIZEOF_UNSIGNED_LONG == 4)
-typedef unsigned long uint32;
+#define UINT32_TYPE	unsigned long
 #else
 #error compiler has no 32 bit unsigned integer
 #endif
 
 #if (SIZEOF_UNSIGNED_LONG == 8)
-typedef unsigned long uint64;
+#define UINT64_TYPE	unsigned long
 #elif (SIZEOF_UNSIGNED_LONG_LONG == 8)
-typedef unsigned long long uint64;
+#define UINT64_TYPE	unsigned long long
 #else
 #error compiler has no 64 bit unsigned integer
 #endif
 
-typedef uint8 byte;
+#if (SIZEOF_FLOAT == 4)
+#define FLOAT4_TYPE float
+#else
+#error compile has no 32 bit float
+#endif
+
+#if (SIZEOF_DOUBLE == 8)
+#define DOUBLE8_TYPE double
+#else
+#error compile has no 64 bit double
+#endif
 
 #endif

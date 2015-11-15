@@ -3,7 +3,7 @@
  *
  * Beecrypt library hooks & stubs, header
  *
- * Copyright (c) 1999-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -500,7 +500,7 @@ typedef struct
 } blockMode;
 
 typedef int (*blockCipherSetup  )(blockCipherParam*, const uint32*, int, cipherOperation);
-typedef int (*blockCipherSetIV  )(blockCipherParam*,  const uint32*);
+typedef int (*blockCipherSetIV  )(blockCipherParam*, const uint32*);
 typedef int (*blockCipherEncrypt)(blockCipherParam*, uint32*, const uint32*);
 typedef int (*blockCipherDecrypt)(blockCipherParam*, uint32*, const uint32*);
 
@@ -607,6 +607,10 @@ extern "C" {
 
 BEEDLLAPI
 void blockCipherContextInit(blockCipherContext*, const blockCipher*);
+BEEDLLAPI
+void blockCipherContextSetup(blockCipherContext*, const uint32*, int, cipherOperation);
+BEEDLLAPI
+void blockCipherContextSetIV(blockCipherContext*, const uint32*);
 BEEDLLAPI
 void blockCipherContextFree(blockCipherContext*);
 

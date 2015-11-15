@@ -13,7 +13,7 @@
  * Note: this generator has a very long period, passes statistical test, but
  * needs more study to determine whether it is cryptographically strong enough.
  *
- * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -103,7 +103,7 @@ int mtprngSeed(mtprngParam* mp, const uint32* data, int size)
 {
 	if (mp)
 	{
-		uint32	needed = N+1;
+		int	needed = N+1;
 		uint32*	dest = mp->state;
 
 		#ifdef _REENTRANT

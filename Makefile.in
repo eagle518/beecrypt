@@ -37,12 +37,17 @@ COMPILE.c = $(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 PRODUCT = @PRODUCT@
 VERSION = @VERSION@
+MAJOR = @MAJOR@
 
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 
 CC = @CC@
 CPP = @CPP@
+LD = @LD@
+
+RM = rm
+LN = ln
 
 ASFLAGS = @CONFASFLAGS@
 CFLAGS = @CONFCFLAGS@
@@ -122,6 +127,7 @@ DISTFILES = \
 	sha1hmac.h sha1hmac.c \
 	timestamp.h timestamp.c \
 	gnu/config.gnu.h.in \
+	gnu/config.gas.h \
 	gnu/blowfishopt.gas.i586.S gnu/fips180opt.gas.i586.S gnu/mp32opt.gas.i386.S \
 	gnu/mp32opt.gas.ia64.S \
 	gnu/mp32opt.gas.powerpc.S \
@@ -135,7 +141,7 @@ DISTFILES = \
 
 LIBBEECRYPT = libbeecrypt.so
 
-all: $(LIBBEECRYPT)
+all: $(LIBBEECRYPT) $(LIBBEECRYPT).$(MAJOR)
 
 javaglue.o: javaglue.c
 	$(COMPILE.c) $(JNIFLAGS)
@@ -149,13 +155,18 @@ javaglue.o: javaglue.c
 @MP32OPTDEP@
 	@MP32OPTRULE@
 
-$(LIBBEECRYPT): $(OBJFILES)
-	$(LD) -G -o $@ $(OBJFILES)
+$(LIBBEECRYPT): $(LIBBEECRYPT).$(MAJOR)
+	$(LN) -s $(LIBBEECRYPT).$(MAJOR) $(LIBBEECRYPT)
 
-install: $(LIBBEECRYPT)
+$(LIBBEECRYPT).$(MAJOR): $(OBJFILES)
+	$(LD) $(LDFLAGS) -o $@ $(OBJFILES)
+
+install: $(LIBBEECRYPT).$(MAJOR)
 	$(INSTALL) -d ${libdir}
-	$(INSTALL) $(LIBBEECRYPT) ${libdir}
-
+	$(INSTALL) $(LIBBEECRYPT).$(MAJOR) ${libdir}
+	$(RM) -f ${libdir}/$(LIBBEECRYPT)
+	$(LN) -s ${libdir}/$(LIBBEECRYPT).$(MAJOR) ${libdir}/$(LIBBEECRYPT)
+	
 install-headers:
 	$(INSTALL) -d ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/base64.h ${includedir}/beecrypt
@@ -184,10 +195,10 @@ install-headers:
 	$(INSTALL_DATA) ${srcdir}/timestamp.h ${includedir}/beecrypt
 
 beetest: beetest.o
-	$(CC) -o $@ beetest.o $(LDFLAGS) -L${libdir} -lbeecrypt
+	$(CC) -o $@ beetest.o -L. -lbeecrypt
 
 clean:
-	rm -f *.so *.o beetest
+	rm -f *.so *.so.$(MAJOR) *.o beetest
 
 distclean:
 	rm -f *.so *.o beetest ${srcdir}/config.log ${srcdir}/config.cache ${srcdir}/config.status conftest.c ${srcdir}/Makefile ${srcdir}/gnu/config.gnu.h

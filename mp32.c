@@ -3,7 +3,7 @@
  *
  * Multiprecision 2's complement integer routines for 32 bit cpu, code
  *
- * Copyright (c) 1997-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -439,7 +439,7 @@ uint32 mp32addw(register uint32 xsize, register uint32* xdata, register uint32 y
 		temp += carry;
 		*xdata = (uint32) temp;
 	}
-	return (temp >> 32);
+	return (uint32)(temp >> 32);
 }
 #endif
 
@@ -716,7 +716,7 @@ uint32 mp32divpowtwo(register uint32 xsize, register uint32* xdata)
 #ifndef ASM_MP32DIVTWO
 void mp32divtwo(register uint32 xsize, register uint32* xdata)
 {
-	register uint64 temp;
+	register uint32 temp;
 	register uint32 carry = 0;
 
 	while (xsize--)
@@ -818,7 +818,7 @@ void mp32lshift(register uint32 xsize, register uint32* xdata, uint32 count)
 			register uint32 temp;
 			register uint32 carry = 0;
 			register uint8  rbits = 32-lbits;
-			register int i = xsize;
+			register uint32 i = xsize;
 
 			while (i > words)
 			{

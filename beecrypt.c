@@ -3,7 +3,7 @@
  *
  * BeeCrypt library hooks & stubs, code
  *
- * Copyright (c) 1999-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -30,6 +30,9 @@
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#if HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #if HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
@@ -37,9 +40,11 @@
 #include <string.h>
 #endif
 
+#include "endianness.h"
 #include "entropy.h"
 #include "fips180.h"
 #include "fips186.h"
+#include "mp32.h"
 #include "mtprng.h"
 #include "sha1hmac.h"
 
@@ -417,6 +422,16 @@ void blockCipherContextInit(blockCipherContext* ctxt, const blockCipher* ciph)
 {
 	ctxt->ciph = ciph;
 	ctxt->param = malloc(ciph->paramsize);
+}
+
+void blockCipherContextSetup(blockCipherContext* ctxt, const uint32* key, int keybits, cipherOperation op)
+{
+	ctxt->ciph->setup(ctxt->param, key, keybits, op);
+}
+
+void blockCipherContextSetIV(blockCipherContext* ctxt, const uint32* iv)
+{
+	ctxt->ciph->setiv(ctxt->param, iv);
 }
 
 void blockCipherContextFree(blockCipherContext* ctxt)

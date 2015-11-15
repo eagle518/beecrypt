@@ -3,7 +3,7 @@
  *
  * Barrett modular reduction, header
  *
- * Copyright (c) 1997-2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -58,6 +58,10 @@ BEEDLLAPI
 void mp32brnd      (const mp32barrett*, randomGeneratorContext*);
 BEEDLLAPI
 void mp32brndres   (const mp32barrett*, uint32*, randomGeneratorContext*);
+BEEDLLAPI
+void mp32brndoddres(const mp32barrett*, uint32*, randomGeneratorContext*);
+BEEDLLAPI
+void mp32brndinvres(const mp32barrett*, uint32*, randomGeneratorContext*);
 
 BEEDLLAPI
 void mp32bmodsubone(const mp32barrett*);
