@@ -45,8 +45,8 @@ extern "C" {
 #endif
 #endif
 
-#ifdef __GNUC__
-#ifdef i386
+#if defined(__GNUC__)
+#if defined(i386) || defined(i486) || defined(i586) || defined(i686)
 #define ASM_MP32ADDW
 #define ASM_MP32ADD
 #define ASM_MP32SUBW
@@ -56,12 +56,17 @@ extern "C" {
 #define ASM_MP32ADDMUL
 #define ASM_MP32ADDSQRTRC
 #endif
-#ifdef powerpc
+#if defined(ia64)
+#define ASM_MP32ADD
+#define ASM_MP32SUB
+#define ASM_MP32SETMUL
+#define ASM_MP32ADDMUL
+#endif
+#if defined(powerpc)
 #define ASM_MP32ADDW
 #define ASM_MP32ADD
-/* there's still a problem to be fixed in the subtraction routines */
-#undef ASM_MP32SUBW
-#undef ASM_MP32SUB
+#define ASM_MP32SUBW
+#define ASM_MP32SUB
 #define ASM_MP32SETMUL
 #define ASM_MP32ADDMUL
 #define ASM_MP32ADDSQRTRC
@@ -77,7 +82,17 @@ extern "C" {
 #define ASM_MP32SETMUL
 #define ASM_MP32ADDMUL
 #define ASM_MP32ADDSQRTRC
-# endif
+#endif
+#if defined(i386) || defined(i486) || defined(i586) || defined(i686)
+#define ASM_MP32ADDW
+#define ASM_MP32ADD
+#define ASM_MP32SUBW
+#define ASM_MP32SUB
+#define ASM_MP32MULTWO
+#define ASM_MP32SETMUL
+#define ASM_MP32ADDMUL
+#define ASM_MP32ADDSQRTRC
+#endif
 #endif
 
 #ifdef __cplusplus

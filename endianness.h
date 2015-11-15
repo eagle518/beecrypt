@@ -146,6 +146,8 @@ int decodeDouble(javadouble*, const byte*);
 BEEDLLAPI
 int decodeInts(javaint*, const byte*, int);
 BEEDLLAPI
+int decodeIntsPartial(javaint*, const byte*, int);
+BEEDLLAPI
 int decodeChars(javachar*, const byte*, int);
 
 BEEDLLAPI

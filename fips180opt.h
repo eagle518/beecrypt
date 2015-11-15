@@ -45,6 +45,12 @@ extern "C" {
 #endif
 #endif
 
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#if defined(i586) || defined(i686)
+#define ASM_SHA1PROCESS
+#endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif

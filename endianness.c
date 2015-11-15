@@ -297,6 +297,32 @@ int decodeInts(javaint* i, const byte* data, int count)
 	return rc;
 }
 
+int decodeIntsPartial(javaint* i, const byte* data, int bytecount)
+{
+	register int rc = bytecount;
+	#if (WORDS_BIGENDIAN)
+	memcpy(i, data, rc);
+	if (rc & 0x3)
+		memset(i + (rc >> 2), 0, 4 - (rc & 0x3));
+	#else
+	javaint tmp;
+	while (bytecount >= 4)
+	{
+		memcpy(&tmp, data, 4);
+		*(i++) = swap32(tmp);
+		data += 4;
+		bytecount -= 4;
+	}
+	if (bytecount)
+	{
+		tmp = 0;
+		memcpy(&tmp, data, bytecount);
+		*(i++) = swap32(tmp);
+	}
+	#endif
+	return rc;
+}
+
 int decodeChars(javachar* c, const byte* data, int count)
 {
 	register int rc = count << 1;

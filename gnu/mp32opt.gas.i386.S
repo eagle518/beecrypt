@@ -1,38 +1,49 @@
-#
-# mp32opt.gas.i386.s
-#
-# Assembler optimized multiprecision integer routines for Intel 386 and higher
-#
-# Compile target is GNU AS
-#
-# Copyright (c) 1998-2000 Virtual Unlimited B.V.
-#
-# Author: Bob Deblier <bob@virtualunlimited.com>
-#
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-#
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
+/*
+ * mp32opt.gas.i386.S
+ *
+ * Assembler optimized multiprecision integer routines for Intel 386 and higher
+ *
+ * Compile target is GNU AS
+ *
+ * Copyright (c) 1998-2000 Virtual Unlimited B.V.
+ *
+ * Author: Bob Deblier <bob@virtualunlimited.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
 
-	.file "mp32opt.gas.i386.s"
+	.file "mp32opt.gas.i386.S"
 
 	.text
 
 	.align	4
-	.globl	mp32addw
+#if defined(CYGWIN)
+	.globl	_mp32addw
+	.def	_mp32addw
+	.scl	2
+	.type	32
+	.endef
+
+_mp32addw:
+#else
+	.global	mp32addw
 	.type	mp32addw,@function
 
 mp32addw:
+#endif
 	pushl %edi
 
 	movl 8(%esp),%ecx
@@ -59,11 +70,20 @@ mp32addw:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32subw
+#if defined(CYGWIN)
+	.globl	_mp32subw
+	.def	_mp32subw
+	.scl	2
+	.type	32
+	.endef
+
+_mp32subw:
+#else
+	.global	mp32subw
 	.type	mp32subw,@function
 
 mp32subw:
+#endif
 	pushl %edi
 
 	movl 8(%esp),%ecx
@@ -89,11 +109,20 @@ mp32subw:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32add
+#if defined(CYGWIN)
+	.globl	_mp32add
+	.def	_mp32add
+	.scl	2
+	.type	32
+	.endef
+
+_mp32add:
+#else
+	.global	mp32add
 	.type	mp32add,@function
 
 mp32add:
+#endif
 	pushl %edi
 	pushl %esi
 
@@ -118,11 +147,20 @@ mp32add:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32sub
+#if defined(CYGWIN)
+	.globl	_mp32sub
+	.def	_mp32sub
+	.scl	2
+	.type	32
+	.endef
+
+_mp32sub:
+#else
+	.global	mp32sub
 	.type	mp32sub,@function
 
 mp32sub:
+#endif
 	pushl %edi
 	pushl %esi
 
@@ -146,11 +184,20 @@ mp32sub:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32multwo
+#if defined(CYGWIN)
+	.globl	_mp32multwo
+	.def	_mp32multwo
+	.scl	2
+	.type	32
+	.endef
+
+_mp32multwo:
+#else
+	.global	mp32multwo
 	.type	mp32multwo,@function
 
 mp32multwo:
+#endif
 	pushl %edi
 
 	movl 8(%esp),%ecx
@@ -172,11 +219,20 @@ mp32multwo:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32setmul
+#if defined(CYGWIN)
+	.globl	_mp32setmul
+	.def	_mp32setmul
+	.scl	2
+	.type	32
+	.endef
+
+_mp32setmul:
+#else
+	.global	mp32setmul
 	.type	mp32setmul,@function
 
 mp32setmul:
+#endif
 	pushl %edi
 	pushl %esi
 	pushl %ebx
@@ -209,11 +265,20 @@ mp32setmul:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32addmul
+#if defined(CYGWIN)
+	.globl	_mp32addmul
+	.def	_mp32addmul
+	.scl	2
+	.type	32
+	.endef
+
+_mp32addmul:
+#else
+	.global	mp32addmul
 	.type	mp32addmul,@function
 
 mp32addmul:
+#endif
 	pushl %edi
 	pushl %esi
 	pushl %ebx
@@ -248,11 +313,20 @@ mp32addmul:
 	popl %edi
 	ret
 
-	.align	4
-	.globl	mp32addsqrtrc
+#if defined(CYGWIN)
+	.globl	_mp32addsqrtrc
+	.def	_mp32addsqrtrc
+	.scl	2
+	.type	32
+	.endef
+
+_mp32addsqrtrc:
+#else
+	.global	mp32addsqrtrc
 	.type	mp32addsqrtrc,@function
 
 mp32addsqrtrc:
+#endif
 	pushl %edi
 	pushl %esi
 	pushl %ebx

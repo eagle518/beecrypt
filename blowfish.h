@@ -36,6 +36,7 @@ typedef struct
 {
 	uint32 p[BLOWFISHPSIZE];
 	uint32 s[1024];
+	uint32 fdback[2];
 } blowfishParam;
 
 #ifdef __cplusplus
@@ -47,9 +48,11 @@ extern const BEEDLLAPI blockCipher blowfish;
 BEEDLLAPI
 int blowfishSetup  (blowfishParam*, const uint32*, int, cipherOperation);
 BEEDLLAPI
-int blowfishEncrypt(blowfishParam*, uint32*);
+int blowfishSetIV  (blowfishParam*, const uint32*);
 BEEDLLAPI
-int blowfishDecrypt(blowfishParam*, uint32*);
+int blowfishEncrypt(blowfishParam*, uint32*, const uint32*);
+BEEDLLAPI
+int blowfishDecrypt(blowfishParam*, uint32*, const uint32*);
 
 BEEDLLAPI
 int blowfishECBEncrypt(blowfishParam*, int, uint32*, const uint32*);
@@ -57,9 +60,9 @@ BEEDLLAPI
 int blowfishECBDecrypt(blowfishParam*, int, uint32*, const uint32*);
 
 BEEDLLAPI
-int blowfishCBCEncrypt(blowfishParam*, int, uint32*, const uint32*, const uint32*);
+int blowfishCBCEncrypt(blowfishParam*, int, uint32*, const uint32*);
 BEEDLLAPI
-int blowfishCBCDecrypt(blowfishParam*, int, uint32*, const uint32*, const uint32*);
+int blowfishCBCDecrypt(blowfishParam*, int, uint32*, const uint32*);
 
 #ifdef __cplusplus
 }

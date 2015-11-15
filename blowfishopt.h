@@ -40,7 +40,14 @@ extern "C" {
 #endif
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
+#if defined(i586) || defined(i686)
+#define ASM_BLOWFISHENCRYPT
+#define ASM_BLOWFISHDECRYPT
+#endif
+#endif
+
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #if defined(i586) || defined(i686)
 #define ASM_BLOWFISHENCRYPT
 #define ASM_BLOWFISHDECRYPT

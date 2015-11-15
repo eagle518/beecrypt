@@ -147,7 +147,7 @@ typedef int (*randomGeneratorCleanup)(randomGeneratorParam*);
 typedef struct
 {
 	const char*						name;
-	const int						paramsize;
+	const unsigned int				paramsize;
 	const randomGeneratorSetup		setup;
 	const randomGeneratorSeed		seed;
 	const randomGeneratorNext		next;
@@ -256,8 +256,8 @@ typedef int (*hashFunctionDigest)(hashFunctionParam*, uint32*);
 typedef struct
 {
 	const char*					name;
-	const int					paramsize;	/* in bytes */
-	const int					digestsize;	/* in bytes */
+	const unsigned int			paramsize;	/* in bytes */
+	const unsigned int			digestsize;	/* in bytes */
 	const hashFunctionReset		reset;
 	const hashFunctionUpdate	update;
 	const hashFunctionDigest	digest;
@@ -388,11 +388,11 @@ typedef int (*keyedHashFunctionDigest )(keyedHashFunctionParam*, uint32*);
 typedef struct
 {
 	const char*						name;
-	const int						paramsize;	/* in bytes */
-	const int						digestsize;	/* in bytes */
-	const int						keybitsmin;	/* in bits */
-	const int						keybitsmax;	/* in bits */
-	const int						keybitsinc;	/* in bits */
+	const unsigned int				paramsize;	/* in bytes */
+	const unsigned int				digestsize;	/* in bytes */
+	const unsigned int				keybitsmin;	/* in bits */
+	const unsigned int				keybitsmax;	/* in bits */
+	const unsigned int				keybitsinc;	/* in bits */
 	const keyedHashFunctionSetup	setup;
 	const keyedHashFunctionReset	reset;
 	const keyedHashFunctionUpdate	update;
@@ -490,8 +490,8 @@ typedef enum
 
 typedef void blockCipherParam;
 
-typedef int (*blockModeEncrypt)(blockCipherParam*, int, uint32*, const uint32*, const uint32*);
-typedef int (*blockModeDecrypt)(blockCipherParam*, int, uint32*, const uint32*, const uint32*);
+typedef int (*blockModeEncrypt)(blockCipherParam*, int, uint32*, const uint32*);
+typedef int (*blockModeDecrypt)(blockCipherParam*, int, uint32*, const uint32*);
 
 typedef struct
 {
@@ -500,8 +500,9 @@ typedef struct
 } blockMode;
 
 typedef int (*blockCipherSetup  )(blockCipherParam*, const uint32*, int, cipherOperation);
-typedef int (*blockCipherEncrypt)(blockCipherParam*, uint32 *);
-typedef int (*blockCipherDecrypt)(blockCipherParam*, uint32 *);
+typedef int (*blockCipherSetIV  )(blockCipherParam*,  const uint32*);
+typedef int (*blockCipherEncrypt)(blockCipherParam*, uint32*, const uint32*);
+typedef int (*blockCipherDecrypt)(blockCipherParam*, uint32*, const uint32*);
 
 /*
  * The struct 'blockCipher' holds information and pointers to code specific
@@ -540,12 +541,13 @@ typedef int (*blockCipherDecrypt)(blockCipherParam*, uint32 *);
 typedef struct
 {
 	const char*					name;
-	const int					paramsize;	/* in bytes */
-	const int					keybitsmin;	/* in bits */
-	const int					keybitsmax;	/* in bits */
-	const int					keybitsinc;	/* in bits */
-	const int					blockbits;	/* in bits */
+	const unsigned int			paramsize;	/* in bytes */
+	const unsigned int			blocksize;	/* in bytes */
+	const unsigned int			keybitsmin;	/* in bits */
+	const unsigned int			keybitsmax;	/* in bits */
+	const unsigned int			keybitsinc;	/* in bits */
 	const blockCipherSetup		setup;
+	const blockCipherSetIV		setiv;
 	const blockCipherEncrypt	encrypt;
 	const blockCipherDecrypt	decrypt;
 	const blockMode*			mode;

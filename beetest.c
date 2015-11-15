@@ -91,6 +91,26 @@ int testVectorSHA()
 	return mp32eq(5, expect, digest);
 }
 
+uint32 keyValue[] = 
+{
+	0x00010203,
+	0x04050607,
+	0x08090a0b,
+	0x0c0d0e0f,
+	0x10111213,
+	0x14151617,
+	0x18191a1b,
+	0x1c1d1e1f,
+	0x20212223,
+	0x24252627,
+	0x28292a2b,
+	0x2c2d2e2f,
+	0x30313233,
+	0x34353637,
+	0x38393a3b,
+	0x3c3d3e3f
+};
+	
 void testBlockInit(uint8* block, int length)
 {
 	register int i;
@@ -110,10 +130,11 @@ void testBlockCiphers()
 
 		if (tmp)
 		{
-			uint32 blockwords = tmp->blockbits >> 5;
+			uint32 blockwords = tmp->blocksize >> 2;
 
-			uint32* src_block = (uint32*) malloc(blockwords * sizeof(uint32));
-			uint32* dst_block = (uint32*) malloc(blockwords * sizeof(uint32));
+			uint32* src_block = (uint32*) malloc(2 * blockwords * sizeof(uint32));
+			uint32* enc_block = (uint32*) malloc(2 * blockwords * sizeof(uint32));
+			uint32* dec_block = (uint32*) malloc(2 * blockwords * sizeof(uint32));
 			uint32* spd_block = (uint32*) malloc(1024 * 1024 * blockwords * sizeof(uint32));
 
 			void* encrypt_param = (void*) malloc(tmp->paramsize);
@@ -123,45 +144,31 @@ void testBlockCiphers()
 
 			for (k = tmp->keybitsmin; k <= tmp->keybitsmax; k += tmp->keybitsinc)
 			{
-				void* key = (void*) malloc(k >> 3);
-
-				testBlockInit((uint8*) key, k >> 3);
-
 				printf("\t\tsetup encrypt (%d bits key): ", k);
-				if (tmp->setup(encrypt_param, key, k, ENCRYPT) < 0)
+				if (tmp->setup(encrypt_param, keyValue, k, ENCRYPT) < 0)
 				{
-					free(key);
 					printf("failed\n");
 					continue;
 				}
 				printf("ok\n");
 				printf("\t\tsetup decrypt (%d bits key): ", k);
-				if (tmp->setup(decrypt_param, key, k, DECRYPT) < 0)
+				if (tmp->setup(decrypt_param, keyValue, k, DECRYPT) < 0)
 				{
-					free(key);
 					printf("failed\n");
 					continue;
 				}
 				printf("ok\n");
 				printf("\t\tencrypt/decrypt test block: ");
-				testBlockInit((uint8*) src_block, tmp->blockbits >> 3);
-				memcpy(dst_block, src_block, tmp->blockbits >> 3);
-				tmp->encrypt(encrypt_param, dst_block);
-				/*
-				for (j = 0; j < (tmp->blockbits >> 3); j++)
+				testBlockInit((uint8*) src_block, tmp->blocksize >> 2);
+
+				blockEncrypt(tmp, encrypt_param, CBC, 2, enc_block, src_block);
+				blockDecrypt(tmp, decrypt_param, CBC, 2, dec_block, enc_block);
+
+				if (memcmp(dec_block, src_block, tmp->blocksize >> 2))
 				{
-					printf("%02x", *(((uint8*)dst_block)+j));
-				}
-				printf(" ");
-				*/
-				tmp->decrypt(decrypt_param, dst_block);
-				if (memcmp(src_block, dst_block, tmp->blockbits >> 3))
-				{
-					free(key);
 					printf("failed\n");
 					continue;
 				}
-				free(key);
 				printf("ok\n");
 				printf("\t\tspeed measurement:\n");
 				{
@@ -173,43 +180,44 @@ void testBlockCiphers()
 					#if HAVE_TIME_H
 					tstart = clock();
 					#endif
-					blockEncrypt(tmp, encrypt_param, ECB, 1024 * 1024, spd_block, spd_block, 0);
+					blockEncrypt(tmp, encrypt_param, ECB, 1024 * 1024, spd_block, spd_block);
 					#if HAVE_TIME_H
 					tstop = clock();
 					ttime = ((double)(tstop - tstart)) / CLOCKS_PER_SEC;
-					printf("\t\t\tECB encrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blockbits, ttime);
+					printf("\t\t\tECB encrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blocksize << 3, ttime);
 					#endif
 					#if HAVE_TIME_H
 					tstart = clock();
 					#endif
-					blockDecrypt(tmp, decrypt_param, ECB, 1024 * 1024, spd_block, spd_block, 0);
+					blockDecrypt(tmp, decrypt_param, ECB, 1024 * 1024, spd_block, spd_block);
 					#if HAVE_TIME_H
 					tstop = clock();
 					ttime = ((double)(tstop - tstart)) / CLOCKS_PER_SEC;
-					printf("\t\t\tECB decrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blockbits, ttime);
+					printf("\t\t\tECB decrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blocksize << 3, ttime);
 					#endif
 					#if HAVE_TIME_H
 					tstart = clock();
 					#endif
-					blockEncrypt(tmp, encrypt_param, CBC, 1024 * 1024, spd_block, spd_block, 0);
+					blockEncrypt(tmp, encrypt_param, CBC, 1024 * 1024, spd_block, spd_block);
 					#if HAVE_TIME_H
 					tstop = clock();
 					ttime = ((double)(tstop - tstart)) / CLOCKS_PER_SEC;
-					printf("\t\t\tCBC encrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blockbits, ttime);
+					printf("\t\t\tCBC encrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blocksize << 3, ttime);
 					#endif
 					#if HAVE_TIME_H
 					tstart = clock();
 					#endif
-					blockEncrypt(tmp, decrypt_param, CBC, 1024 * 1024, spd_block, spd_block, 0);
+					blockEncrypt(tmp, decrypt_param, CBC, 1024 * 1024, spd_block, spd_block);
 					#if HAVE_TIME_H
 					tstop = clock();
 					ttime = ((double)(tstop - tstart)) / CLOCKS_PER_SEC;
-					printf("\t\t\tCBC decrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blockbits, ttime);
+					printf("\t\t\tCBC decrypts 1M blocks of %d bits in %.3f seconds\n", tmp->blocksize << 3, ttime);
 					#endif
 				}
 			}
 			free(spd_block);
-			free(dst_block);
+			free(dec_block);
+			free(enc_block);
 			free(src_block);
 			free(decrypt_param);
 			free(encrypt_param);
@@ -406,16 +414,35 @@ void testDLParams()
 			double ttime;
 			clock_t tstart, tstop;
 			#endif
+			printf("Generating P (768 bits) Q (512 bits) G with order Q\n");
 			#if HAVE_TIME_H
 			tstart = clock();
 			#endif
-			printf("Generating P (768 bits) Q (512 bits) G with order Q\n");
 			dldp_pgoqMake(&dp, &rc, 768 >> 5, 512 >> 5, 1);
 			#if HAVE_TIME_H
 			tstop = clock();
 			ttime = ((double)(tstop - tstart)) / CLOCKS_PER_SEC;
 			printf("\tdone in %.3f seconds\n", ttime);
 			#endif
+			printf("P = "); fflush(stdout); mp32println(dp.p.size, dp.p.modl);
+			printf("Q = "); fflush(stdout); mp32println(dp.q.size, dp.q.modl);
+			printf("G = "); fflush(stdout); mp32println(dp.g.size, dp.g.data);
+			dldp_pFree(&dp);
+
+			printf("Generating P (768 bits) Q (512 bits) G with order (P-1)\n");
+			#if HAVE_TIME_H
+			tstart = clock();
+			#endif
+			dldp_pgonMake(&dp, &rc, 768 >> 5, 512 >> 5);
+			#if HAVE_TIME_H
+			tstop = clock();
+			ttime = ((double)(tstop - tstart)) / CLOCKS_PER_SEC;
+			printf("\tdone in %.3f seconds\n", ttime);
+			#endif
+			printf("P = "); fflush(stdout); mp32println(dp.p.size, dp.p.modl);
+			printf("Q = "); fflush(stdout); mp32println(dp.q.size, dp.q.modl);
+			printf("G = "); fflush(stdout); mp32println(dp.g.size, dp.g.data);
+			dldp_pFree(&dp);
 		}
 	}
 

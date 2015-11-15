@@ -33,7 +33,6 @@ extern "C" {
 #endif
 
 #if WIN32
-
 BEEDLLAPI
 int entropy_provider_setup(HINSTANCE);
 BEEDLLAPI
@@ -41,6 +40,10 @@ int entropy_provider_cleanup();
 
 BEEDLLAPI
 int entropy_wavein(uint32*, int);
+BEEDLLAPI
+int entropy_console(uint32*, int);
+BEEDLLAPI
+int entropy_wincrypt(uint32*, int);
 #else
 #if HAVE_DEV_AUDIO
 int entropy_dev_audio (uint32*, int);
@@ -50,6 +53,9 @@ int entropy_dev_dsp   (uint32*, int);
 #endif
 #if HAVE_DEV_RANDOM
 int entropy_dev_random(uint32*, int);
+#endif
+#if HAVE_DEV_URANDOM
+int entropy_dev_urandom(uint32*, int);
 #endif
 #if HAVE_DEV_TTY
 int entropy_dev_tty   (uint32*, int);

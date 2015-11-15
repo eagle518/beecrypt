@@ -26,7 +26,7 @@
 
 	.text
 
-	.align 4
+	.align 8
 	.globl _mp32addw
 
 _mp32addw:
@@ -55,7 +55,7 @@ _mp32addw:
 	pop edi
 	ret
 
-	.align 4
+	.align 8
 	.globl _mp32subw
 
 _mp32subw:
@@ -84,7 +84,7 @@ _mp32subw:
 	pop edi
 	ret
 
-	.align 4
+	.align 8
 	.globl _mp32add
 
 _mp32add:
@@ -111,7 +111,7 @@ _mp32add:
 	pop edi
 	ret
 
-	.align 4
+	.align 8
 	.globl _mp32sub
 
 _mp32sub:
@@ -138,7 +138,7 @@ _mp32sub:
 	pop edi
 	ret
 
-	.align 4
+	.align 8
 	.globl _mp32multwo
 
 _mp32multwo:
@@ -162,7 +162,7 @@ _mp32multwo:
 	pop edi
 	ret
 
-	.align 4
+	.align 8
 	.globl _mp32setmul
 
 _mp32setmul:
@@ -179,7 +179,7 @@ _mp32setmul:
 	xor ebx,ebx
 	dec ecx
 	
-	.align 4
+	.align 8
 @setmul_loop:
 	mov eax,[esi+ecx*4]
 	mul ebp
@@ -198,8 +198,7 @@ _mp32setmul:
 	pop edi
 	ret
 
-
-	.align 4
+	.align 8
 	.globl _mp32addmul
 
 _mp32addmul:
@@ -237,7 +236,7 @@ _mp32addmul:
 	pop edi
 	ret
 
-	.align 4
+	.align 8
 	.globl _mp32addsqrtrc
 
 _mp32addsqrtrc:

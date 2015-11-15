@@ -80,7 +80,7 @@ dtworounds:	.macro p
 
 	.text
 
-	.align 4
+	.align 8
 	.globl _blowfishEncrypt
 	
 _blowfishEncrypt:
@@ -89,7 +89,7 @@ _blowfishEncrypt:
 	push ebx
 
 	mov esi,[esp+16]
-	mov edi,[esp+20]
+	mov edi,[esp+24]
 	
 	xor eax,eax
 	xor ebx,ebx
@@ -125,8 +125,8 @@ _blowfishEncrypt:
 	pop esi
 	pop edi
 	ret
-	
-	.align 4
+
+	.align 8
 	.globl _blowfishDecrypt
 
 _blowfishDecrypt:
@@ -135,7 +135,7 @@ _blowfishDecrypt:
 	push ebx
 
 	mov esi,[esp+16]
-	mov edi,[esp+20]
+	mov edi,[esp+24]
 	
 	xor eax,eax
 	xor ebx,ebx

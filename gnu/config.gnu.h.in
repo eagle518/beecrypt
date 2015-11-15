@@ -36,6 +36,7 @@
 
 #define AIX			0
 #define BEOS		0
+#define CYGWIN		0
 #define FREEBSD		0
 #define HPUX		0
 #define LINUX		0
@@ -43,6 +44,8 @@
 #define OPENBSD		0
 #define SOLARIS		0
 #define WIN32		0
+
+#define JAVAGLUE	0
 
 #if LINUX
 #define _LIBC_REENTRANT
@@ -69,6 +72,7 @@
 #define HAVE_SEMAPHORE_H	0
 
 #define HAVE_TERMIO_H			0
+#define HAVE_TERMIOS_H			0
 #define HAVE_SYS_AUDIOIO_H		0
 #define HAVE_SYS_IOCTL_H		0
 #define HAVE_SYS_SOUNDCARD_H	0
@@ -78,10 +82,11 @@
 #define HAVE_GETTIMEOFDAY	0
 #define HAVE_GETHRTIME		0
 
-#define HAVE_DEV_TTY		0
 #define HAVE_DEV_AUDIO		0
 #define HAVE_DEV_DSP		0
 #define HAVE_DEV_RANDOM		0
+#define HAVE_DEV_URANDOM	0
+#define HAVE_DEV_TTY		0
 
 #define SIZEOF_CHAR					0
 #define SIZEOF_UNSIGNED_CHAR		0

@@ -82,18 +82,22 @@ Planned for the near future are:
 	- Elliptic Curves (ECDSA, ... )
 
 The library has been tested on the following platforms:
-    - Solaris 2.6 Sparc, Solaris 2.7 Sparc
+    - Solaris 2.6/2.7 Sparc (with Workshop compilers, gnu binutils and make)
         - includes assembler optimization for ultrasparc
+	- Solaris 2.7 Intel (with gnu compiler, binutils and make)
+		- includes assembler optimization (tuned for Pentium Pro and higher)
     - Linux glibc 2.x x86
         - includes assembler optimization (tuned for Pentium Pro and higher)
     - Linux glibc 2.x ppc
-        - includes assembler optimization (generic 32-bit PowerPC)
+        - includes assembler optimization (for generic 32-bit PowerPC)
+	- FreeBSD 4.0 x86
+		- includes assembler optimization (tuned for Pentium Pro and higher)
     - Win32 (Windows 95, 98, NT 4.0, 2000)
         - includes assembler optimization (tuned for Pentium Pro and higher)
 
-Planned platforms for the near future are:
-    - Solaris Intel
-    - FreeBSD x86
+The library is currently in the process of being ported to:
+	- Cygwin
+	- Darwin 1.0
 
 Consult file 'DOCUMENTATION' on how to use the library. There is also a program
 called 'beetest.c' included which gives an example of how to use the API. You

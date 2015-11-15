@@ -47,7 +47,9 @@
 # if HAVE_SYS_SOUNDCARD_H
 #  include <sys/soundcard.h>
 # endif
-# if HAVE_TERMIO_H
+# if HAVE_TERMIOS_H
+#  include <termios.h>
+# elif HAVE_TERMIO_H
 #  include <termio.h>
 # endif
 # if HAVE_SYNCH_H
@@ -364,6 +366,92 @@ int entropy_wavein(uint32* data, int size)
 		return -1;
 	}
 }
+
+int entropy_console(uint32* data, int size)
+{
+	register uint32 randombits = size << 5;
+	register uint32 temp = 0;
+
+	HANDLE hStdin;
+	DWORD inRet;
+	INPUT_RECORD inEvent;
+	LARGE_INTEGER hrtsample;
+
+	hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	if (hStdin == INVALID_HANDLE_VALUE)
+	{
+		fprintf(stderr, "GetStdHandle error %d\n", GetLastError());
+		return -1;
+	}
+
+	printf("please press random keys on your keyboard\n"); fflush(stdout);
+
+	while (randombits)
+	{
+		if (!ReadConsoleInput(hStdin, &inEvent, 1, &inRet))
+		{
+			fprintf(stderr, "ReadConsoleInput failed\n"); fflush(stderr);
+			return -1;
+		}
+		if (inRet == 1 && inEvent.EventType == KEY_EVENT)
+		{
+			printf("."); fflush(stdout);
+			if (!QueryPerformanceCounter(&hrtsample))
+			{
+				fprintf(stderr, "QueryPerformanceCounter failed\n"); fflush(stderr);
+				return -1;
+			}
+
+			/* get 8 bits from the sample */
+			temp <<= 8;
+			/* discard the 2 lowest bits */
+			temp |= (uint32)(hrtsample.LowPart >> 2);
+			randombits -= 8;
+
+			if (!(randombits & 0x1f))
+				*(data++) = temp;
+		}
+	}
+
+	printf("\nthanks\n");
+
+	sleep(1);
+	
+	if (!FlushConsoleInputBuffer(hStdin))
+	{
+		fprintf(stderr, "FlushConsoleInputBuffer failed\n"); fflush(stderr);
+		return -1;
+	}
+
+	return 0;
+}
+
+int entropy_wincrypt(uint32* data, int size)
+{
+	HCRYPTPROV hCrypt;
+	DWORD provType = PROV_RSA_FULL;
+	BOOL rc;
+
+	/* consider using getenv("BEECRYPT_ENTROPY_WINCRYPT_PROVTYPE") to set provType */
+
+	if (!CryptAcquireContext(&hCrypt, "BeeCrypt", NULL, provType, 0))
+	{
+		if (GetLastError() == NTE_BAD_KEYSET)
+		{
+			if (!CryptAcquireContext(&hCrypt, "BeeCrypt", NULL, provType, CRYPT_NEWKEYSET))
+				return -1;
+		}
+		else
+			return -1;
+	}
+
+	rc = CryptGenRandom(hCrypt, size << 2, (BYTE*) data);
+
+	CryptReleaseContext(hCrypt, 0);
+
+	return rc ? 0 : -1;
+}
+
 #else
 #if HAVE_DEV_AUDIO
 static const char* name_dev_audio = "/dev/audio";
@@ -401,6 +489,20 @@ static int dev_random_fd = -1;
 static mutex_t dev_random_lock = DEFAULTMUTEX;
 #elif HAVE_PTHREAD_H
 static pthread_mutex_t dev_random_lock = PTHREAD_MUTEX_INITIALIZER;
+#else
+#error Need locking mechanism
+#endif
+#endif
+#endif
+
+#if HAVE_DEV_URANDOM
+static const char* name_dev_urandom = "/dev/urandom";
+static int dev_urandom_fd = -1;
+#ifdef _REENTRANT
+#if HAVE_SYNC_H
+static mutex_t dev_urandom_lock = DEFAULTMUTEX;
+#elif HAVE_PTHREAD_H
+static pthread_mutex_t dev_urandom_lock = PTHREAD_MUTEX_INITIALIZER;
 #else
 #error Need locking mechanism
 #endif
@@ -445,34 +547,14 @@ static int statdevice(const char *device)
 #if HAVE_FCNTL_H
 static int opendevice(const char *device)
 {
-	register int fd, flags, rc;
+	register int fd;
 
-	if ((fd = open(device, O_RDWR | O_NONBLOCK)) < 0)
+	if ((fd = open(device, O_RDONLY)) < 0)
 	{
 		#if HAVE_ERRNO_H && HAVE_STRING_H
 		fprintf(stderr, "open of %s failed: %s\n", device, strerror(errno));
 		#endif
 		return fd;
-	}
-
-	flags = fcntl(fd, F_GETFL, 0);
-	if (flags >= 0)
-	{
-		rc = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
-		if (rc < 0)
-		{
-			#if HAVE_ERRNO_H
-			perror("fcntl F_SETFL failed");
-			#endif
-			return rc;
-		}
-	}
-	else
-	{
-		#if HAVE_ERRNO_H
-		perror("fcntl F_GETFL failed");
-		#endif
-		return flags;
 	}
 	
 	return fd;
@@ -581,8 +663,12 @@ static int entropy_ttybits(int fd, uint32* data, int size)
 	register uint32 randombits = size << 5;
 	register uint32 temp;
 	byte dummy;
-	#if HAVE_TERMIO_H
+	#if HAVE_TERMIOS_H
+	struct termios tio_save, tio_set;
+	#elif HAVE_TERMIO_H
 	struct termio tio_save, tio_set;
+	#else
+	# need alternative
 	#endif
 	#if HAVE_GETHRTIME
 	hrtime_t hrtsample;
@@ -593,7 +679,30 @@ static int entropy_ttybits(int fd, uint32* data, int size)
 	#endif
 
 	printf("please press random keys on your keyboard\n");
-	#if HAVE_TERMIO_H
+	#if HAVE_TERMIOS_H
+	if (tcgetattr(fd, &tio_save) < 0)
+	{
+		#if HAVE_ERRNO_H
+		perror("tcgetattr failed");
+		#endif
+		return -1;
+	}
+
+	tio_set = tio_save;
+	tio_set.c_cc[VMIN] = 1;				/* read 1 tty character at a time */
+	tio_set.c_cc[VTIME] = 0;			/* don't timeout the read */
+	tio_set.c_iflag |= IGNBRK;			/* ignore <ctrl>-c */
+	tio_set.c_lflag &= ~(ECHO|ICANON);	/* don't echo characters */
+
+	/* change the tty settings, and flush input characters */
+	if (tcsetattr(fd, TCSAFLUSH, &tio_set) < 0)
+	{
+		#if HAVE_ERRNO_H
+		perror("tcsetattr failed");
+		#endif
+		return -1;
+	}
+	#elif HAVE_TERMIO_H
 	if (ioctl(fd, TCGETA, &tio_save) < 0)
 	{
 		#if HAVE_ERRNO_H
@@ -656,7 +765,16 @@ static int entropy_ttybits(int fd, uint32* data, int size)
 	/* give the user 1 second to stop typing */
 	sleep(1);
 
-	#if HAVE_TERMIO_H
+	#if HAVE_TERMIOS_H
+	/* change the tty settings, and flush input characters */
+	if (tcsetattr(fd, TCSAFLUSH, &tio_save) < 0)
+	{
+		#if HAVE_ERRNO_H
+		perror("tcsetattr failed");
+		#endif
+		return -1;
+	}
+	#elif HAVE_TERMIO_H
 	/* restore the tty settings, and flush input characters */
 	if (ioctl(fd, TCSETAF, &tio_save) < 0)
 	{
@@ -1066,6 +1184,80 @@ int entropy_dev_random(uint32* data, int size)
 	mutex_unlock(&dev_random_lock);
 	# elif HAVE_PTHREAD_H
 	pthread_mutex_unlock(&dev_random_lock);
+	# else
+	#  error need locking mechanism
+	# endif
+	#endif
+	return 0;
+}
+#endif
+
+#if HAVE_DEV_URANDOM
+int entropy_dev_urandom(uint32* data, int size)
+{
+	#ifdef _REENTRANT
+	# if HAVE_SYNCH_H
+	if (mutex_lock(&dev_urandom_lock))
+		return -1;
+	# elif HAVE_PTHREAD_H
+	if (pthread_mutex_lock(&dev_urandom_lock))
+		return -1;
+	# else
+	#  error need locking mechanism
+	# endif
+	#endif
+
+	#if HAVE_SYS_STAT_H
+	if (statdevice(name_dev_urandom) < 0)
+	{
+		#ifdef _REENTRANT
+		# if HAVE_SYNCH_H
+		mutex_unlock(&dev_urandom_lock);
+		# elif HAVE_PTHREAD_H
+		pthread_mutex_unlock(&dev_urandom_lock);
+		# else
+		#  error need locking mechanism
+		# endif
+		#endif
+		return -1;
+	}
+	#endif
+	
+	if ((dev_urandom_fd = opendevice(name_dev_urandom)) < 0)
+	{
+		#ifdef _REENTRANT
+		# if HAVE_SYNCH_H
+		mutex_unlock(&dev_urandom_lock);
+		# elif HAVE_PTHREAD_H
+		pthread_mutex_unlock(&dev_urandom_lock);
+		# else
+		#  error need locking mechanism
+		# endif
+		#endif
+		return -1;
+	}
+
+	if (entropy_randombits(dev_urandom_fd, data, size) < 0)
+	{
+		close(dev_urandom_fd);
+		#ifdef _REENTRANT
+		# if HAVE_SYNCH_H
+		mutex_unlock(&dev_urandom_lock);
+		# elif HAVE_PTHREAD_H
+		pthread_mutex_unlock(&dev_urandom_lock);
+		# else
+		#  error need locking mechanism
+		# endif
+		#endif
+		return -1;
+	}
+
+	close(dev_urandom_fd);
+	#ifdef _REENTRANT
+	# if HAVE_SYNCH_H
+	mutex_unlock(&dev_urandom_lock);
+	# elif HAVE_PTHREAD_H
+	pthread_mutex_unlock(&dev_urandom_lock);
 	# else
 	#  error need locking mechanism
 	# endif

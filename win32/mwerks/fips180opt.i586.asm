@@ -100,7 +100,7 @@ subround4:	.macro b,c,d,e,w
 
 	.text
 
-	.align	4
+	.align	8
 	.globl _sha1Process
 
 _sha1Process:

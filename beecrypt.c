@@ -50,6 +50,8 @@ static entropySource entropySourceList[] =
 {
 #if WIN32
 	{ "wavein", entropy_wavein },
+	{ "console", entropy_console },
+	{ "wincrypt", entropy_wincrypt },
 #else
 # if HAVE_DEV_AUDIO
 	{ "audio", entropy_dev_audio },
@@ -59,6 +61,9 @@ static entropySource entropySourceList[] =
 # endif
 # if HAVE_DEV_RANDOM
 	{ "random", entropy_dev_random },
+# endif
+# if HAVE_DEV_URANDOM
+	{ "urandom", entropy_dev_urandom },
 # endif
 # if HAVE_DEV_TTY
 	{ "tty", entropy_dev_tty },
@@ -367,7 +372,7 @@ int keyedHashFunctionContextDigest(keyedHashFunctionContext* ctxt, mp32number* d
 
 static const blockCipher* blockCipherList[] =
 {
-	&blowfish,
+	&blowfish
 };
 
 #define BLOCKCIPHERS (sizeof(blockCipherList) / sizeof(blockCipher*))

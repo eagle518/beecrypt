@@ -11,12 +11,14 @@ The tests:
 Modular exponentiations, (1024 bits ^ 1024 bits) mod 1024 bits, 100 times, sorted according to speed (less is better)
 
 BeeCrypt 1.0.1/RedHat Linux 6.1    /Pentium III 600/256 MB:  4.4 sec
+BeeCrypt 1.0.2/Windows 2000        /Pentium III 450/128 MB:  5.8 sec
 BeeCrypt 1.0.1/Windows NT 4.0      /Pentium III 450/128 MB:  5.8 sec
 BeeCrypt 1.0.1/Windows 98          /Pentium III 450/128 MB:  5.8 sec
 BeeCrypt 1.0.1/RedHat Linux 6.2    /Pentium III 450/128 MB:  5.8 sec
 BeeCrypt 0.9.5/RedHat Linux 6.2    /Pentium III 450/128 MB:  7.5 sec
 BeeCrypt 1.0.0/Windows 98          /Pentium III 450/128 MB:  7.5 sec
-BeeCrypt 1.0.0/Windows 98          /Pentium III 350/128 MB:  9.5 sec
+BeeCrypt 1.0.0/Windows 98          /Pentium II  350/128 MB:  9.5 sec
+BeeCrypt 1.1.0/Darwin 1.0.2        /PowerPC 604 166/ 96 MB: 10.7 sec
 Java 1.2.2    /RedHat Linux 6.2    /Pentium III 450/128 MB: 11.6 sec
 BeeCrypt 1.0.1/LinuxPPC 2000       /PowerPC G3  250/ 96 MB: 14.8 sec
 BeeCrypt 1.0.0/RedHat Linux 6.1    /Pentium Pro 200/128 MB: 16.6 sec
@@ -29,8 +31,8 @@ BeeCrypt 1.0.1/Solaris 2.7         /UltraSparc  143/128 MB: 42.7 sec
 Java 1.2.2    /Windows NT 4.0      /Pentium Pro 200/128 MB: 48.8 sec
 Java 1.2.2    /Solaris 2.7         /UltraSparc  143/128 MB: 51.1 sec
 BeeCrypt 0.9.4/Solaris 2.7         /UltraSparc  143/128 MB: 56.5 sec
+BeeCrypt 1.1.0/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB: 67.8 sec
 BeeCrypt 1.0.1/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB: 68.2 sec
-BeeCrypt 0.9.5/Yellow Dog Linux 1.2/PowerPC 601  90/ 40 MB: 88.9 sec
 
 Remarks: both on Solaris and Linux, beecrypt is least 5 times faster for this operation than a commercial product we at one time considered using.
 

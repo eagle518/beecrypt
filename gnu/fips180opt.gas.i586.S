@@ -1,30 +1,31 @@
-#
-# fips180opt.gas.i586.asm
-#
-# Assembler optimized SHA-1 routines for Intel Pentium processors
-#
-# Compile target is GNU AS
-#
-# Copyright (c) 2000 Virtual Unlimited B.V.
-#
-# Author: Bob Deblier <bob@virtualunlimited.com>
-#
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-#
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
+/*
+ * fips180opt.gas.i586.S
+ *
+ * Assembler optimized SHA-1 routines for Intel Pentium processors
+ *
+ * Compile target is GNU AS
+ *
+ * Copyright (c) 2000 Virtual Unlimited B.V.
+ *
+ * Author: Bob Deblier <bob@virtualunlimited.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
 
-	.file "fips180opt.gas.i586.s"
+	.file "fips180opt.gas.i586.S"
 
 	.text
 
@@ -102,10 +103,20 @@
 	.endm
 
 	.align	4
-	.globl	sha1Process
+#if defined(CYGWIN)
+	.globl	_sha1Process
+	.def	_sha1Process
+	.scl	2
+	.type	32
+	.endef
+
+_sha1Process:
+#else
+	.global	sha1Process
 	.type	sha1Process,@function
 
 sha1Process:
+#endif
 	pushl %edi
 	pushl %esi
 	pushl %ebx
@@ -272,7 +283,7 @@ sha1Process:
 	subround4 16(%ebp),   %ebx ,  4(%ebp),  8(%ebp), 8
 	subround4 12(%ebp),   %ebx ,   (%ebp),  4(%ebp), 12
 	subround4  8(%ebp),   %ebx , 16(%ebp),   (%ebp), 16
-	# addl $20,%edi
+	/* addl $20,%edi */
 
 	movl $4,%ecx
 

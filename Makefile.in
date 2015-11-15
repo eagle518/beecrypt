@@ -20,18 +20,42 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 # 
 
-PRODUCT=@PRODUCT@
-VERSION=@VERSION@
+SHELL=/bin/sh
+
+.SUFFIXES:
+.SUFFIXES: .S .c .o
+
+COMPILE.S = $(CPP) $(CPPFLAGS) $< | $(AS) $(ASFLAGS) -o $@
+
+COMPILE.c = $(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+.S.o:
+	$(COMPILE.S)
+
+.c.o:
+	$(COMPILE.c)
+
+PRODUCT = @PRODUCT@
+VERSION = @VERSION@
 
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 
 CC = @CC@
-CFLAGS = @CFLAGS@ @DEFS@ -I${srcdir}
-LDFLAGS = @LDFLAGS@ @LIBS@
+CPP = @CPP@
+
+ASFLAGS = @CONFASFLAGS@
+CFLAGS = @CONFCFLAGS@
+CPPFLAGS = @DEFS@ @CONFCPPFLAGS@ -I. -I${srcdir}
+LDFLAGS = @CONFLDFLAGS@ @LIBS@
+
+JAVAGLUE = @JAVAGLUE@
+JNIFLAGS = @JNIFLAGS@
 
 TARGET_OS = @target_os@
 TARGET_CPU = @target_cpu@
+
+VPATH = @srcdir@
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -56,6 +80,7 @@ OBJFILES = \
 	fips180.o \
 	fips180opt.o \
 	fips186.o \
+	$(JAVAGLUE) \
 	hmac.o \
 	mp32.o \
 	mp32barrett.o \
@@ -87,6 +112,7 @@ DISTFILES = \
 	fips180opt.h fips180opt.c \
 	fips186.h fips186.c \
 	hmac.h hmac.c \
+	javaglue.h javaglue.c \
 	mp32barrett.h mp32barrett.c \
 	mp32.h mp32.c \
 	mp32number.h mp32number.c \
@@ -96,9 +122,10 @@ DISTFILES = \
 	sha1hmac.h sha1hmac.c \
 	timestamp.h timestamp.c \
 	gnu/config.gnu.h.in \
-	gnu/blowfishopt.gas.i586.s gnu/fips180opt.gas.i586.s gnu/mp32opt.gas.i386.s \
-	gnu/mp32opt.gas.powerpc.s \
-	gnu/mp32opt.gas.sparcv9.s \
+	gnu/blowfishopt.gas.i586.S gnu/fips180opt.gas.i586.S gnu/mp32opt.gas.i386.S \
+	gnu/mp32opt.gas.ia64.S \
+	gnu/mp32opt.gas.powerpc.S \
+	gnu/mp32opt.gas.sparcv9.S \
 	beecrypt.mcp \
 	win32/config.win.h \
 	win32/beecrypt.dll.c win32/beecrypt.rc win32/beecrypt.def \
@@ -110,86 +137,51 @@ LIBBEECRYPT = libbeecrypt.so
 
 all: $(LIBBEECRYPT)
 
-ifeq '$(TARGET_CPU)' 'sparcv8plus'
-mp32opt.o: gnu/mp32opt.gas.sparcv9.s
-	$(AS) -Av8plus -KPIC -o $@ gnu/mp32opt.gas.sparcv9.s
-endif
+javaglue.o: javaglue.c
+	$(COMPILE.c) $(JNIFLAGS)
 
-ifeq '$(TARGET_CPU)' 'sparcv9'
-mp32opt.o: gnu/mp32opt.gas.sparcv9.s
-	$(AS) -Av9 -KPIC -o $@ gnu/mp32opt.gas.sparcv9.s
-endif
+@BLOWFISHOPTDEP@
+	@BLOWFISHOPTRULE@
 
-ifeq '$(TARGET_CPU)' 'i386'
-mp32opt.o: gnu/mp32opt.gas.i386.s
-	$(AS) -o $@ gnu/mp32opt.gas.i386.s
-endif
+@FIPS180OPTDEP@
+	@FIPS180OPTRULE@
 
-ifeq '$(TARGET_CPU)' 'i486'
-mp32opt.o: gnu/mp32opt.gas.i386.s
-	$(AS) -o $@ gnu/mp32opt.gas.i386.s
-endif
-
-ifeq '$(TARGET_CPU)' 'i586'
-blowfishopt.o: gnu/blowfishopt.gas.i586.s
-	$(AS) -o $@ gnu/blowfishopt.gas.i586.s
-
-fips180opt.o: gnu/fips180opt.gas.i586.s
-	$(AS) -o $@ gnu/fips180opt.gas.i586.s
-
-mp32opt.o: gnu/mp32opt.gas.i386.s
-	$(AS) -o $@ gnu/mp32opt.gas.i386.s
-endif
-
-ifeq '$(TARGET_CPU)' 'i686' 
-blowfishopt.o: gnu/blowfishopt.gas.i586.s
-	$(AS) -o $@ gnu/blowfishopt.gas.i586.s
-
-fips180opt.o: gnu/fips180opt.gas.i586.s
-	$(AS) -o $@ gnu/fips180opt.gas.i586.s
-
-mp32opt.o: gnu/mp32opt.gas.i386.s
-	$(AS) -o $@ gnu/mp32opt.gas.i386.s
-endif
-
-ifeq '$(TARGET_CPU)' 'powerpc'
-mp32opt.o: gnu/mp32opt.gas.powerpc.s
-	$(AS) -o $@ gnu/mp32opt.gas.powerpc.s
-endif
+@MP32OPTDEP@
+	@MP32OPTRULE@
 
 $(LIBBEECRYPT): $(OBJFILES)
 	$(LD) -G -o $@ $(OBJFILES)
 
 install: $(LIBBEECRYPT)
-	$(INSTALL) -d $(libdir)
-	$(INSTALL) $(LIBBEECRYPT) $(libdir)
+	$(INSTALL) -d ${libdir}
+	$(INSTALL) $(LIBBEECRYPT) ${libdir}
 
 install-headers:
-	$(INSTALL) -d $(includedir)/beecrypt
-	$(INSTALL_DATA) base64.h $(includedir)/beecrypt
-	$(INSTALL_DATA) beecrypt.h $(includedir)/beecrypt
-	$(INSTALL_DATA) blockmode.h $(includedir)/beecrypt
-	$(INSTALL_DATA) blowfish.h $(includedir)/beecrypt
-	$(INSTALL_DATA) blowfishopt.h $(includedir)/beecrypt
-	$(INSTALL_DATA) dldp.h $(includedir)/beecrypt
-	$(INSTALL_DATA) dlkp.h $(includedir)/beecrypt
-	$(INSTALL_DATA) dlpk.h $(includedir)/beecrypt
-	$(INSTALL_DATA) dlsvdp-dh.h $(includedir)/beecrypt
-	$(INSTALL_DATA) elgamal.h $(includedir)/beecrypt
-	$(INSTALL_DATA) endianness.h $(includedir)/beecrypt
-	$(INSTALL_DATA) entropy.h $(includedir)/beecrypt
-	$(INSTALL_DATA) fips180.h $(includedir)/beecrypt
-	$(INSTALL_DATA) fips180opt.h $(includedir)/beecrypt
-	$(INSTALL_DATA) fips186.h $(includedir)/beecrypt
-	$(INSTALL_DATA) hmac.h $(includedir)/beecrypt
-	$(INSTALL_DATA) mp32.h $(includedir)/beecrypt
-	$(INSTALL_DATA) mp32barrett.h $(includedir)/beecrypt
-	$(INSTALL_DATA) mp32number.h $(includedir)/beecrypt
-	$(INSTALL_DATA) mp32opt.h $(includedir)/beecrypt
-	$(INSTALL_DATA) mp32prime.h $(includedir)/beecrypt
-	$(INSTALL_DATA) mtprng.h $(includedir)/beecrypt
-	$(INSTALL_DATA) sha1hmac.h $(includedir)/beecrypt
-	$(INSTALL_DATA) timestamp.h $(includedir)/beecrypt
+	$(INSTALL) -d ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/base64.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/beecrypt.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/blockmode.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/blowfish.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/blowfishopt.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/dldp.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/dlkp.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/dlpk.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/dlsvdp-dh.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/elgamal.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/endianness.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/entropy.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/fips180.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/fips180opt.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/fips186.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/hmac.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/mp32.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/mp32barrett.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/mp32number.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/mp32opt.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/mp32prime.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/mtprng.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/sha1hmac.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/timestamp.h ${includedir}/beecrypt
 
 beetest: beetest.o
 	$(CC) -o $@ beetest.o $(LDFLAGS) -L${libdir} -lbeecrypt
@@ -208,6 +200,15 @@ dist: $(DISTFILES)
 	@chmod -R a+r $(PRODUCT)-$(VERSION)
 	@tar chozf $(PRODUCT)-$(VERSION).tar.gz $(PRODUCT)-$(VERSION)
 	@rm -rf $(PRODUCT)-$(VERSION)
+
+tarball: $(DISTFILES)
+	@rm -rf $(PRODUCT)
+	@mkdir $(PRODUCT)
+	@chmod 777 $(PRODUCT)
+	@tar cf - $(DISTFILES) | (cd $(PRODUCT) && tar xf - )
+	@chmod -R a+r $(PRODUCT)
+	@tar chozf $(PRODUCT).tar.gz $(PRODUCT)
+	@rm -rf $(PRODUCT)
 
 depend:
 	makedepend -I${srcdir} *.c

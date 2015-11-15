@@ -38,7 +38,7 @@ void mp32zero(register uint32 xsize, register uint32* xdata)
 #endif
 
 #ifndef ASM_MP32FILL
-void mp32fill(register uint32 xsize, register uint32* xdata, uint32 val)
+void mp32fill(register uint32 xsize, register uint32* xdata, register uint32 val)
 {
 	while (xsize--)
 		*(xdata++) = val;
@@ -593,23 +593,8 @@ uint32 mp32addmul(register uint32 size, register uint32* result, register const 
 #ifndef ASM_MP32MUL
 void mp32mul(uint32* result, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
 {
-	if (xsize <= ysize)
-	{
-		register uint32 rc;
-
-		result += xsize;
-		xdata += xsize;
-
-		rc = mp32setmul(ysize, result, ydata, *(--xdata));
-		*(--result) = rc;
-
-		while (--xsize)
-		{
-			rc = mp32addmul(ysize, result, ydata, *(--xdata));
-			*(--result) = rc;
-		}
-	}
-	else
+	/* preferred passing of parameters is x the larger of the two numbers */
+	if (xsize >= ysize)
 	{
 		register uint32 rc;
 
@@ -622,6 +607,22 @@ void mp32mul(uint32* result, uint32 xsize, const uint32* xdata, uint32 ysize, co
 		while (--ysize)
 		{
 			rc = mp32addmul(xsize, result, xdata, *(--ydata));
+			*(--result) = rc;
+		}
+	}
+	else
+	{
+		register uint32 rc;
+
+		result += xsize;
+		xdata += xsize;
+
+		rc = mp32setmul(ysize, result, ydata, *(--xdata));
+		*(--result) = rc;
+
+		while (--xsize)
+		{
+			rc = mp32addmul(ysize, result, ydata, *(--xdata));
 			*(--result) = rc;
 		}
 	}
