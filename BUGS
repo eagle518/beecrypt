@@ -2,6 +2,10 @@ Legend:
 	- = open bug
 	* = fixed bug
 
+3.1.0:
+	* Error in final result computation of mpextgcd_w in certain circumstances.
+	* PowerPC 64-bit assembler symbols aren't defined according to LSB 1.3.
+	
 3.0.0:
 	- Can't seem to generate 64-bit shared libraries on AIX; use
 	  --disable-shared on this platform for now.

@@ -32,7 +32,11 @@
 #ifndef _DSA_H
 #define _DSA_H
 
-#include "mpbarrett.h"
+#include "dlkp.h"
+
+typedef dldp_p dsaparam;
+typedef dlpk_p dsapub;
+typedef dlkp_p dsakp;
 
 #ifdef __cplusplus
 extern "C" {

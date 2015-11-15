@@ -89,7 +89,8 @@ void mpncopy(mpnumber* n, const mpnumber* copy)
 
 void mpnwipe(mpnumber* n)
 {
-	mpzero(n->size, n->data);
+	if (n->data != (mpw*) 0)
+		mpzero(n->size, n->data);
 }
 
 void mpnset(mpnumber* n, size_t size, const mpw* data)

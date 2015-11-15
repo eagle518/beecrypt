@@ -26,7 +26,9 @@ AUTOMAKE_OPTIONS = gnu no-dependencies
 
 BEECRYPT_JAVA_OBJECTS = javaglue.lo
 
-lib_LTLIBRARIES = libbeecrypt_java.la
+libaltdir=$(prefix)/lib@LIBALT@
+
+libalt_LTLIBRARIES = libbeecrypt_java.la
 
 noinst_HEADERS = javaglue.h
 

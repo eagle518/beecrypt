@@ -179,37 +179,27 @@ INCLUDES = -I. \
 
 noinst_HEADERS = mpw-py.h rng-py.h
 
-mylibs = $(top_builddir)/.libs/libbeecrypt.so
+mylibs = $(top_builddir)/libbeecrypt.la
 
 LDADD = 
 
 pythondir = $(pylibdir)/site-packages
-python_PROGRAMS = _bc.so
+python_LTLIBRARIES = _bc.la
 
-_bc_so_SOURCES = 
-_bc_so_LDFLAGS = $(mylibs) $(LIBS) -shared -Wl,-soname,_bc.so
-
-noinst_LTLIBRARIES = libbc.la
-libbc_la_SOURCES = _bc-py.c mpw-py.c rng-py.c
+_bc_la_SOURCES = _bc-py.c mpw-py.c rng-py.c
+_bc_la_LDFLAGS = -avoid-version -module
+_bc_la_LIBADD = $(mylibs)
 
 splint_srcs = _bc-py.c $(libbc_la_sources)
 subdir = python
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-LTLIBRARIES = $(noinst_LTLIBRARIES)
+LTLIBRARIES = $(python_LTLIBRARIES)
 
-libbc_la_LDFLAGS =
-libbc_la_LIBADD =
-am_libbc_la_OBJECTS = _bc-py.lo mpw-py.lo rng-py.lo
-libbc_la_OBJECTS = $(am_libbc_la_OBJECTS)
-python_PROGRAMS = _bc.so$(EXEEXT)
-PROGRAMS = $(python_PROGRAMS)
-
-am__bc_so_OBJECTS =
-_bc_so_OBJECTS = $(am__bc_so_OBJECTS)
-_bc_so_LDADD = $(LDADD)
-_bc_so_DEPENDENCIES =
+_bc_la_DEPENDENCIES = $(top_builddir)/libbeecrypt.la
+am__bc_la_OBJECTS = _bc-py.lo mpw-py.lo rng-py.lo
+_bc_la_OBJECTS = $(am__bc_la_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -223,7 +213,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(libbc_la_SOURCES) $(_bc_so_SOURCES)
+DIST_SOURCES = $(_bc_la_SOURCES)
 HEADERS = $(noinst_HEADERS)
 
 
@@ -234,7 +224,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = $(noinst_HEADERS) Makefile.am Makefile.in
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(libbc_la_SOURCES) $(_bc_so_SOURCES)
+SOURCES = $(_bc_la_SOURCES)
 
 all: all-recursive
 
@@ -245,46 +235,36 @@ $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	  $(AUTOMAKE) --foreign  python/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
+pythonLTLIBRARIES_INSTALL = $(INSTALL)
+install-pythonLTLIBRARIES: $(python_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(pythondir)
+	@list='$(python_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f="`echo $$p | sed -e 's|^.*/||'`"; \
+	    echo " $(LIBTOOL) --mode=install $(pythonLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(pythondir)/$$f"; \
+	    $(LIBTOOL) --mode=install $(pythonLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(pythondir)/$$f; \
+	  else :; fi; \
+	done
 
-clean-noinstLTLIBRARIES:
-	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
-	@list='$(noinst_LTLIBRARIES)'; for p in $$list; do \
+uninstall-pythonLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(python_LTLIBRARIES)'; for p in $$list; do \
+	    p="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(pythondir)/$$p"; \
+	  $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(pythondir)/$$p; \
+	done
+
+clean-pythonLTLIBRARIES:
+	-test -z "$(python_LTLIBRARIES)" || rm -f $(python_LTLIBRARIES)
+	@list='$(python_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" = "$$p" && dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libbc.la: $(libbc_la_OBJECTS) $(libbc_la_DEPENDENCIES) 
-	$(LINK)  $(libbc_la_LDFLAGS) $(libbc_la_OBJECTS) $(libbc_la_LIBADD) $(LIBS)
-pythonPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-install-pythonPROGRAMS: $(python_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(pythondir)
-	@list='$(python_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	     || test -f $$p1 \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(pythonPROGRAMS_INSTALL) $$p $(DESTDIR)$(pythondir)/$$f"; \
-	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(pythonPROGRAMS_INSTALL) $$p $(DESTDIR)$(pythondir)/$$f || exit 1; \
-	  else :; fi; \
-	done
-
-uninstall-pythonPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(python_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f $(DESTDIR)$(pythondir)/$$f"; \
-	  rm -f $(DESTDIR)$(pythondir)/$$f; \
-	done
-
-clean-pythonPROGRAMS:
-	@list='$(python_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
-	done
+_bc.la: $(_bc_la_OBJECTS) $(_bc_la_DEPENDENCIES) 
+	$(LINK) -rpath $(pythondir) $(_bc_la_LDFLAGS) $(_bc_la_OBJECTS) $(_bc_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -506,7 +486,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
 	$(mkinstalldirs) $(DESTDIR)$(pythondir)
@@ -537,8 +517,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	clean-pythonPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-libtool clean-pythonLTLIBRARIES \
+	mostlyclean-am
 
 distclean: distclean-recursive
 
@@ -553,7 +533,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-pythonPROGRAMS
+install-data-am: install-pythonLTLIBRARIES
 
 install-exec-am:
 
@@ -580,32 +560,29 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-pythonPROGRAMS
+uninstall-am: uninstall-info-am uninstall-pythonLTLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am clean \
-	clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	clean-pythonPROGRAMS clean-recursive ctags ctags-recursive \
-	distclean distclean-compile distclean-depend distclean-generic \
+	clean-generic clean-libtool clean-pythonLTLIBRARIES \
+	clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-depend distclean-generic \
 	distclean-libtool distclean-recursive distclean-tags distdir \
 	dvi dvi-am dvi-recursive info info-am info-recursive install \
 	install-am install-data install-data-am install-data-recursive \
 	install-exec install-exec-am install-exec-recursive \
 	install-info install-info-am install-info-recursive install-man \
-	install-pythonPROGRAMS install-recursive install-strip \
+	install-pythonLTLIBRARIES install-recursive install-strip \
 	installcheck installcheck-am installdirs installdirs-am \
 	installdirs-recursive maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
 	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
 	tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-pythonPROGRAMS \
+	uninstall-info-recursive uninstall-pythonLTLIBRARIES \
 	uninstall-recursive
 
-
-_bc.so$(EXEEXT): $(libbc_la_OBJECTS)
-	$(LINK) -o $@ $(libbc_la_OBJECTS) $(_bc_so_LDFLAGS)
 
 .PHONY:	lint
 lint:

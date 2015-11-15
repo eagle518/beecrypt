@@ -110,6 +110,12 @@ void mpbcopy(mpbarrett* b, const mpbarrett* copy)
 	}
 }
 
+void mpbwipe(mpbarrett* b)
+{
+	if (b->modl != (mpw*) 0)
+		mpzero(2*(b->size)+1, b->modl);
+}
+
 /*
  * mpbset
  */

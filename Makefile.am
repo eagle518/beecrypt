@@ -28,8 +28,8 @@
 # 3. Interfaces removed (bad): Increment CURRENT, set AGE and REVISION to 0.
 #
 
-LIBBEECRYPT_LT_CURRENT = 6
-LIBBEECRYPT_LT_AGE = 0
+LIBBEECRYPT_LT_CURRENT = 8
+LIBBEECRYPT_LT_AGE = 2
 LIBBEECRYPT_LT_REVISION = 0
 
 AUTOMAKE_OPTIONS = gnu check-news no-dependencies
@@ -59,7 +59,7 @@ pkginclude_HEADERS = aes.h aesopt.h base64.h beecrypt.h beecrypt.api.h beecrypt.
 
 noinst_HEADERS = aes_be.h aes_le.h
 
-EXTRA_DIST = BENCHMARKS BUGS CONTRIBUTORS README.DLL README.WIN32 beecrypt.rc autogen.sh Makefile.mak
+EXTRA_DIST = BENCHMARKS BUGS CONTRIBUTORS README.DLL README.WIN32 Doxyheader beecrypt.rc autogen.sh Makefile.mak
 
 DISTCLEANFILES = mpopt.s aesopt.s blowfishopt.s sha1opt.s
 

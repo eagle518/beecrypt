@@ -160,13 +160,20 @@ int rsakpInit(rsakp* kp)
 
 int rsakpFree(rsakp* kp)
 {
+	/* wipe all secret key components */
 	mpbfree(&kp->n);
 	mpnfree(&kp->e);
+	mpnwipe(&kp->d);
 	mpnfree(&kp->d);
+	mpbwipe(&kp->p);
 	mpbfree(&kp->p);
+	mpbwipe(&kp->q);
 	mpbfree(&kp->q);
+	mpnwipe(&kp->d1);
 	mpnfree(&kp->d1);
+	mpnwipe(&kp->d2);
 	mpnfree(&kp->d2);
+	mpnwipe(&kp->c);
 	mpnfree(&kp->c);
 
 	return 0;

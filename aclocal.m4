@@ -329,11 +329,8 @@ AC_DEFUN(BEECRYPT_GNU_CC,[
     pentium*)
       CFLAGS="$CFLAGS -march=$bc_target_arch"
       ;;
-    powerpc)
-      CFLAGS="$CFLAGS -mcpu=powerpc"
-      ;;
-    powerpc64)
-      CFLAGS="$CFLAGS -mcpu=powerpc64"
+    powerpc | powerpc64)
+      CFLAGS="$CFLAGS -mcpu=$bc_target_arch"
       ;;
     sparcv8)
       CFLAGS="$CFLAGS -mv8"
@@ -582,6 +579,8 @@ AC_DEFUN(BEECRYPT_ASM_ALIGN,[
   AC_CACHE_CHECK([how to align symbols],
     bc_cv_asm_align,[
       case $target_cpu in
+      alpha*)
+        bc_cv_asm_align=".align 5" ;;
       i[[3456]]86 | athlon*)
         bc_cv_asm_align=".align 4" ;;
       ia64)
@@ -592,6 +591,8 @@ AC_DEFUN(BEECRYPT_ASM_ALIGN,[
         bc_cv_asm_align=".align 4" ;;
       sparc*)
         bc_cv_asm_align=".align 4" ;;
+      x86_64)
+        bc_cv_asm_align=".align 16" ;;
       esac
     ])
   AC_SUBST(ASM_ALIGN,$bc_cv_asm_align)

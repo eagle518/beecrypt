@@ -1,3 +1,8 @@
+3.1.0:
+	- Added wiping of private key components of keypairs before freeing.
+	- Fixed bug in mpextgcd_w which sometimes returned incorrect result.
+	- Fixed error in PowerPC 64-bit assembler symbol definitions.
+
 3.0.0:
 	- Cleaned up installed header files.
 	- Modified the API so that all keys can be passed as arrays of bytes.

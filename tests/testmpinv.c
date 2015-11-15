@@ -26,45 +26,71 @@
 #include <stdio.h>
 
 #include "beecrypt.h"
-#include "mpbarrett.h"
+#include "mpnumber.h"
 
-static const char* dsa_q		= "c773218c737ec8ee993b4f2ded30f48edace915f";
-static const char* dsa_k		= "358dad571462710f50e254cf1a376b2bdeaadfbf";
-static const char* dsa_inv_k	= "0d5167298202e49b4116ac104fc3f415ae52f917";
+struct vector
+{
+	const char* m;
+	const char* k;
+	const char* inv_k;
+};
+
+#define NVECTORS	4
+
+struct vector table[NVECTORS] = {
+	{	"c773218c737ec8ee993b4f2ded30f48edace915f",
+		"358dad571462710f50e254cf1a376b2bdeaadfbf",
+		"0d5167298202e49b4116ac104fc3f415ae52f917" },
+	{	"fe95df16069b516859ba036ef0e563a7b6a86409",
+		"eedd5539e982b570a5f8efc73f243a04f312920d",
+		"f64a00a9ce43f4128e5eee1991b2e08c6008ba4e" },
+	{	"fe95df16069b516859ba036ef0e563a7b6a86409",
+		"d75f6d17eb243613eacc0dcbb41db4e5a3364b07",
+		"e90aa0a992ebd4c9176f0e20a885101218111a73" },
+	{	"fe95df16069b516859ba036ef0e563a7b6a86409",
+		"759ea04b65f66184af22fcabfe99a1cda3a79236",
+		"2c701a52078afe539a281cba7f35df34a7a125a4" }
+};
 
 int main()
 {
-	int failures = 0;
+	int i, failures = 0;
 
-	mpnumber q;
+	mpnumber m;
 	mpnumber k;
 	mpnumber inv_k;
 	mpnumber inv;
 
-	mpnzero(&q);
+	mpnzero(&m);
 	mpnzero(&k);
 	mpnzero(&inv_k);
 	mpnzero(&inv);
 
-	mpnsethex(&q, dsa_q);
-	mpnsethex(&k, dsa_k);
-	mpnsethex(&inv_k, dsa_inv_k);
-
-	if (mpninv(&inv, &k, &q))
+	for (i = 0; i < NVECTORS; i++)
 	{
-		if (mpnex(inv.size, inv.data, inv_k.size, inv_k.data))
+		mpnsethex(&m, table[i].m);
+		mpnsethex(&k, table[i].k);
+		mpnsethex(&inv_k, table[i].inv_k);
+
+		if (mpninv(&inv, &k, &m))
 		{
-			printf("mpninv return unexpected result\n");
-			mpprintln(inv_k.size, inv_k.data);
-			mpprintln(inv.size, inv.data);
+			if (mpnex(inv.size, inv.data, inv_k.size, inv_k.data))
+			{
+				printf("mpninv return unexpected result\n");
+				failures++;
+			}
+		}
+		else
+		{
+			printf("mpninv failed\n");
 			failures++;
 		}
 	}
-	else
-	{
-		printf("mpninv failed\n");
-		failures++;
-	}
+
+	mpnfree(&m);
+	mpnfree(&k);
+	mpnfree(&inv_k);
+	mpnfree(&inv);
 
 	return failures;
 }

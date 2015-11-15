@@ -1214,12 +1214,12 @@ int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ndata, mpw* result, mpw
 			{
 				if (result)
 				{
-					mpsetx(size, result, sizep, ddata);
 					if (*ddata & MP_MSBMASK)
 					{
 						/* keep adding the modulus until we get a carry */
-						while (!mpadd(size, result, ndata));
+						while (!mpaddx(sizep, ddata, size, ndata));
 					} 
+					mpsetx(size, result, sizep, ddata);
 				}
 				return 1; 
 			}   

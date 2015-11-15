@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([beecrypt],[3.0.0],[bob.deblier@pandora.be])
+AC_INIT([beecrypt],[3.1.0],[bob.deblier@pandora.be])
 AM_INIT_AUTOMAKE
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR(beecrypt.h)
@@ -32,7 +32,7 @@ AC_ARG_WITH(cpu,[  --with-cpu              optimize for specific cpu],[
       ;;
     esac
     ;;
-  powerpc)
+  powerpc | powerpc64)
     case $withval in
     403 | 505 | \
     60[[1234]] | 60[[34]]e | 6[[23]]0 | \
@@ -46,7 +46,7 @@ AC_ARG_WITH(cpu,[  --with-cpu              optimize for specific cpu],[
       ;;
     esac
     ;;
-  sparc)
+  sparc | sparc64)
     case $withval in
     sparcv8 | sparcv8plus | sparcv8plus[[ab]] | sparcv9 | sparcv9[[ab]])
       ;;
@@ -123,8 +123,11 @@ AC_ARG_WITH(arch,[  --with-arch             optimize for specific architecture (
   m68k)
     bc_target_arch=m68k
     ;;
-  powerpc*)
+  powerpc)
     bc_target_arch=powerpc
+    ;;
+  powerpc64)
+    bc_target_arch=powerpc64
     ;;
   s390x)
     bc_target_arch=s390x
@@ -524,6 +527,8 @@ EOF
               cygwin*)
                 ac_cv_java_include="-I$java_include -I$java_include/win32" ;;
               darwin*) ;;
+              hpux*)
+                ac_cv_java_include="-I$java_include -I$java_include/hpux" ;;
               linux*)
                 ac_cv_java_include="-I$java_include -I$java_include/linux" ;;
               osf*)

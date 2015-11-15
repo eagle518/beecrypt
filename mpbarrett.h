@@ -48,6 +48,8 @@ BEECRYPTAPI
 void mpbfree(mpbarrett*);
 BEECRYPTAPI
 void mpbcopy(mpbarrett*, const mpbarrett*);
+BEECRYPTAPI
+void mpbwipe(mpbarrett*);
 
 BEECRYPTAPI
 void mpbset(mpbarrett*, size_t, const mpw*);

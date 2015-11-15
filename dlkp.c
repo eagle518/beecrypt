@@ -60,6 +60,8 @@ int dlkp_pFree(dlkp_p* kp)
 		return -1;
 
 	mpnfree(&kp->y);
+	/* wipe secret key before freeing */
+	mpnwipe(&kp->x);
 	mpnfree(&kp->x);
 
 	return 0;
