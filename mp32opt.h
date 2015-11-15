@@ -76,7 +76,7 @@ extern "C" {
 #define ASM_MP32SUB
 #define ASM_MP32SETMUL
 #define ASM_MP32ADDMUL
-#undef ASM_MP32ADDSQRTRC
+#define ASM_MP32ADDSQRTRC
 # endif
 #endif
 

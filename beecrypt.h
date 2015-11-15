@@ -29,6 +29,8 @@
 # include "config.h"
 #endif
 
+#include "mp32number.h"
+
 typedef struct
 {
 	int		size;
@@ -317,6 +319,16 @@ BEEDLLAPI
 void hashFunctionContextInit(hashFunctionContext*, const hashFunction*);
 BEEDLLAPI
 void hashFunctionContextFree(hashFunctionContext*);
+BEEDLLAPI
+int hashFunctionContextReset(hashFunctionContext*);
+BEEDLLAPI
+int hashFunctionContextUpdate(hashFunctionContext*, const byte*, int);
+BEEDLLAPI
+int hashFunctionContextUpdateMC(hashFunctionContext*, const memchunk*);
+BEEDLLAPI
+int hashFunctionContextUpdateMP32(hashFunctionContext*, const mp32number*);
+BEEDLLAPI
+int hashFunctionContextDigest(hashFunctionContext*, mp32number*);
 
 #ifdef __cplusplus
 }
@@ -443,6 +455,18 @@ BEEDLLAPI
 void keyedHashFunctionContextInit(keyedHashFunctionContext*, const keyedHashFunction*);
 BEEDLLAPI
 void keyedHashFunctionContextFree(keyedHashFunctionContext*);
+BEEDLLAPI
+int keyedHashFunctionContextSetup(keyedHashFunctionContext*, const uint32*, int);
+BEEDLLAPI
+int keyedHashFunctionContextReset(keyedHashFunctionContext*);
+BEEDLLAPI
+int keyedHashFunctionContextUpdate(keyedHashFunctionContext*, const byte*, int);
+BEEDLLAPI
+int keyedHashFunctionContextUpdateMC(keyedHashFunctionContext*, const memchunk*);
+BEEDLLAPI
+int keyedHashFunctionContextUpdateMP32(keyedHashFunctionContext*, const mp32number*);
+BEEDLLAPI
+int keyedHashFunctionContextDigest(keyedHashFunctionContext*, mp32number*);
 
 #ifdef __cplusplus
 }

@@ -155,35 +155,30 @@ mp32addmul:
 	retl
 	nop
 
-.if 0
-	# not finished !
 	.align	4
 	.globl	mp32addsqrtrc
 	.type	mp32addsqrtrc,@function
 
 mp32addsqrtrc:
 	sll %o0,2,%g1
-	add %o1,%g1,%o1
 	sub %g1,4,%g1
+	add %o1,%g1,%o1
 	add %o1,%g1,%o1
 	mov %g0,%o0
 
 .L60:
+	# load from o1 into g4 as xuint; simulate xuint carry by doing an xuint comparison; carry if result smaller than initial value
 	lduw [%o2+%g1],%g2
-	lduw [%o1],%g4
-	mulx %g2,%g2,%g3
-	add %o0,%g3,%o0
-	add %o0,%g4,%o0
-	stw %o0,[%o1]
-	sub %o1,4,%o1
-	srlx %o0,32,%o0
-	lduw [%o1],%g4
-	add %o0,%g4,%g0
-	stw %o0,[%o1]
-	sub %o1,4,%o1
-	srlx %o0,32,%o0
+	ldx [%o1],%g4
+	mulx %g2,%g2,%g2
+	add %o0,%g4,%g3
+	add %g3,%g2,%g3
+	cmp %g4,%g3
+	or %g0,0,%o0
+	movgu %xcc,1,%o0
+	stx %g3,[%o1]
+	sub %o1,8,%o1
 	brnz,pt %g1,.L60
 	sub %g1,4,%g1
 	retl
 	nop
-.endif

@@ -30,6 +30,9 @@
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
@@ -210,6 +213,55 @@ void hashFunctionContextFree(hashFunctionContext* ctxt)
 	free(ctxt->param);
 }
 
+int hashFunctionContextReset(hashFunctionContext* ctxt)
+{
+	return ctxt->hash->reset(ctxt->param);
+}
+
+int hashFunctionContextUpdate(hashFunctionContext* ctxt, const byte* data, int size)
+{
+	return ctxt->hash->update(ctxt->param, data, size);
+}
+
+int hashFunctionContextUpdateMC(hashFunctionContext* ctxt, const memchunk* m)
+{
+	return ctxt->hash->update(ctxt->param, m->data, m->size);
+}
+
+int hashFunctionContextUpdateMP32(hashFunctionContext* ctxt, const mp32number* n)
+{
+	register int rc;
+	#if HAVE_ALLOCA
+	byte* temp = (byte*) alloca((n->size << 2) + 1);
+	#else
+	byte* temp = (byte*) malloc((n->size << 2) + 1);
+	#endif
+
+	if (mp32msbset(n->size, n->data))
+	{
+		temp[0] = 0;
+		encodeInts((javaint*) n->data, temp+1, n->size);
+		rc = ctxt->hash->update(ctxt->param, temp, (n->size << 2) + 1);
+	}
+	else
+	{
+		encodeInts((javaint*) n->data, temp, n->size);
+		rc = ctxt->hash->update(ctxt->param, temp, n->size << 2);
+	}
+	#if !HAVE_ALLOCA
+	free(temp);
+	#endif
+
+	return rc;
+}
+
+int hashFunctionContextDigest(hashFunctionContext* ctxt, mp32number* dig)
+{
+	mp32nsize(dig, (ctxt->hash->digestsize + 3) >> 2);
+
+	return ctxt->hash->digest(ctxt->param, dig->data);
+}
+
 
 static const keyedHashFunction* keyedHashFunctionList[] =
 {
@@ -261,6 +313,55 @@ void keyedHashFunctionContextInit(keyedHashFunctionContext* ctxt, const keyedHas
 void keyedHashFunctionContextFree(keyedHashFunctionContext* ctxt)
 {
 	free(ctxt->param);
+}
+
+int keyedHashFunctionContextReset(keyedHashFunctionContext* ctxt)
+{
+	return ctxt->hash->reset(ctxt->param);
+}
+
+int keyedHashFunctionContextUpdate(keyedHashFunctionContext* ctxt, const byte* data, int size)
+{
+	return ctxt->hash->update(ctxt->param, data, size);
+}
+
+int keyedHashFunctionContextUpdateMC(keyedHashFunctionContext* ctxt, const memchunk* m)
+{
+	return ctxt->hash->update(ctxt->param, m->data, m->size);
+}
+
+int keyedHashFunctionContextUpdateMP32(keyedHashFunctionContext* ctxt, const mp32number* n)
+{
+	register int rc;
+	#if HAVE_ALLOCA
+	byte* temp = (byte*) alloca((n->size << 2) + 1);
+	#else
+	byte* temp = (byte*) malloc((n->size << 2) + 1);
+	#endif
+
+	if (mp32msbset(n->size, n->data))
+	{
+		temp[0] = 0;
+		encodeInts((javaint*) n->data, temp+1, n->size);
+		rc = ctxt->hash->update(ctxt->param, temp, (n->size << 2) + 1);
+	}
+	else
+	{
+		encodeInts((javaint*) n->data, temp, n->size);
+		rc = ctxt->hash->update(ctxt->param, temp, n->size << 2);
+	}
+	#if !HAVE_ALLOCA
+	free(temp);
+	#endif
+
+	return rc;
+}
+
+int keyedHashFunctionContextDigest(keyedHashFunctionContext* ctxt, mp32number* dig)
+{
+	mp32nsize(dig, (ctxt->hash->digestsize + 3) >> 2);
+
+	return ctxt->hash->digest(ctxt->param, dig->data);
 }
 
 

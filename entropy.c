@@ -251,14 +251,9 @@ int entropy_wavein(uint32* data, int size)
 	WAVEINCAPS		waveincaps;
 	WAVEFORMATEX	waveformatex;
 	HWAVEIN			wavein;
-	MMRESULT		numdevs;
 	MMRESULT		rc;
 	
-	numdevs = waveInGetNumDevs();
-	if (numdevs <= 0)
-		return -1;
-	
-	rc = waveInGetDevCaps(0, &waveincaps, sizeof(WAVEINCAPS));
+	rc = waveInGetDevCaps(WAVE_MAPPER, &waveincaps, sizeof(WAVEINCAPS));
 	if (rc != MMSYSERR_NOERROR)
 		return -1;
 
@@ -348,8 +343,8 @@ int entropy_wavein(uint32* data, int size)
 
 	if (WaitForSingleObject(entropy_wavein_lock, INFINITE) != WAIT_OBJECT_0)
 		return -1;
-		
-	rc = waveInOpen(&wavein, 0, &waveformatex, (DWORD) entropy_wavein_event, (DWORD) 0, CALLBACK_EVENT);
+
+	rc = waveInOpen(&wavein, WAVE_MAPPER, &waveformatex, (DWORD) entropy_wavein_event, (DWORD) 0, CALLBACK_EVENT);
 	if (rc != MMSYSERR_NOERROR)
 	{
 		fprintf(stderr, "waveInOpen returned %d\n", rc);

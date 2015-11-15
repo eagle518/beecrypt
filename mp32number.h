@@ -26,7 +26,9 @@
 #ifndef _MP32NUMBER_H
 #define _MP32NUMBER_H
 
-#include "beecrypt.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 typedef struct
 {

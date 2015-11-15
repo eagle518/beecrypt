@@ -88,10 +88,9 @@ The library has been tested on the following platforms:
         - includes assembler optimization (tuned for Pentium Pro and higher)
     - Linux glibc 2.x ppc
         - includes assembler optimization (generic 32-bit PowerPC)
-    - Win32 (Windows 95, 98, NT 4.0)
+    - Win32 (Windows 95, 98, NT 4.0, 2000)
         - includes assembler optimization (tuned for Pentium Pro and higher)
-        - once the entropy provider bug is fixed (see BUGS), the library should
-		  work fine on Windows 2000.
+
 Planned platforms for the near future are:
     - Solaris Intel
     - FreeBSD x86
