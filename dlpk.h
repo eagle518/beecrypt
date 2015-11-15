@@ -1,11 +1,5 @@
 /*
- * dlpk.h
- *
- * Discrete Logarithm Public Key, header
- *
- * Copyright (c) 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,34 +17,42 @@
  *
  */
 
+/*!\file dlpk.h
+ * \brief Discrete Logarithm public key, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup DL_m
+ */
+
 #ifndef _DLPK_H
 #define _DLPK_H
 
 #include "dldp.h"
 
+/*!\ingroup DL_m
+ */
 typedef struct
 {
 	dldp_p param;
-	mp32number y;
+	mpnumber y;
 } dlpk_p;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-BEEDLLAPI
+BEECRYPTAPI
 int dlpk_pInit(dlpk_p*);
-BEEDLLAPI
+BEECRYPTAPI
 int dlpk_pFree(dlpk_p*);
-BEEDLLAPI
+BEECRYPTAPI
 int dlpk_pCopy(dlpk_p*, const dlpk_p*);
 
-BEEDLLAPI
+BEECRYPTAPI
 int  dlpk_pEqual(const dlpk_p*, const dlpk_p*);
 
-BEEDLLAPI
+BEECRYPTAPI
 int  dlpk_pgoqValidate(const dlpk_p*, randomGeneratorContext*, int cofactor);
-BEEDLLAPI
+BEECRYPTAPI
 int  dlpk_pgonValidate(const dlpk_p*, randomGeneratorContext*);
 
 #ifdef __cplusplus

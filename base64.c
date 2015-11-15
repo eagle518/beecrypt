@@ -1,11 +1,5 @@
 /*
- * base64.c
- *
- * Base64 encoding/decoding, code
- *
- * Copyright (c) 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,24 +17,28 @@
  *
  */
 
+/*!\file base64.c
+ * \brief Base64 encoding and decoding.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ */
+
 #define BEECRYPT_DLL_EXPORT
 
-#include "base64.h"
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
-#if HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-#if HAVE_STRING_H
-# include <string.h>
-#endif
+#include "base64.h"
+#include "endianness.h"
+
 #if HAVE_CTYPE_H
 # include <ctype.h>
 #endif
 
 static const char* to_b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/* encode 72 characters per line */
-#define CHARS_PER_LINE	72
+/* encode 64 characters per line */
+#define CHARS_PER_LINE	64
 
 char* b64enc(const memchunk* chunk)
 {
@@ -61,8 +59,8 @@ char* b64enc(const memchunk* chunk)
 		while (div > 0)
 		{
 			buf[0] = to_b64[ (data[0] >> 2) & 0x3f];
-			buf[1] = to_b64[((data[0] << 4) & 0x30) + ((data[1] >> 4) & 0xf)];
-			buf[2] = to_b64[((data[1] << 2) & 0x3c) + ((data[2] >> 6) & 0x3)];
+			buf[1] = to_b64[((data[0] << 4) & 0x30) | ((data[1] >> 4) & 0xf)];
+			buf[2] = to_b64[((data[1] << 2) & 0x3c) | ((data[2] >> 6) & 0x3)];
 			buf[3] = to_b64[  data[2] & 0x3f];
 			data += 3;
 			buf += 4;
@@ -175,7 +173,7 @@ memchunk* b64dec(const char* string)
 					for (i = 0; i < length; i++)
 					{
 						register char ch = string[i];
-						register byte bits;
+						register byte bits = 0;
 
 						if (isspace(ch))
 							continue;
@@ -191,6 +189,14 @@ memchunk* b64dec(const char* string)
 						else if ((ch >= '0') && (ch <= '9'))
 						{
 							bits = (byte) (ch - '0' + 52);
+						}
+						else if (ch == '+')
+						{
+							bits = 62;
+						}
+						else if (ch == '/')
+						{
+							bits = 63;
 						}
 						else if (ch == '=')
 							break;
@@ -225,4 +231,210 @@ memchunk* b64dec(const char* string)
 	}
 
 	return rc;
+}
+
+int b64encode_chars_per_line = B64ENCODE_CHARS_PER_LINE;
+
+const char * b64encode_eolstr = B64ENCODE_EOLSTR;
+
+char* b64encode(const void* data, size_t ns)
+{
+    static char b64enc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const char *e;
+    const unsigned char *s = data;
+    unsigned char *t, *te;
+    int nt;
+    int lc;
+    unsigned c;
+
+    if (s == NULL)	return NULL;
+    if (*s == '\0')	return calloc(1, sizeof(*t));
+
+    if (ns == 0) ns = strlen((const char*) s);
+    nt = ((ns + 2) / 3) * 4;
+
+    /* Add additional bytes necessary for eol string(s). */
+    if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
+	{
+		lc = (nt + b64encode_chars_per_line - 1) / b64encode_chars_per_line;
+		if (((nt + b64encode_chars_per_line - 1) % b64encode_chars_per_line) != 0)
+			++lc;
+		nt += lc * strlen(b64encode_eolstr);
+    }
+
+    t = te = malloc(nt + 1);
+
+    lc = 0;
+    if (te)
+    while (ns > 0)
+	{
+		c = *s++;
+		*te++ = b64enc[ (c >> 2) ], lc++;
+		*te++ = b64enc[ ((c & 0x3) << 4) | (*s >> 4) ], lc++;
+		if (--ns == 0)
+		{
+			*te++ = '=';
+			*te++ = '=';
+			continue;
+		}
+		c = *s++;
+		*te++ = b64enc[ ((c & 0xf) << 2) | (*s >> 6) ], lc++;
+		if (--ns == 0)
+		{
+			*te++ = '=';
+			continue;
+		}
+		*te++ = b64enc[ (int)(*s & 0x3f) ], lc++;
+
+		/* Append eol string if desired. */
+		if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
+		{
+			if (lc >= b64encode_chars_per_line)
+			{
+				for (e = b64encode_eolstr; *e != '\0'; e++)
+					*te++ = *e;
+				lc = 0;
+			}
+		}
+		s++;
+		--ns;
+	}
+
+	if (te)
+	{
+		/* Append eol string if desired. */
+		if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
+		{
+			if (lc != 0)
+			{
+				for (e = b64encode_eolstr; *e != '\0'; e++)
+					*te++ = *e;
+			}
+		}
+		*te = '\0';
+    }
+
+    return (char*) t;
+}
+
+#define CRC24_INIT 0xb704ceL
+#define CRC24_POLY 0x1864cfbL
+
+char* b64crc (const unsigned char* data, size_t ns)
+{
+    const unsigned char *s = data;
+    uint32_t crc = CRC24_INIT;
+
+    while (ns-- > 0)
+	{
+		int i;
+		crc ^= (*s++) << 16;
+		for (i = 0; i < 8; i++)
+		{
+			crc <<= 1;
+			if (crc & 0x1000000)
+			crc ^= CRC24_POLY;
+		}
+    }
+    crc &= 0xffffff;
+    #if !WORDS_BIGENDIAN
+    crc = swapu32(crc);
+    #endif
+    data = (byte *)&crc;
+    data++;
+    ns = 3;
+
+	return b64encode(data, ns);
+}
+
+const char* b64decode_whitespace = B64DECODE_WHITESPACE;
+
+int b64decode(const char* s, void** datap, size_t* lenp)
+{
+	unsigned char b64dec[256];
+	const unsigned char *t;
+	unsigned char *te;
+	int ns, nt;
+	unsigned a, b, c, d;
+
+    if (s == NULL)	return 1;
+
+    /* Setup character lookup tables. */
+    memset(b64dec, 0x80, sizeof(b64dec));
+    for (c = 'A'; c <= 'Z'; c++)
+		b64dec[ c ] = 0 + (c - 'A');
+    for (c = 'a'; c <= 'z'; c++)
+		b64dec[ c ] = 26 + (c - 'a');
+    for (c = '0'; c <= '9'; c++)
+		b64dec[ c ] = 52 + (c - '0');
+	b64dec[(unsigned)'+'] = 62;
+	b64dec[(unsigned)'/'] = 63;
+	b64dec[(unsigned)'='] = 0;
+
+    /* Mark whitespace characters. */
+    if (b64decode_whitespace)
+	{
+		const char *e;
+		for (e = b64decode_whitespace; *e != '\0'; e++)
+		{
+			if (b64dec[ (unsigned)*e ] == 0x80)
+				b64dec[ (unsigned)*e ] = 0x81;
+		}
+    }
+    
+    /* Validate input buffer */
+    ns = 0;
+    for (t = (unsigned char*) s; *t != '\0'; t++)
+	{
+		switch (b64dec[(unsigned) *t])
+		{
+		case 0x80:	/* invalid chararcter */
+			return 3;
+		case 0x81:	/* white space */
+			break;
+		default:
+			ns++;
+			break;
+		}
+    }
+    
+    if (((unsigned) ns) & 0x3)	return 2;
+
+    nt = (ns / 4) * 3;
+    t = te = malloc(nt + 1);
+
+    while (ns > 0)
+	{
+		/* Get next 4 characters, ignoring whitespace. */
+		while ((a = b64dec[ (unsigned)*s++ ]) == 0x81)
+			;
+		while ((b = b64dec[ (unsigned)*s++ ]) == 0x81)
+			;
+		while ((c = b64dec[ (unsigned)*s++ ]) == 0x81)
+			;
+		while ((d = b64dec[ (unsigned)*s++ ]) == 0x81)
+			;
+
+		ns -= 4;
+		*te++ = (a << 2) | (b >> 4);
+		if (s[-2] == '=') break;
+		*te++ = (b << 4) | (c >> 2);
+		if (s[-1] == '=') break;
+		*te++ = (c << 6) | d;
+    }
+
+    if (ns != 0)
+	{	/* XXX can't happen, just in case */
+		if (t) free((void *)t);
+		return 1;
+    }
+    if (lenp)
+		*lenp = (te - t);
+
+    if (datap)
+		*datap = (void *)t;
+    else
+		if (t) free((void *)t);
+
+    return 0;
 }

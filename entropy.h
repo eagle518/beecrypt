@@ -1,11 +1,5 @@
 /*
- * entropy.h
- *
- * Entropy gathering routine(s) for pseudo-random generator initialization, header
- *
- * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 1998, 1999, 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +17,12 @@
  *
  */
 
+/*!\file entropy.h
+ * \brief Entropy sources, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup ES_m ES_audio_m ES_dsp_m ES_random_m ES_urandom_m ES_tty_m
+ */
+
 #ifndef _ENTROPY_H
 #define _ENTROPY_H
 
@@ -37,32 +37,32 @@ extern "C" {
 #endif
 
 #if WIN32
-BEEDLLAPI
+BEECRYPTAPI
 int entropy_provider_setup(HINSTANCE);
-BEEDLLAPI
+BEECRYPTAPI
 int entropy_provider_cleanup();
 
-BEEDLLAPI
-int entropy_wavein(uint32*, int);
-BEEDLLAPI
-int entropy_console(uint32*, int);
-BEEDLLAPI
-int entropy_wincrypt(uint32*, int);
+BEECRYPTAPI
+int entropy_wavein(byte*, size_t);
+BEECRYPTAPI
+int entropy_console(byte*, size_t);
+BEECRYPTAPI
+int entropy_wincrypt(byte*, size_t);
 #else
 #if HAVE_DEV_AUDIO
-int entropy_dev_audio (uint32*, int);
+int entropy_dev_audio  (byte*, size_t);
 #endif
 #if HAVE_DEV_DSP
-int entropy_dev_dsp   (uint32*, int);
+int entropy_dev_dsp    (byte*, size_t);
 #endif
 #if HAVE_DEV_RANDOM
-int entropy_dev_random(uint32*, int);
+int entropy_dev_random (byte*, size_t);
 #endif
 #if HAVE_DEV_URANDOM
-int entropy_dev_urandom(uint32*, int);
+int entropy_dev_urandom(byte*, size_t);
 #endif
 #if HAVE_DEV_TTY
-int entropy_dev_tty   (uint32*, int);
+int entropy_dev_tty    (byte*, size_t);
 #endif
 #endif
 

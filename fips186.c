@@ -1,11 +1,5 @@
 /*
- * fips186.c
- *
- * NIST FIPS 186 pseudo-random generator, code
- *
- * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 1998, 1999, 2000, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,26 +17,38 @@
  *
  */
 
+/*!\file fips186.c
+ * \brief FIPS 186 pseudo-random number generator.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup PRNG_m PRNG_fips186_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
 
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "fips186.h"
-#include "mp32.h"
-#include "mp32opt.h"
 
-#if HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-#if HAVE_MALLOC_H
-# include <malloc.h>
-#endif
+/*!\addtogroup PRNG_fips186_m
+ * \{
+ */
 
-static uint32 fips186hinit[5] = { 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0, 0x67452301 };
+static uint32_t fips186hinit[5] = { 0xefcdab89U, 0x98badcfeU, 0x10325476U, 0xc3d2e1f0U, 0x67452301U };
 
-const randomGenerator fips186prng = { "FIPS 186", sizeof(fips186Param), (const randomGeneratorSetup) fips186Setup, (const randomGeneratorSeed) fips186Seed, (const randomGeneratorNext) fips186Next, (const randomGeneratorCleanup) fips186Cleanup };
+const randomGenerator fips186prng = {
+	"FIPS 186",
+	sizeof(fips186Param),
+	(randomGeneratorSetup) fips186Setup,
+	(randomGeneratorSeed) fips186Seed,
+	(randomGeneratorNext) fips186Next,
+	(randomGeneratorCleanup) fips186Cleanup
+};
 
 static int fips186init(register sha1Param* p)
 {
-	mp32copy(5, p->h, fips186hinit);
+	memcpy(p->h, fips186hinit, 5 * sizeof(uint32_t));
 	return 0;
 }
 
@@ -55,24 +61,24 @@ int fips186Setup(fips186Param* fp)
 		if (!(fp->lock = CreateMutex(NULL, FALSE, NULL)))
 			return -1;
 		# else
-		#  if defined(HAVE_SYNCH_H)
+		#  if HAVE_THREAD_H && HAVE_SYNCH_H
 		if (mutex_init(&fp->lock, USYNC_THREAD, (void *) 0))
 			return -1;
-		#  elif defined(HAVE_PTHREAD_H)
+		#  elif HAVE_PTHREAD_H
 		if (pthread_mutex_init(&fp->lock, (pthread_mutexattr_t *) 0))
 			return -1;
 		#  endif
 		# endif
 		#endif
 
-		fp->digestsize = 0;
+		fp->digestremain = 0;
 
-		return entropyGatherNext(fp->state, FIPS186_STATE_SIZE);
+		return entropyGatherNext((byte*) fp->state, MP_WORDS_TO_BYTES(FIPS186_STATE_SIZE));
 	}
 	return -1;
 }
 
-int fips186Seed(fips186Param* fp, const uint32* data, int size)
+int fips186Seed(fips186Param* fp, const byte* data, size_t size)
 {
 	if (fp)
 	{
@@ -81,26 +87,36 @@ int fips186Seed(fips186Param* fp, const uint32* data, int size)
 		if (WaitForSingleObject(fp->lock, INFINITE) != WAIT_OBJECT_0)
 			return -1;
 		# else
-		#  if defined(HAVE_SYNCH_H)
+		#  if HAVE_THREAD_H && HAVE_SYNCH_H
 		if (mutex_lock(&fp->lock))
 			return -1;
-		#  elif defined(HAVE_PTHREAD_H)
+		#  elif HAVE_PTHREAD_H
 		if (pthread_mutex_lock(&fp->lock))
 			return -1;
 		#  endif
 		# endif
 		#endif
 		if (data)
-			mp32addx(FIPS186_STATE_SIZE, fp->state, size, data);
+		{
+			mpw seed[FIPS186_STATE_SIZE];
+
+			/* if there's too much data, cut off at what we can deal with */
+			if (size > MP_WORDS_TO_BYTES(FIPS186_STATE_SIZE))
+				size = MP_WORDS_TO_BYTES(FIPS186_STATE_SIZE);
+
+			/* convert to multi-precision integer, and add to the state */
+			if (os2ip(seed, FIPS186_STATE_SIZE, data, size) == 0)
+				mpadd(FIPS186_STATE_SIZE, fp->state, seed);
+		}
 		#ifdef _REENTRANT
 		# if WIN32
 		if (!ReleaseMutex(fp->lock))
 			return -1;
 		# else
-		#  if defined(HAVE_SYNCH_H)
+		#  if HAVE_THREAD_H && HAVE_SYNCH_H
 		if (mutex_unlock(&fp->lock))
 			return -1;
-		#  elif defined(HAVE_PTHREAD_H)
+		#  elif HAVE_PTHREAD_H
 		if (pthread_mutex_unlock(&fp->lock))
 			return -1;
 		#  endif
@@ -111,45 +127,78 @@ int fips186Seed(fips186Param* fp, const uint32* data, int size)
 	return -1;
 }
 
-int fips186Next(fips186Param* fp, uint32* data, int size)
+int fips186Next(fips186Param* fp, byte* data, size_t size)
 {
 	if (fp)
 	{
+		mpw dig[FIPS186_STATE_SIZE];
+
 		#ifdef _REENTRANT
 		# if WIN32
 		if (WaitForSingleObject(fp->lock, INFINITE) != WAIT_OBJECT_0)
 			return -1;
 		# else
-		#  if defined(HAVE_SYNCH_H)
+		#  if HAVE_THREAD_H && HAVE_SYNCH_H
 		if (mutex_lock(&fp->lock))
 			return -1;
-		#  elif defined(HAVE_PTHREAD_H)
+		#  elif HAVE_PTHREAD_H
 		if (pthread_mutex_lock(&fp->lock))
 			return -1;
 		#  endif
 		# endif
 		#endif
+
 		while (size > 0)
 		{
-			register uint32 copy;
+			register size_t copy;
 
-			if (fp->digestsize == 0)
+			if (fp->digestremain == 0)
 			{
 				fips186init(&fp->param);
 				/* copy the 512 bits of state data into the sha1Param */
-				mp32copy(FIPS186_STATE_SIZE, fp->param.data, fp->state);
+				memcpy(fp->param.data, fp->state, MP_WORDS_TO_BYTES(FIPS186_STATE_SIZE));
 				/* process the data */
 				sha1Process(&fp->param);
-				/* set state to state + digest + 1 mod 2^512 */
-				mp32addx(FIPS186_STATE_SIZE, fp->state, 5, fp->param.h);
-				mp32addw(FIPS186_STATE_SIZE, fp->state, 1);
-				/* we now have 5 words of pseudo-random data */
-				fp->digestsize = 5;
-			}
+				
+				#if WORDS_BIGENDIAN
+				memcpy(fp->digest, fp->param.h, 20);
+				#else
+				/* encode 5 integers big-endian style */
+				fp->digest[ 0] = (byte)(fp->param.h[0] >> 24);
+				fp->digest[ 1] = (byte)(fp->param.h[0] >> 16);
+				fp->digest[ 2] = (byte)(fp->param.h[0] >>  8);
+				fp->digest[ 3] = (byte)(fp->param.h[0] >>  0);
+				fp->digest[ 4] = (byte)(fp->param.h[1] >> 24);
+				fp->digest[ 5] = (byte)(fp->param.h[1] >> 16);
+				fp->digest[ 6] = (byte)(fp->param.h[1] >>  8);
+				fp->digest[ 7] = (byte)(fp->param.h[1] >>  0);
+				fp->digest[ 8] = (byte)(fp->param.h[2] >> 24);
+				fp->digest[ 9] = (byte)(fp->param.h[2] >> 16);
+				fp->digest[10] = (byte)(fp->param.h[2] >>  8);
+				fp->digest[11] = (byte)(fp->param.h[2] >>  0);
+				fp->digest[12] = (byte)(fp->param.h[3] >> 24);
+				fp->digest[13] = (byte)(fp->param.h[3] >> 16);
+				fp->digest[14] = (byte)(fp->param.h[3] >>  8);
+				fp->digest[15] = (byte)(fp->param.h[3] >>  0);
+				fp->digest[16] = (byte)(fp->param.h[4] >> 24);
+				fp->digest[17] = (byte)(fp->param.h[4] >> 16);
+				fp->digest[18] = (byte)(fp->param.h[4] >>  8);
+				fp->digest[19] = (byte)(fp->param.h[4] >>  0);
+				#endif
 
-			copy = (size > fp->digestsize) ? fp->digestsize : size;
-			mp32copy(copy, data, fp->param.h + 5 - fp->digestsize);
-			fp->digestsize -= copy;
+				if (os2ip(dig, FIPS186_STATE_SIZE, fp->digest, 20) == 0)
+				{
+					/* set state to state + digest + 1 mod 2^512 */
+					mpadd (FIPS186_STATE_SIZE, fp->state, dig);
+					mpaddw(FIPS186_STATE_SIZE, fp->state, 1);
+				}
+				/* else shouldn't occur */
+				/* we now have 5 words of pseudo-random data */
+				fp->digestremain = 20;
+			}
+			copy = (size > fp->digestremain) ? fp->digestremain : size;
+			memcpy(data, fp->digest+20-fp->digestremain, copy);
+			fp->digestremain -= copy;
 			size -= copy;
 			data += copy;
 		}
@@ -158,10 +207,10 @@ int fips186Next(fips186Param* fp, uint32* data, int size)
 		if (!ReleaseMutex(fp->lock))
 			return -1;
 		# else
-		#  if defined(HAVE_SYNCH_H)
+		#  if HAVE_THREAD_H && HAVE_SYNCH_H
 		if (mutex_unlock(&fp->lock))
 			return -1;
-		#  elif defined(HAVE_PTHREAD_H)
+		#  elif HAVE_PTHREAD_H
 		if (pthread_mutex_unlock(&fp->lock))
 			return -1;
 		#  endif
@@ -181,10 +230,10 @@ int fips186Cleanup(fips186Param* fp)
 		if (!CloseHandle(fp->lock))
 			return -1;
 		# else
-		#  if defined(HAVE_SYNCH_H)
+		#  if HAVE_THREAD_H && HAVE_SYNCH_H
 		if (mutex_destroy(&fp->lock))
 			return -1;
-		#  elif defined(HAVE_PTHREAD_H)
+		#  elif HAVE_PTHREAD_H
 		if (pthread_mutex_destroy(&fp->lock))
 			return -1;
 		#  endif
@@ -194,3 +243,6 @@ int fips186Cleanup(fips186Param* fp)
 	}
 	return -1;
 }
+
+/*!\}
+ */

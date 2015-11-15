@@ -1,9 +1,9 @@
 #
 # Makefile.am's purpose is to add the GNU Assembler sources to the dist
 #
-# Copyright (c) 2001 Virtual Unlimited B.V.
+# Copyright (c) 2001, 2002, 2003 Virtual Unlimited B.V.
 #
-# Author: Bob Deblier <bob@virtualunlimited.com>
+# Author: Bob Deblier <bob.deblier@pandora.be>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -22,4 +22,29 @@
 
 AUTOMAKE_OPTIONS = gnu no-dependencies
 
-SOURCES = blowfishopt.i586.S fips180opt.i586.S mp32opt.arm.S mp32opt.i386.S mp32opt.ia64.S mp32opt.powerpc.S mp32opt.sparcv8.S mp32opt.sparcv9.S mp64opt.ia64.S
+EXTRA_DIST = \
+	aesopt.x86.m4 \
+	aesopt.ppc.m4 \
+	alpha.m4 \
+	asmdefs.m4 \
+	blowfishopt.i586.m4 \
+	blowfishopt.ppc.m4 \
+	ia64.m4 \
+	m68k.m4 \
+	mpopt.alpha.m4 \
+	mpopt.arm.m4 \
+	mpopt.ia64.m4 \
+	mpopt.m68k.m4 \
+	mpopt.ppc.m4 \
+	mpopt.ppc64.m4 \
+	mpopt.s390x.m4 \
+	mpopt.sparcv8.m4 \
+	mpopt.sparcv8plus.m4 \
+	mpopt.x86.m4 \
+	mpopt.x86_64.m4 \
+	ppc.m4 \
+	ppc64.m4 \
+	sha1opt.x86.m4 \
+	sparc.m4 \
+	x86.m4 \
+	x86_64.m4

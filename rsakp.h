@@ -1,13 +1,5 @@
 /*
- * rsakp.h
- *
- * RSA Keypair, header
- *
- * <conformance statement for IEEE P1363 needed here>
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,34 +17,72 @@
  *
  */
 
+/*!\file rsakp.h
+ * \brief RSA keypair, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup IF_m IF_rsa_m
+ */
+
 #ifndef _RSAKP_H
 #define _RSAKP_H
 
 #include "rsapk.h"
 
+/*!\brief RSA keypair.
+ * \ingroup IF_rsa_m
+ */
 typedef struct
 {
-	mp32barrett n;
-	mp32number e;
-	mp32number d;
-	mp32barrett p;
-	mp32barrett q;
-	mp32number d1;
-	mp32number d2;
-	mp32number c;
+	/*!\var n
+	 * \brief The modulus.
+	 *
+	 * \f$n=pq\f$
+	 */
+	mpbarrett n;
+	/*!\var e
+	 * \brief The public exponent.
+	 */
+	mpnumber e;
+	/*!\var d
+	 * \brief The private exponent.
+	 */
+	mpnumber d;
+	/*!\var p
+	 * \brief The first prime factor of the modulus.
+	 */
+	mpbarrett p;
+	/*!\var q
+	 * \brief The second prime factor of the modulus.
+	 */
+	mpbarrett q;
+	/*!\var d1
+	 *
+	 * \f$d_1=d\ \textrm{mod}\ (p-1)\f$
+	 */
+	mpnumber d1;
+	/*!\var d2
+	 *
+	 * \f$d_2=d\ \textrm{mod}\ (q-1)\f$
+	 */
+	mpnumber d2;
+	/*!\var q
+	 *
+	 * \f$c=q^{-1}\ \textrm{mod}\ p\f$
+	 */
+	mpnumber c;
 } rsakp;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-BEEDLLAPI
+BEECRYPTAPI
 int rsakpMake(rsakp*, randomGeneratorContext*, int);
-BEEDLLAPI
+BEECRYPTAPI
 int rsakpInit(rsakp*);
-BEEDLLAPI
+BEECRYPTAPI
 int rsakpFree(rsakp*);
-BEEDLLAPI
+BEECRYPTAPI
 int rsakpCopy(rsakp*, const rsakp*);
 
 #ifdef __cplusplus

@@ -1,11 +1,5 @@
 /*
- * rsapk.h
- *
- * RSA Public Key, header
- *
- * Copyright (c) 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,26 +17,32 @@
  *
  */
 
+/*!\file rsapk.h
+ * \brief RSA public key, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup IF_m IF_rsa_m
+ */
+
 #ifndef _RSAPK_H
 #define _RSAPK_H
 
-#include "mp32barrett.h"
+#include "mpbarrett.h"
 
 typedef struct
 {
-	mp32barrett n;
-	mp32number e;
+	mpbarrett n;
+	mpnumber e;
 } rsapk;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-BEEDLLAPI
+BEECRYPTAPI
 int rsapkInit(rsapk*);
-BEEDLLAPI
+BEECRYPTAPI
 int rsapkFree(rsapk*);
-BEEDLLAPI
+BEECRYPTAPI
 int rsapkCopy(rsapk*, const rsapk*);
 
 #ifdef __cplusplus

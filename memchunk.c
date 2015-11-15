@@ -1,11 +1,5 @@
 /*
- * memchunk.c
- *
- * BeeCrypt memory block handling, code
- *
  * Copyright (c) 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,18 +17,19 @@
  *
  */
 
+/*!\file memchunk.c
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "memchunk.h"
 
-#if HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-#if HAVE_MALLOC_H
-# include <malloc.h>
-#endif
-
-memchunk* memchunkAlloc(int size)
+memchunk* memchunkAlloc(size_t size)
 {
 	memchunk* tmp = (memchunk*) calloc(1, sizeof(memchunk));
 
@@ -68,7 +63,7 @@ void memchunkFree(memchunk* m)
 	}
 }
 
-memchunk* memchunkResize(memchunk* m, int size)
+memchunk* memchunkResize(memchunk* m, size_t size)
 {
 	if (m)
 	{
@@ -87,4 +82,19 @@ memchunk* memchunkResize(memchunk* m, int size)
 	}
 
 	return m;
+}
+
+memchunk* memchunkClone(const memchunk* m)
+{
+	if (m)
+	{
+		memchunk* tmp = memchunkAlloc(m->size);
+
+		if (tmp)
+			memcpy(tmp->data, m->data, m->size);
+
+		return tmp;
+	}
+
+	return (memchunk*) 0;
 }

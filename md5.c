@@ -1,11 +1,5 @@
 /*
- * md5.c
- *
- * MD5 hash function, code
- *
- * Copyright (c) 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,22 +17,49 @@
  *
  */
 
+/*!\file md5.c
+ * \brief MD5 hash function
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HASH_m HASH_md5_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
 
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "md5.h"
-#include "mp32.h"
 #include "endianness.h"
 
-static uint32 md5hinit[4] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
+/*!\addtogroup HASH_md5_m
+ * \{
+ */
 
-const hashFunction md5 = { "MD5", sizeof(md5Param), 64, 4 * sizeof(uint32), (hashFunctionReset) md5Reset, (hashFunctionUpdate) md5Update, (hashFunctionDigest) md5Digest };
+static uint32_t md5hinit[4] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
 
-int md5Reset(register md5Param* p)
+const hashFunction md5 = {
+	"MD5",
+	sizeof(md5Param),
+	64,
+	16,
+	(hashFunctionReset) md5Reset,
+	(hashFunctionUpdate) md5Update,
+	(hashFunctionDigest) md5Digest
+};
+
+int md5Reset(register md5Param* mp)
 {
-	mp32copy(4, p->h, md5hinit);
-	mp32zero(16, p->data);
-	p->length = 0;
-	p->offset = 0;
+	memcpy(mp->h, md5hinit, 4 * sizeof(uint32_t));
+	memset(mp->data, 0, 16 * sizeof(uint32_t));
+	#if (MP_WBITS == 64)
+	mpzero(1, mp->length);
+	#elif (MP_WBITS == 32)
+	mpzero(2, mp->length);
+	#else
+	# error
+	#endif
+	mp->offset = 0;
 	return 0;
 }
 
@@ -63,26 +84,26 @@ int md5Reset(register md5Param* p)
 	a += b;
 
 #ifndef ASM_MD5PROCESS
-void md5Process(md5Param* p)
+void md5Process(md5Param* mp)
 {
-	register uint32 a,b,c,d;
-	register uint32* w;
+	register uint32_t a,b,c,d;
+	register uint32_t* w;
 	#if WORDS_BIGENDIAN
 	register byte t;
 	#endif
 
-	w = p->data;
+	w = mp->data;
 	#if WORDS_BIGENDIAN
 	t = 16;
 	while (t--)
 	{
-		register uint32 temp = swapu32(*w);
+		register uint32_t temp = swapu32(*w);
 		*(w++) = temp;
 	}
-	w = p->data;
+	w = mp->data;
 	#endif
 
-	a = p->h[0]; b = p->h[1]; c = p->h[2]; d = p->h[3];
+	a = mp->h[0]; b = mp->h[1]; c = mp->h[2]; d = mp->h[3];
 
 	FF(a, b, c, d, w[ 0],  7, 0xd76aa478);
 	FF(d, a, b, c, w[ 1], 12, 0xe8c7b756);
@@ -152,77 +173,119 @@ void md5Process(md5Param* p)
 	II(c, d, a, b, w[ 2], 15, 0x2ad7d2bb);
 	II(b, c, d, a, w[ 9], 21, 0xeb86d391);
 
-	p->h[0] += a;
-	p->h[1] += b;
-	p->h[2] += c;
-	p->h[3] += d;
+	mp->h[0] += a;
+	mp->h[1] += b;
+	mp->h[2] += c;
+	mp->h[3] += d;
 }
 #endif
 
-int md5Update(md5Param* p, const byte* data, int size)
+int md5Update(md5Param* mp, const byte* data, size_t size)
 {
-	register int proclength;
+	register uint32_t proclength;
 
-	p->length += size;
+	#if (MP_WBITS == 64)
+	mpw add[1];
+	mpsetw(1, add, size);
+	mplshift(1, add, 3);
+	mpadd(1, mp->length, add);
+	#elif (MP_WBITS == 32)
+	mpw add[2];
+	mpsetw(2, add, size);
+	mplshift(2, add, 3);
+	mpadd(2, mp->length, add);
+	#else
+	# error
+	#endif
+
 	while (size > 0)
 	{
-		proclength = ((p->offset + size) > 64) ? (64 - p->offset) : size;
-		memcpy(((byte *) p->data) + p->offset, data, proclength);
+		proclength = ((mp->offset + size) > 64U) ? (64U - mp->offset) : size;
+		memcpy(((byte *) mp->data) + mp->offset, data, proclength);
 		size -= proclength;
 		data += proclength;
-		p->offset += proclength;
+		mp->offset += proclength;
 
-		if (p->offset == 64)
+		if (mp->offset == 64U)
 		{
-			md5Process(p);
-			p->offset = 0;
+			md5Process(mp);
+			mp->offset = 0;
 		}
 	}
 	return 0;
 }
 
-static void md5Finish(md5Param* p)
+static void md5Finish(md5Param* mp)
 {
-	register byte *ptr = ((byte *) p->data) + p->offset++;
+	register byte *ptr = ((byte *) mp->data) + mp->offset++;
 
 	*(ptr++) = 0x80;
 
-	if (p->offset > 56)
+	if (mp->offset > 56)
 	{
-		while (p->offset++ < 64)
+		while (mp->offset++ < 64)
 			*(ptr++) = 0;
 
-		md5Process(p);
-		p->offset = 0;
+		md5Process(mp);
+		mp->offset = 0;
 	}
 
-	ptr = ((byte *) p->data) + p->offset;
-	while (p->offset++ < 56)
+	ptr = ((byte *) mp->data) + mp->offset;
+	while (mp->offset++ < 56)
 		*(ptr++) = 0;
 
-	#if !WORDS_BIGENDIAN
-	p->data[14] = ((uint32)((p->length << 3) & 0xffffffff));
-	p->data[15] = ((uint32)(p->length >> 29));
+	#if (MP_WBITS == 64)
+	ptr[0] = (byte)(mp->length[0]      );
+	ptr[1] = (byte)(mp->length[0] >>  8);
+	ptr[2] = (byte)(mp->length[0] >> 16);
+	ptr[3] = (byte)(mp->length[0] >> 24);
+	ptr[4] = (byte)(mp->length[0] >> 32);
+	ptr[5] = (byte)(mp->length[0] >> 40);
+	ptr[6] = (byte)(mp->length[0] >> 48);
+	ptr[7] = (byte)(mp->length[0] >> 56);
+	#elif (MP_WBITS == 32)
+	ptr[0] = (byte)(mp->length[1]      );
+	ptr[1] = (byte)(mp->length[1] >>  8);
+	ptr[2] = (byte)(mp->length[1] >> 16);
+	ptr[3] = (byte)(mp->length[1] >> 24);
+	ptr[4] = (byte)(mp->length[0]      );
+	ptr[5] = (byte)(mp->length[0] >>  8);
+	ptr[6] = (byte)(mp->length[0] >> 16);
+	ptr[7] = (byte)(mp->length[0] >> 24);
 	#else
-	p->data[14] = swapu32((uint32)((p->length << 3) & 0xffffffff));
-	p->data[15] = swapu32((uint32)(p->length >> 29));
+	# error
 	#endif
 
-	md5Process(p);
+	md5Process(mp);
 
-	#if 1 /* WORDS_BIGENDIAN */
-	p->h[0] = swapu32(p->h[0]);
-	p->h[1] = swapu32(p->h[1]);
-	p->h[2] = swapu32(p->h[2]);
-	p->h[3] = swapu32(p->h[3]);
-	#endif
-	p->offset = 0;
+	mp->offset = 0;
 }
 
-int md5Digest(md5Param* p, uint32* data)
+int md5Digest(md5Param* mp, byte* data)
 {
-	md5Finish(p);
-	mp32copy(4, data, p->h);
-	md5Reset(p);
+	md5Finish(mp);
+
+	/* encode 4 integers little-endian style */
+	data[ 0] = (byte)(mp->h[0]      );
+	data[ 1] = (byte)(mp->h[0] >>  8);
+	data[ 2] = (byte)(mp->h[0] >> 16);
+	data[ 3] = (byte)(mp->h[0] >> 24);
+	data[ 4] = (byte)(mp->h[1]      );
+	data[ 5] = (byte)(mp->h[1] >>  8);
+	data[ 6] = (byte)(mp->h[1] >> 16);
+	data[ 7] = (byte)(mp->h[1] >> 24);
+	data[ 8] = (byte)(mp->h[2]      );
+	data[ 9] = (byte)(mp->h[2] >>  8);
+	data[10] = (byte)(mp->h[2] >> 16);
+	data[11] = (byte)(mp->h[2] >> 24);
+	data[12] = (byte)(mp->h[3]      );
+	data[13] = (byte)(mp->h[3] >>  8);
+	data[14] = (byte)(mp->h[3] >> 16);
+	data[15] = (byte)(mp->h[3] >> 24);
+
+	md5Reset(mp);
 	return 0;
 }
+
+/*!\}
+ */

@@ -1,11 +1,5 @@
 /*
- * hmacmd5.h
- *
- * HMAC-MD5 message authentication code, header
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,33 +17,41 @@
  *
  */
 
+/*!\file hmacmd5.h
+ * \brief HMAC-MD5 message authentication code, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HMAC_m HMAC_md5_m
+ */
+
 #ifndef _HMACMD5_H
 #define _HMACMD5_H
 
 #include "hmac.h"
 #include "md5.h"
 
+/*!\ingroup HMAC_md5_m
+ */
 typedef struct
 {
+	md5Param mparam;
 	byte kxi[64];
 	byte kxo[64];
-	md5Param param;
 } hmacmd5Param;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern BEEDLLAPI const keyedHashFunction hmacmd5;
+extern BEECRYPTAPI const keyedHashFunction hmacmd5;
 
-BEEDLLAPI
-int hmacmd5Setup (hmacmd5Param*, const uint32*, int);
-BEEDLLAPI
+BEECRYPTAPI
+int hmacmd5Setup (hmacmd5Param*, const byte*, size_t);
+BEECRYPTAPI
 int hmacmd5Reset (hmacmd5Param*);
-BEEDLLAPI
-int hmacmd5Update(hmacmd5Param*, const byte*, int);
-BEEDLLAPI
-int hmacmd5Digest(hmacmd5Param*, uint32*);
+BEECRYPTAPI
+int hmacmd5Update(hmacmd5Param*, const byte*, size_t);
+BEECRYPTAPI
+int hmacmd5Digest(hmacmd5Param*, byte*);
 
 #ifdef __cplusplus
 }

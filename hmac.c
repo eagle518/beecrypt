@@ -1,11 +1,5 @@
 /*
- * hmac.c
- *
- * HMAC message authentication code, code
- *
- * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 1999, 2000, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,80 +17,107 @@
  *
  */
 
+/*!\file hmac.c
+ * \brief HMAC algorithm.
+ *
+ * \see RFC2104 HMAC: Keyed-Hashing for Message Authentication.
+ *                    H. Krawczyk, M. Bellare, R. Canetti.
+ *
+ * \author Bob Deblier <bob.deblier@pandore.be>
+ * \ingroup HMAC_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "hmac.h"
 #include "endianness.h"
 
-#define HMAC_IPAD	0x36363636
-#define HMAC_OPAD	0x5c5c5c5c
+/*!\addtogroup HMAC_m
+ * \{
+ */
 
-int hmacSetup(hmacParam* hp, const hashFunction* hash, hashFunctionParam* param, const uint32* key, int keybits)
+#define HMAC_IPAD	0x36
+#define HMAC_OPAD	0x5c
+
+int hmacSetup(byte* kxi, byte* kxo, const hashFunction* hash, hashFunctionParam* param, const byte* key, size_t keybits)
 {
-	int keywords = (keybits >> 5);
+	register unsigned int i;
 
-	if (keywords <= 16)
+	size_t keybytes = keybits >> 3;
+
+	/* if the key is too large, hash it first */
+	if (keybytes > hash->blocksize)
 	{
-		register int i;
+		/* if the hash digest is too large, this doesn't help; this is really a sanity check */
+		if (hash->digestsize > hash->blocksize)
+			return -1;
 
-		if (keywords > 0)
-		{
-			encodeInts((const javaint*) key, (byte*) hp->kxi, keywords);
-			encodeInts((const javaint*) key, (byte*) hp->kxo, keywords);
+		if (hash->reset(param))
+			return -1;
 
-			for (i = 0; i < keywords; i++)
-			{
-				hp->kxi[i] ^= HMAC_IPAD;
-				hp->kxo[i] ^= HMAC_OPAD;
-			}
-		}
+		if (hash->update(param, key, keybytes))
+			return -1;
 
-		for (i = keywords; i < 16; i++)
-		{
-			hp->kxi[i] = HMAC_IPAD;
-			hp->kxo[i] = HMAC_OPAD;
-		}
+		if (hash->digest(param, kxi))
+			return -1;
 
-		return hmacReset(hp, hash, param);
+		memcpy(kxo, kxi, keybytes = hash->digestsize);
+	}
+	else if (keybytes > 0)
+	{
+		memcpy(kxi, key, keybytes);
+		memcpy(kxo, key, keybytes);
+	}
+	else
+		return -1;
+
+	for (i = 0; i < keybytes; i++)
+	{
+		kxi[i] ^= HMAC_IPAD;
+		kxo[i] ^= HMAC_OPAD;
 	}
 
-	/* key too long */
+	for (i = keybytes; i < hash->blocksize; i++)
+	{
+		kxi[i] = HMAC_IPAD;
+		kxo[i] = HMAC_OPAD;
+	}
 
-	return -1;
+	return hmacReset(kxi, hash, param);
 }
 
-int hmacReset(hmacParam* hp, const hashFunction* hash, hashFunctionParam* param)
+int hmacReset(const byte* kxi, const hashFunction* hash, hashFunctionParam* param)
 {
 	if (hash->reset(param))
 		return -1;
-
-	if (hash->update(param, (const byte*) hp->kxi, 64))
+	if (hash->update(param, kxi, hash->blocksize))
 		return -1;
 
 	return 0;
 }
 
-int hmacUpdate(hmacParam* hp, const hashFunction* hash, hashFunctionParam* param, const byte* data, int size)
+int hmacUpdate(const hashFunction* hash, hashFunctionParam* param, const byte* data, size_t size)
 {
 	return hash->update(param, data, size);
 }
 
-int hmacDigest(hmacParam* hp, const hashFunction* hash, hashFunctionParam* param, uint32* data)
+int hmacDigest(const byte* kxo, const hashFunction* hash, hashFunctionParam* param, byte* data)
 {
 	if (hash->digest(param, data))
 		return -1;
-
-	if (hash->update(param, (const byte*) hp->kxo, 64))
+	if (hash->update(param, kxo, hash->blocksize))
 		return -1;
-
-	/* digestsize is in bytes; divide by 4 to get the number of words */
-	encodeInts((const javaint*) data, (byte*) data, hash->digestsize >> 2);
-
-	if (hash->update(param, (const byte*) data, hash->digestsize))
+	if (hash->update(param, data, hash->digestsize))
 		return -1;
-
 	if (hash->digest(param, data))
 		return -1;
 
 	return 0;
 }
+
+/*!\}
+ */

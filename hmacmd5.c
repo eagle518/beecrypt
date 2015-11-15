@@ -1,11 +1,5 @@
 /*
- * hmacmd5.c
- *
- * HMAC-MD5 message authentication code, code
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,28 +17,61 @@
  *
  */
 
+/*!\file hmacmd5.c
+ * \brief HMAC-MD5 message authentication code.
+ * 
+ * \see RFC2202 - Test Cases for HMAC-MD5 and HMAC-SHA-1.
+ *                P. Cheng, R. Glenn.
+ *
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HMAC_m HMAC_md5_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "hmacmd5.h"
 
-const keyedHashFunction hmacmd5 = { "HMAC-MD5", sizeof(hmacmd5Param), 64, 4 * sizeof(uint32), 64, 512, 32, (const keyedHashFunctionSetup) hmacmd5Setup, (const keyedHashFunctionReset) hmacmd5Reset, (const keyedHashFunctionUpdate) hmacmd5Update, (const keyedHashFunctionDigest) hmacmd5Digest };
+/*!\addtogroup HMAC_md5_m
+ * \{
+ */
 
-int hmacmd5Setup (hmacmd5Param* sp, const uint32* key, int keybits)
+const keyedHashFunction hmacmd5 = {
+	"HMAC-MD5",
+	sizeof(hmacmd5Param),
+	64,
+	16,
+	64,
+	512,
+	32,
+	(keyedHashFunctionSetup) hmacmd5Setup,
+	(keyedHashFunctionReset) hmacmd5Reset,
+	(keyedHashFunctionUpdate) hmacmd5Update,
+	(keyedHashFunctionDigest) hmacmd5Digest
+};
+
+int hmacmd5Setup (hmacmd5Param* sp, const byte* key, size_t keybits)
 {
-	return hmacSetup((hmacParam*) sp, &md5, &sp->param, key, keybits);
+	return hmacSetup(sp->kxi, sp->kxo, &md5, &sp->mparam, key, keybits);
 }
 
 int hmacmd5Reset (hmacmd5Param* sp)
 {
-	return hmacReset((hmacParam*) sp, &md5, &sp->param);
+	return hmacReset(sp->kxi, &md5, &sp->mparam);
 }
 
-int hmacmd5Update(hmacmd5Param* sp, const byte* data, int size)
+int hmacmd5Update(hmacmd5Param* sp, const byte* data, size_t size)
 {
-	return hmacUpdate((hmacParam*) sp, &md5, &sp->param, data, size);
+	return hmacUpdate(&md5, &sp->mparam, data, size);
 }
 
-int hmacmd5Digest(hmacmd5Param* sp, uint32* data)
+int hmacmd5Digest(hmacmd5Param* sp, byte* data)
 {
-	return hmacDigest((hmacParam*) sp, &md5, &sp->param, data);
+	return hmacDigest(sp->kxo, &md5, &sp->mparam, data);
 }
+
+/*!\}
+ */

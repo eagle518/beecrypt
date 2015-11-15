@@ -1,11 +1,5 @@
 /*
- * dlsvdp-dh.c
- *
- * Discrete Logarithm Secret Value Derivation Primite - Diffie Hellman, code
- *
- * Copyright (c) 1999, 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 1999, 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,13 +17,49 @@
  *
  */
 
+/*!\file dlsvdp-dh.c
+ * \brief Diffie-Hellman algorithm.
+ *
+ * The IEEE P.1363 designation is:
+ * Discrete Logarithm Secret Value Derivation Primitive, Diffie-Hellman style.
+ *
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup DL_m DL_dh_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "dlsvdp-dh.h"
 
-int dlsvdp_pDHSecret(const dldp_p* dp, const mp32number* x, const mp32number* y, mp32number* s)
+/*!\addtogroup DL_dh_m
+ * \{
+ */
+
+/*!\fn dlsvdp_pDHSecret(const dldp_p* dp, const mpnumber* x, const mpnumber* y, mpnumber* s)
+ * \brief Computes the shared secret.
+ *
+ * Equation:
+ *
+ * \li \f$s=y^{x}\ \textrm{mod}\ p\f$
+ *
+ * \param dp The domain parameters.
+ * \param x The private value.
+ * \param y The public value (of the peer).
+ * \param s The computed secret value.
+ *
+ * \retval 0 on success.
+ * \retval -1 on failure.
+ */
+int dlsvdp_pDHSecret(const dldp_p* dp, const mpnumber* x, const mpnumber* y, mpnumber* s)
 {
-	mp32bnpowmod(&dp->p, y, x, s);
+	mpbnpowmod(&dp->p, y, x, s);
 
 	return 0;
 }
+
+/*!\}
+ */

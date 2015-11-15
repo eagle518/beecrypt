@@ -1,11 +1,5 @@
 /*
- * hmac.h
- *
- * HMAC message authentication code, header
- *
- * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 1999, 2000, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,16 +17,19 @@
  *
  */
 
+/*!\file hmac.h
+ * \brief HMAC algorithm, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HMAC_m
+ */
+
 #ifndef _HMAC_H
 #define _HMAC_H
 
 #include "beecrypt.h"
 
-typedef struct
-{
-	uint32 kxi[16];
-	uint32 kxo[16];
-} hmacParam;
+/*!\ingroup HMAC_m
+ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,14 +37,14 @@ extern "C" {
 
 /* not used directly as keyed hash function, but instead used as generic methods */
 
-BEEDLLAPI
-int hmacSetup (hmacParam*, const hashFunction*, hashFunctionParam*, const uint32*, int);
-BEEDLLAPI
-int hmacReset (hmacParam*, const hashFunction*, hashFunctionParam*);
-BEEDLLAPI
-int hmacUpdate(hmacParam*, const hashFunction*, hashFunctionParam*, const byte*, int);
-BEEDLLAPI
-int hmacDigest(hmacParam*, const hashFunction*, hashFunctionParam*, uint32*);
+BEECRYPTAPI
+int hmacSetup (      byte*,       byte*, const hashFunction*, hashFunctionParam*, const byte*, size_t);
+BEECRYPTAPI
+int hmacReset (const byte*,              const hashFunction*, hashFunctionParam*);
+BEECRYPTAPI
+int hmacUpdate(                          const hashFunction*, hashFunctionParam*, const byte*, size_t);
+BEECRYPTAPI
+int hmacDigest(             const byte*, const hashFunction*, hashFunctionParam*, byte*);
 
 #ifdef __cplusplus
 }

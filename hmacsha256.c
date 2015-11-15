@@ -1,11 +1,5 @@
 /*
- * hmacsha256.c
- *
- * HMAC-SHA-256 message authentication code, code
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,28 +17,57 @@
  *
  */
 
+/*!\file hmacsha256.c
+ * \brief HMAC-SHA-256 message digest algorithm.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HMAC_m HMAC_sha256_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "hmacsha256.h"
 
-const keyedHashFunction hmacsha256 = { "HMAC-SHA-256", sizeof(hmacsha256Param), 64, 8 * sizeof(uint32), 64, 512, 32, (keyedHashFunctionSetup) hmacsha256Setup, (keyedHashFunctionReset) hmacsha256Reset, (keyedHashFunctionUpdate) hmacsha256Update, (keyedHashFunctionDigest) hmacsha256Digest };
+/*!\addtogroup HMAC_sha256_m
+ * \{
+ */
 
-int hmacsha256Setup (hmacsha256Param* sp, const uint32* key, int keybits)
+const keyedHashFunction hmacsha256 = {
+	"HMAC-SHA-256",
+	sizeof(hmacsha256Param),
+	64,
+	32,
+	64,
+	512,
+	32,
+	(keyedHashFunctionSetup) hmacsha256Setup,
+	(keyedHashFunctionReset) hmacsha256Reset,
+	(keyedHashFunctionUpdate) hmacsha256Update,
+	(keyedHashFunctionDigest) hmacsha256Digest
+};
+
+int hmacsha256Setup (hmacsha256Param* sp, const byte* key, size_t keybits)
 {
-	return hmacSetup((hmacParam*) sp, &sha256, &sp->param, key, keybits);
+	return hmacSetup(sp->kxi, sp->kxo, &sha256, &sp->sparam, key, keybits);
 }
 
 int hmacsha256Reset (hmacsha256Param* sp)
 {
-	return hmacReset((hmacParam*) sp, &sha256, &sp->param);
+	return hmacReset(sp->kxi, &sha256, &sp->sparam);
 }
 
-int hmacsha256Update(hmacsha256Param* sp, const byte* data, int size)
+int hmacsha256Update(hmacsha256Param* sp, const byte* data, size_t size)
 {
-	return hmacUpdate((hmacParam*) sp, &sha256, &sp->param, data, size);
+	return hmacUpdate(&sha256, &sp->sparam, data, size);
 }
 
-int hmacsha256Digest(hmacsha256Param* sp, uint32* data)
+int hmacsha256Digest(hmacsha256Param* sp, byte* data)
 {
-	return hmacDigest((hmacParam*) sp, &sha256, &sp->param, data);
+	return hmacDigest(sp->kxo, &sha256, &sp->sparam, data);
 }
+
+/*!\}
+ */

@@ -1,13 +1,5 @@
 /*
- * rsapk.c
- *
- * RSA Public Key, code
- *
- * <conformance statement for IEEE P1363 needed here>
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,20 +17,30 @@
  *
  */
 
+/*!\file rsapk.c
+ * \brief RSA public key.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup IF_m IF_rsa_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "rsapk.h"
 
-#if HAVE_STRING_H
-# include <string.h>
-#endif
+/*!\addtogroup IF_rsa_m
+ * \{
+ */
 
 int rsapkInit(rsapk* pk)
 {
 	memset(pk, 0, sizeof(rsapk));
 	/* or
-	mp32bzero(&pk->n);
-	mp32nzero(&pk->e);
+	mpbzero(&pk->n);
+	mpnzero(&pk->e);
 	*/
 
 	return 0;
@@ -46,16 +48,19 @@ int rsapkInit(rsapk* pk)
 
 int rsapkFree(rsapk* pk)
 {
-	mp32bfree(&pk->n);
-	mp32nfree(&pk->e);
+	mpbfree(&pk->n);
+	mpnfree(&pk->e);
 
 	return 0;
 }
 
 int rsapkCopy(rsapk* dst, const rsapk* src)
 {
-	mp32bcopy(&dst->n, &src->n);
-	mp32ncopy(&dst->e, &src->e);
+	mpbcopy(&dst->n, &src->n);
+	mpncopy(&dst->e, &src->e);
 
 	return 0;
 }
+
+/*!\}
+ */

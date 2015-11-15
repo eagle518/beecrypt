@@ -1,11 +1,5 @@
 /*
- * blockpad.h
- *
- * Blockcipher padding, header
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +17,12 @@
  *
  */
 
+/*!\file blockpad.h
+ * \brief Blockcipher padding algorithms.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup BC_m
+ */
+
 #ifndef _BLOCKPAD_H
 #define _BLOCKPAD_H
 
@@ -32,15 +32,15 @@
 extern "C" {
 #endif
 
-BEEDLLAPI
-memchunk* pkcs5Pad  (int, memchunk*);
-BEEDLLAPI
-memchunk* pkcs5Unpad(int, memchunk*);
+BEECRYPTAPI
+memchunk* pkcs5Pad  (size_t, memchunk*);
+BEECRYPTAPI
+memchunk* pkcs5Unpad(size_t, memchunk*);
 
-BEEDLLAPI
-memchunk* pkcs5PadCopy  (int, const memchunk*);
-BEEDLLAPI
-memchunk* pkcs5UnpadCopy(int, const memchunk*);
+BEECRYPTAPI
+memchunk* pkcs5PadCopy  (size_t, const memchunk*);
+BEECRYPTAPI
+memchunk* pkcs5UnpadCopy(size_t, const memchunk*);
 
 #ifdef __cplusplus
 }

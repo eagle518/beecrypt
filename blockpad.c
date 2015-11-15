@@ -1,11 +1,5 @@
 /*
- * blockpad.c
- *
- * Blockcipher padding, code
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,21 +17,21 @@
  *
  */
 
+/*!\file blockpad.c
+ * \brief Blockcipher padding algorithms.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup BC_m
+ */
+
 #define BEECRYPT_DLL_EXPORT
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "blockpad.h"
 
-#if HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-#if HAVE_MALLOC_H
-# include <malloc.h>
-#endif
-#if HAVE_STRING_H
-# include <string.h>
-#endif
-
-memchunk* pkcs5Pad(int blockbytes, memchunk* tmp)
+memchunk* pkcs5Pad(size_t blockbytes, memchunk* tmp)
 {
 	if (tmp)
 	{
@@ -52,13 +46,13 @@ memchunk* pkcs5Pad(int blockbytes, memchunk* tmp)
 	return tmp;
 }
 
-memchunk* pkcs5Unpad(int blockbytes, memchunk* tmp)
+memchunk* pkcs5Unpad(size_t blockbytes, memchunk* tmp)
 {
 	if (tmp)
 	{
 		byte padvalue = tmp->data[tmp->size - 1];
 
-		int i;
+		unsigned int i;
 
 		if (padvalue > blockbytes)
 			return (memchunk*) 0;
@@ -76,7 +70,7 @@ memchunk* pkcs5Unpad(int blockbytes, memchunk* tmp)
 	return tmp;
 }
 
-memchunk* pkcs5PadCopy(int blockbytes, const memchunk* src)
+memchunk* pkcs5PadCopy(size_t blockbytes, const memchunk* src)
 {
 	memchunk* tmp;
 	byte padvalue = blockbytes - (src->size % blockbytes);
@@ -95,11 +89,11 @@ memchunk* pkcs5PadCopy(int blockbytes, const memchunk* src)
 	return tmp;
 }
 
-memchunk* pkcs5UnpadCopy(int blockbytes, const memchunk* src)
+memchunk* pkcs5UnpadCopy(size_t blockbytes, const memchunk* src)
 {
 	memchunk* tmp;
 	byte padvalue;
-	int i;
+	unsigned int i;
 
 	if (src == (memchunk*) 0)
 		return (memchunk*) 0;

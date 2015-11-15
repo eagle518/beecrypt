@@ -1,11 +1,5 @@
 /*
- * blowfishopt.h
- *
- * Blowfish block cipher assembler-optimized routines, header
- *
- * Copyright (c) 2000 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2002, 2003 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ */
+
+/*!\file blowfishopt.h
+ * \brief Blowfish block cipher, assembler-optimized routines, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup BC_blowfish_m
  */
 
 #ifndef _BLOWFISHOPT_H
@@ -48,13 +48,28 @@ extern "C" {
 #  define ASM_BLOWFISHENCRYPT
 #  define ASM_BLOWFISHDECRYPT
 # endif
+# if defined(OPTIMIZE_POWERPC)
+#  define ASM_BLOWFISHENCRYPT
+#  define ASM_BLOWFISHDECRYPT
+# endif
+#endif
+
+#if defined(__IBMC__)
+# if defined(OPTIMIZE_POWERPC)
+#  define ASM_BLOWFISHENCRYPT
+#  define ASM_BLOWFISHDECRYPT
+# endif
+#endif
+
+#if defined(__INTEL_COMPILER)
+# if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
+#  define ASM_BLOWFISHENCRYPT
+#  define ASM_BLOWFISHDECRYPT
+# endif
 #endif
 
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
-#define ASM_BLOWFISHENCRYPT
-#define ASM_BLOWFISHDECRYPT
-#endif
+/* nothing here yet */
 #endif
 
 #ifdef __cplusplus

@@ -1,11 +1,5 @@
 /*
- * hmacsha256.h
- *
- * HMAC-SHA-256 message authentication code, header
- *
- * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,33 +17,41 @@
  *
  */
 
+/*!\file hmacsha256.h
+ * \brief HMAC-SHA-256 message authentication code, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HMAC_m HMAC_sha256_m
+ */
+
 #ifndef _HMACSHA256_H
 #define _HMACSHA256_H
 
 #include "hmac.h"
 #include "sha256.h"
 
+/*!\ingroup HMAC_sha256_m
+ */
 typedef struct
 {
+	sha256Param sparam;
 	byte kxi[64];
 	byte kxo[64];
-	sha256Param param;
 } hmacsha256Param;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern BEEDLLAPI const keyedHashFunction hmacsha256;
+extern BEECRYPTAPI const keyedHashFunction hmacsha256;
 
-BEEDLLAPI
-int hmacsha256Setup (hmacsha256Param*, const uint32*, int);
-BEEDLLAPI
+BEECRYPTAPI
+int hmacsha256Setup (hmacsha256Param*, const byte*, size_t);
+BEECRYPTAPI
 int hmacsha256Reset (hmacsha256Param*);
-BEEDLLAPI
-int hmacsha256Update(hmacsha256Param*, const byte*, int);
-BEEDLLAPI
-int hmacsha256Digest(hmacsha256Param*, uint32*);
+BEECRYPTAPI
+int hmacsha256Update(hmacsha256Param*, const byte*, size_t);
+BEECRYPTAPI
+int hmacsha256Digest(hmacsha256Param*, byte*);
 
 #ifdef __cplusplus
 }

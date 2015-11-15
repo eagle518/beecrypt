@@ -1,11 +1,5 @@
 /*
- * hmacsha1.h
- *
- * HMAC-SHA-1 message authentication code, header
- *
- * Copyright (c) 1999, 2000, 2001 Virtual Unlimited B.V.
- *
- * Author: Bob Deblier <bob@virtualunlimited.com>
+ * Copyright (c) 1999, 2000, 2001, 2002 Virtual Unlimited B.V.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,33 +17,41 @@
  *
  */
 
+/*!\file hmacsha1.h
+ * \brief HMAC-SHA-1 message authentication code, headers.
+ * \author Bob Deblier <bob.deblier@pandora.be>
+ * \ingroup HMAC_m HMAC_sha1_m
+ */
+
 #ifndef _HMACSHA1_H
 #define _HMACSHA1_H
 
 #include "hmac.h"
-#include "fips180.h"
+#include "sha1.h"
 
+/*!\ingroup HMAC_sha1_m
+ */
 typedef struct
 {
+	sha1Param sparam;
 	byte kxi[64];
 	byte kxo[64];
-	sha1Param param;
 } hmacsha1Param;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern BEEDLLAPI const keyedHashFunction hmacsha1;
+extern BEECRYPTAPI const keyedHashFunction hmacsha1;
 
-BEEDLLAPI
-int hmacsha1Setup (hmacsha1Param*, const uint32*, int);
-BEEDLLAPI
+BEECRYPTAPI
+int hmacsha1Setup (hmacsha1Param*, const byte*, size_t);
+BEECRYPTAPI
 int hmacsha1Reset (hmacsha1Param*);
-BEEDLLAPI
-int hmacsha1Update(hmacsha1Param*, const byte*, int);
-BEEDLLAPI
-int hmacsha1Digest(hmacsha1Param*, uint32*);
+BEECRYPTAPI
+int hmacsha1Update(hmacsha1Param*, const byte*, size_t);
+BEECRYPTAPI
+int hmacsha1Digest(hmacsha1Param*, byte*);
 
 #ifdef __cplusplus
 }
