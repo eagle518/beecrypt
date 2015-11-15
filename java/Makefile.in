@@ -63,7 +63,7 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = build.xml
 CONFIG_CLEAN_VPATH_FILES =
@@ -92,8 +92,9 @@ am__installdirs = "$(DESTDIR)$(libaltdir)"
 LTLIBRARIES = $(libalt_LTLIBRARIES)
 libbeecrypt_java_la_DEPENDENCIES = $(top_builddir)/libbeecrypt.la
 am_libbeecrypt_java_la_OBJECTS = beecrypt_tools.lo \
-	beecrypt_provider_AES.lo beecrypt_provider_MD5.lo \
-	beecrypt_provider_SHA1.lo beecrypt_provider_SHA256.lo \
+	beecrypt_provider_AES.lo beecrypt_provider_MD4.lo \
+	beecrypt_provider_MD5.lo beecrypt_provider_SHA1.lo \
+	beecrypt_provider_SHA224.lo beecrypt_provider_SHA256.lo \
 	beecrypt_provider_SHA384.lo beecrypt_provider_SHA512.lo \
 	beecrypt_provider_HMACMD5.lo beecrypt_provider_HMACSHA1.lo \
 	beecrypt_provider_HMACSHA256.lo \
@@ -190,7 +191,6 @@ LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
-MAYBE_SUB = @MAYBE_SUB@
 MKDIR_P = @MKDIR_P@
 MP_WBITS = @MP_WBITS@
 NM = @NM@
@@ -304,8 +304,10 @@ libalt_LTLIBRARIES = libbeecrypt_java.la
 libbeecrypt_java_la_SOURCES = \
 beecrypt_tools.c \
 beecrypt_provider_AES.c \
+beecrypt_provider_MD4.c \
 beecrypt_provider_MD5.c \
 beecrypt_provider_SHA1.c \
+beecrypt_provider_SHA224.c \
 beecrypt_provider_SHA256.c \
 beecrypt_provider_SHA384.c \
 beecrypt_provider_SHA512.c \
@@ -338,10 +340,13 @@ src/beecrypt/provider/DHIESParameters.java \
 src/beecrypt/provider/DHKeyFactory.java \
 src/beecrypt/provider/DSAKeyFactory.java \
 src/beecrypt/provider/KeyProtector.java \
+src/beecrypt/provider/MD4.java \
 src/beecrypt/provider/MD5.java \
+src/beecrypt/provider/PKCS12.java \
 src/beecrypt/provider/RSAKeyFactory.java \
 src/beecrypt/provider/RSAKeyPairGenerator.java \
 src/beecrypt/provider/SHA1.java \
+src/beecrypt/provider/SHA224.java \
 src/beecrypt/provider/SHA256.java \
 src/beecrypt/provider/SHA384.java \
 src/beecrypt/provider/SHA512.java \

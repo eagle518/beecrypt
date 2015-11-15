@@ -33,8 +33,10 @@ libalt_LTLIBRARIES = libbeecrypt_java.la
 libbeecrypt_java_la_SOURCES = \
 beecrypt_tools.c \
 beecrypt_provider_AES.c \
+beecrypt_provider_MD4.c \
 beecrypt_provider_MD5.c \
 beecrypt_provider_SHA1.c \
+beecrypt_provider_SHA224.c \
 beecrypt_provider_SHA256.c \
 beecrypt_provider_SHA384.c \
 beecrypt_provider_SHA512.c \
@@ -68,10 +70,13 @@ src/beecrypt/provider/DHIESParameters.java \
 src/beecrypt/provider/DHKeyFactory.java \
 src/beecrypt/provider/DSAKeyFactory.java \
 src/beecrypt/provider/KeyProtector.java \
+src/beecrypt/provider/MD4.java \
 src/beecrypt/provider/MD5.java \
+src/beecrypt/provider/PKCS12.java \
 src/beecrypt/provider/RSAKeyFactory.java \
 src/beecrypt/provider/RSAKeyPairGenerator.java \
 src/beecrypt/provider/SHA1.java \
+src/beecrypt/provider/SHA224.java \
 src/beecrypt/provider/SHA256.java \
 src/beecrypt/provider/SHA384.java \
 src/beecrypt/provider/SHA512.java \

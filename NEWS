@@ -1,3 +1,8 @@
+4.2.1:
+	- Cleaned up old autotools cruft (thanks to Anìbal Monsalve Salazar).
+	- Different automake approach to compiling separate components.
+	- Fixed C++ header installation problem.
+
 4.2.0:
 	- Added OpenMP support (initially for RSA CRT).
 	- Added SHA-224 and HMAC-SHA-224.

@@ -8,8 +8,8 @@ import java.security.spec.*;
 import javax.crypto.interfaces.*;
 import javax.crypto.spec.*;
 
-import beecrypt.asn1.*;
-import beecrypt.asn1.x509.SubjectPublicKeyInfo;
+// import beecrypt.asn1.*;
+// import beecrypt.asn1.x509.SubjectPublicKeyInfo;
 import beecrypt.beeyond.*;
 import beecrypt.crypto.*;
 import beecrypt.io.*;

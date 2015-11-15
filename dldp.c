@@ -363,7 +363,6 @@ int dldp_pgonMakeSafe(dldp_p* dp, randomGeneratorContext* rgc, size_t pbits)
 		mpbset(&dp->n, psize, temp);
 
 		/* set q */
-		mpcopy(psize, temp, dp->p.modl);
 		mpdivtwo(psize, temp);
 		mpbset(&dp->q, psize, temp);
 

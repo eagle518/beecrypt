@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([beecrypt],[4.2.0],[bob.deblier@telenet.be])
+AC_INIT([beecrypt],[4.2.1],[bob.deblier@telenet.be])
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR(include/beecrypt/beecrypt.h)
 AC_CONFIG_HEADERS([config.h])
@@ -318,6 +318,8 @@ if test "$ac_with_cplusplus" = yes; then
   AC_LANG_POP(C)
 fi
 
+AM_CONDITIONAL([WITH_CPLUSPLUS],[test "$ac_with_cplusplus" = yes])
+
 if test "$ac_with_cplusplus" = yes ; then
   AC_DEFINE([CPPGLUE],1)
 fi
@@ -434,6 +436,8 @@ EOF
   fi
 fi
 
+AM_CONDITIONAL([WITH_JAVA],[test "$ac_with_java" = yes])
+
 if test "$ac_with_java" = yes ; then
   AC_DEFINE([JAVAGLUE],1)
   CPPFLAGS="$CPPFLAGS $ac_cv_java_include"
@@ -456,6 +460,8 @@ if test "$ac_with_python" = yes ; then
     ])
   fi
 fi
+
+AM_CONDITIONAL([WITH_PYTHON],[test "$ac_with_python" = yes])
 
 if test "$ac_with_python" = yes; then
   AC_DEFINE([PYTHONGLUE],1)
@@ -636,26 +642,6 @@ BEE_ASM_SOURCES
 # Check for standard types and integers of specific sizes
 BEE_INT_TYPES
 BEE_CPU_BITS
-
-MAYBE_SUB=
-# MAYBE_LTLIB=
-
-if test "$ac_with_cplusplus" = yes; then
-  MAYBE_SUB="$MAYBE_SUB c++"
-# MAYBE_LTLIB="$MAYBE_LTLIB libbeecrypt_cxx.la"
-fi
-
-if test "$ac_with_java" = yes; then
-  MAYBE_SUB="$MAYBE_SUB java"
-# MAYBE_LTLIB="$MAYBE_LTLIB libbeecrypt_java.la"
-fi
-
-if test "$ac_with_python" = yes; then
-  MAYBE_SUB="$MAYBE_SUB python"
-fi
-
-AC_SUBST([MAYBE_SUB])
-# AC_SUBST([MAYBE_LTLIB])
 
 # Generate output files.
 AC_CONFIG_FILES([

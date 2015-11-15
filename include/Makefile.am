@@ -53,8 +53,10 @@ beecrypt/sha512.h \
 beecrypt/sha2k32.h \
 beecrypt/sha2k64.h \
 beecrypt/timestamp.h \
-beecrypt/win.h \
-\
+beecrypt/win.h
+
+if WITH_CPLUSPLUS
+nobase_include_HEADERS += \
 beecrypt/c++/array.h \
 beecrypt/c++/mutex.h \
 \
@@ -260,10 +262,12 @@ beecrypt/c++/util/Queue.h \
 beecrypt/c++/util/RandomAccess.h \
 beecrypt/c++/util/Set.h \
 \
-beecrypt/c++/util/concurrent/locks \
+beecrypt/c++/util/concurrent/Callable.h \
+\
 beecrypt/c++/util/concurrent/locks/Condition.h \
 beecrypt/c++/util/concurrent/locks/Lock.h \
 beecrypt/c++/util/concurrent/locks/ReentrantLock.h
+endif
 
 noinst_HEADERS = \
 beecrypt/aes_be.h \
@@ -317,6 +321,7 @@ beecrypt/c++/provider/SHA1Digest.h \
 beecrypt/c++/provider/SHA1withDSASignature.h \
 beecrypt/c++/provider/SHA1withRSASignature.h \
 beecrypt/c++/provider/SHA256Digest.h \
+beecrypt/c++/provider/SHA224Digest.h \
 beecrypt/c++/provider/SHA256withRSASignature.h \
 beecrypt/c++/provider/SHA384Digest.h \
 beecrypt/c++/provider/SHA384withRSASignature.h \
@@ -330,9 +335,11 @@ beecrypt/java/beecrypt_provider_HMACSHA1.h \
 beecrypt/java/beecrypt_provider_HMACSHA256.h \
 beecrypt/java/beecrypt_provider_HMACSHA384.h \
 beecrypt/java/beecrypt_provider_HMACSHA512.h \
+beecrypt/java/beecrypt_provider_MD4.h \
 beecrypt/java/beecrypt_provider_MD5.h \
 beecrypt/java/beecrypt_provider_RSAKeyPairGenerator.h \
 beecrypt/java/beecrypt_provider_SHA1.h \
+beecrypt/java/beecrypt_provider_SHA224.h \
 beecrypt/java/beecrypt_provider_SHA256.h \
 beecrypt/java/beecrypt_provider_SHA384.h \
 beecrypt/java/beecrypt_provider_SHA512.h \

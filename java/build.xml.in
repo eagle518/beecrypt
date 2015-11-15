@@ -59,8 +59,10 @@
   <target name="headers" depends="dist">
     <javah classpath="@builddir@/beecrypt-java.jar">
        <class name="beecrypt.provider.AES"/>
+       <class name="beecrypt.provider.MD4"/>
        <class name="beecrypt.provider.MD5"/>
        <class name="beecrypt.provider.SHA1"/>
+       <class name="beecrypt.provider.SHA224"/>
        <class name="beecrypt.provider.SHA256"/>
        <class name="beecrypt.provider.SHA384"/>
        <class name="beecrypt.provider.SHA512"/>

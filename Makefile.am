@@ -37,6 +37,18 @@ AUTOMAKE_OPTIONS = gnu check-news no-dependencies
 
 SUBDIRS = . include $(MAYBE_SUB) tests docs gas masm
 
+if WITH_CPLUSPLUS
+SUBDIRS += c++
+endif
+
+if WITH_JAVA
+SUBDIRS += java
+endif
+
+if WITH_PYTHON
+SUBDIRS += python
+endif
+
 SUFFIXES = .s
 
 AM_CFLAGS = $(OPENMP_CFLAGS)

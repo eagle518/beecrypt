@@ -3,10 +3,6 @@ Legend:
 	* = fixed bug
 
 4.2.0:
-	- When beecrypt is compiled with OpenMP support, the python interface
-	  will complain about missing symbols (GOMP_*). The cause seems to be
-	  that if a shared library is built with OpenMP support, the application
-	  that dlopens it also needs to be compiled with OpenMP support.
 	- Sparc / Solaris 64-bit with gcc fails during link of library with
 	  error due to wrong ELF class: this is actually a bug in Sun's gcc
 	  profiles, which tries to link 32-bit libraries in 64-bit mode.

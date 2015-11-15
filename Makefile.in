@@ -66,6 +66,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@WITH_CPLUSPLUS_TRUE@am__append_1 = c++
+@WITH_JAVA_TRUE@am__append_2 = java
+@WITH_PYTHON_TRUE@am__append_3 = python
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
@@ -73,9 +76,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure \
 	$(top_srcdir)/include/beecrypt/Doxyfile.in \
 	$(top_srcdir)/include/beecrypt/c++/Doxyfile.in AUTHORS COPYING \
-	COPYING.LIB ChangeLog INSTALL NEWS config.guess config.rpath \
-	config.sub depcomp install-sh ltconfig ltmain.sh missing \
-	mkinstalldirs
+	COPYING.LIB ChangeLog INSTALL NEWS config.guess config.sub \
+	depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
@@ -83,7 +85,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = config.m4 include/beecrypt/Doxyfile \
 	include/beecrypt/c++/Doxyfile gnu.h
@@ -163,7 +165,7 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir dist dist-all distcheck
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = . include tests docs gas masm c++ java python
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -268,7 +270,6 @@ LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
-MAYBE_SUB = @MAYBE_SUB@
 MKDIR_P = @MKDIR_P@
 MP_WBITS = @MP_WBITS@
 NM = @NM@
@@ -376,7 +377,8 @@ LIBBEECRYPT_LT_CURRENT = 7
 LIBBEECRYPT_LT_AGE = 0
 LIBBEECRYPT_LT_REVISION = 0
 AUTOMAKE_OPTIONS = gnu check-news no-dependencies
-SUBDIRS = . include $(MAYBE_SUB) tests docs gas masm
+SUBDIRS = . include $(MAYBE_SUB) tests docs gas masm $(am__append_1) \
+	$(am__append_2) $(am__append_3)
 SUFFIXES = .s
 AM_CFLAGS = $(OPENMP_CFLAGS)
 INCLUDES = -I$(top_srcdir)/include

@@ -53,8 +53,10 @@ public final class BaseProvider extends Provider {
 				setProperty("Mac.HmacSHA256", "beecrypt.provider.HMACSHA256");
 				setProperty("Mac.HmacSHA384", "beecrypt.provider.HMACSHA384");
 				setProperty("Mac.HmacSHA512", "beecrypt.provider.HMACSHA512");
+				setProperty("MessageDigest.MD4", "beecrypt.provider.MD4");
 				setProperty("MessageDigest.MD5", "beecrypt.provider.MD5");
 				setProperty("MessageDigest.SHA-1", "beecrypt.provider.SHA1");
+				setProperty("MessageDigest.SHA-224", "beecrypt.provider.SHA224");
 				setProperty("MessageDigest.SHA-256", "beecrypt.provider.SHA256");
 				setProperty("MessageDigest.SHA-384", "beecrypt.provider.SHA384");
 				setProperty("MessageDigest.SHA-512", "beecrypt.provider.SHA512");
