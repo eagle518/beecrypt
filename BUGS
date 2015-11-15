@@ -2,6 +2,9 @@ Legend:
 	- = open bug
 	* = fixed bug
 
+2.1.0:
+	* Entropy gathering from /dev/dsp contained error; size in words of entropy data to gather was overwritten with audio sample size - which resulted in much less entropy.
+
 2.0.0:
 	- Chinese Remainder Theorem for RSA private key operation doesn't work; it needs fixing.
 

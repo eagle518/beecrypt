@@ -40,16 +40,18 @@ javalong timestamp()
 	#if HAVE_SYS_TIME_H
 	# if HAVE_GETTIMEOFDAY
 	struct timeval now;
+
 	gettimeofday(&now, 0);
-	tmp = now.tv_sec;
-	tmp *= 1000;
-	tmp += (now.tv_usec / 1000);
+
+	tmp = ((javalong) now.tv_sec) * 1000 + (now.tv_usec / 1000);
+	# else
+	#  error
 	# endif
 	#elif HAVE_TIME_H
-	tmp = time(0);
-	tmp *= 1000;
+	tmp = ((javalong) time(0)) * 1000;
 	#else
 	# error implement other time function
 	#endif
+
 	return tmp;
 }

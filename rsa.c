@@ -29,8 +29,12 @@
 #include "mp32.h"
 
 #if HAVE_STDLIB_H
-# include "stdlib.h"
+# include <stdlib.h>
 #endif
+#if HAVE_MALLOC_H
+# include <malloc.h>
+#endif
+
 int rsapri(const rsakp* kp, const mp32number* m, mp32number* c)
 {
 	register uint32  size = kp->n.size;
@@ -98,8 +102,8 @@ int rsapricrt(const rsakp* kp, const mp32number* m, mp32number* c)
 }
 
 /**
- * returns: 0 if signature verifies
- *          -1 otherwise, can also indicate errors
+ * returns: 1 if signature verifies
+ *          0 otherwise, can also indicate errors
  */
 int rsavrfy(const rsapk* pk, const mp32number* m, const mp32number* c)
 {

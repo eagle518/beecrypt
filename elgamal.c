@@ -61,11 +61,10 @@
 #include "mp32.h"
 
 #if HAVE_STDLIB_H
-#include <stdlib.h>
+# include <stdlib.h>
 #endif
-
-#if HAVE_ALLOCA_H
-#include <alloca.h>
+#if HAVE_MALLOC_H
+# include <malloc.h>
 #endif
 
 int elgv1sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rgc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)

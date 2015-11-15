@@ -31,24 +31,41 @@
 
 typedef struct
 {
-	dldp_p param;
-	hashFunctionContext hash;
-	blockCipherContext cipher;
-	keyedHashFunctionContext mac;
-	randomGeneratorContext rng;
-} dhaes_p;
+	const dldp_p*				param;
+	const hashFunction*			hash;
+	const blockCipher*			cipher;
+	const keyedHashFunction*	mac;
+	int							cipherkeybits;
+	int							mackeybits;
+} dhaes_pParameters;
+
+typedef struct
+{
+	dldp_p						param;
+	mp32number					pub;
+	mp32number					pri;
+	hashFunctionContext			hash;
+	blockCipherContext			cipher;
+	keyedHashFunctionContext	mac;
+	int							cipherkeybits;
+	int							mackeybits;
+} dhaes_pContext;
 
 BEEDLLAPI
-int dhaes_usable(const blockCipher*, const keyedHashFunction*, const hashFunction*);
+int dhaes_pUsable(const dhaes_pParameters*);
 
 BEEDLLAPI
-int dhaes_pInit(dhaes_p*, const dldp_p*, const blockCipher*, const keyedHashFunction*, const hashFunction*, const randomGenerator*);
+int dhaes_pContextInit       (dhaes_pContext*, const dhaes_pParameters*);
 BEEDLLAPI
-int dhaes_pFree(dhaes_p*);
+int dhaes_pContextInitDecrypt(dhaes_pContext*, const dhaes_pParameters*, const mp32number*);
+BEEDLLAPI
+int dhaes_pContextInitEncrypt(dhaes_pContext*, const dhaes_pParameters*, const mp32number*);
+BEEDLLAPI
+int dhaes_pContextFree       (dhaes_pContext*);
 
 BEEDLLAPI
-memchunk* dhaes_pEncrypt(dhaes_p*, const mp32number*,       mp32number*,       mp32number*, const memchunk*);
+memchunk* dhaes_pContextEncrypt(dhaes_pContext*,       mp32number*,       mp32number*, const memchunk*, randomGeneratorContext*);
 BEEDLLAPI
-memchunk* dhaes_pDecrypt(dhaes_p*, const mp32number*, const mp32number*, const mp32number*, const memchunk*);
+memchunk* dhaes_pContextDecrypt(dhaes_pContext*, const mp32number*, const mp32number*, const memchunk*);
 
 #endif

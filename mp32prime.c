@@ -3,7 +3,7 @@
  *
  * Multi-precision primes, code
  *
- * Copyright (c) 2000 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -30,7 +30,10 @@
 #include "mp32barrett.h"
 
 #if HAVE_STDLIB_H
-#include <stdlib.h>
+# include <stdlib.h>
+#endif
+#if HAVE_MALLOC_H
+# include <malloc.h>
 #endif
 
 #include <stdio.h>

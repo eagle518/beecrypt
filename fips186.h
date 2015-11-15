@@ -30,7 +30,8 @@
 
 #ifdef _REENTRANT
 # if WIN32
-#  include <Winbase.h>
+#  include <windows.h>
+#  include <winbase.h>
 # else
 #  if HAVE_SYNCH_H
 #   include <synch.h>

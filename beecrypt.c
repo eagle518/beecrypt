@@ -28,13 +28,16 @@
 #include "beecrypt.h"
 
 #if HAVE_STDLIB_H
-#include <stdlib.h>
+# include <stdlib.h>
 #endif
 #if HAVE_MALLOC_H
-#include <malloc.h>
+# include <malloc.h>
 #endif
 #if HAVE_STRING_H
-#include <string.h>
+# include <string.h>
+#endif
+#if WIN32
+# include <windows.h>
 #endif
 
 #include "endianness.h"
@@ -106,16 +109,41 @@ const entropySource* entropySourceFind(const char* name)
 
 const entropySource* entropySourceDefault()
 {
-	char* tmp = getenv("BEECRYPT_ENTROPY");
-	if (tmp)
+	const char* selection = getenv("BEECRYPT_ENTROPY");
+
+	if (selection)
 	{
-		return entropySourceFind(tmp);
+		return entropySourceFind(selection);
 	}
 	else if (ENTROPYSOURCES)
 	{
 		return entropySourceList+0;
 	}
 	return (const entropySource*) 0;
+}
+
+int entropyGatherNext(uint32* data, int size)
+{
+	const char* selection = getenv("BEECRYPT_ENTROPY");
+
+	if (selection)
+	{
+		const entropySource* ptr = entropySourceFind(selection);
+
+		if (ptr)
+			return ptr->next(data, size);
+	}
+	else
+	{
+		register int index;
+
+		for (index = 0; index < ENTROPYSOURCES; index++)
+		{
+			if (entropySourceList[index].next(data, size) == 0)
+				return 0;
+		}
+	}
+	return -1;
 }
 
 static const randomGenerator* randomGeneratorList[] =
@@ -153,10 +181,10 @@ const randomGenerator* randomGeneratorFind(const char* name)
 
 const randomGenerator* randomGeneratorDefault()
 {
-	char* tmp = getenv("BEECRYPT_RANDOM");
+	char* selection = getenv("BEECRYPT_RANDOM");
 
-	if (tmp)
-		return randomGeneratorFind(tmp);
+	if (selection)
+		return randomGeneratorFind(selection);
 	else
 		return &fips186prng;
 }
@@ -216,9 +244,10 @@ int hashFunctionCount()
 
 const hashFunction* hashFunctionDefault()
 {
-	char* tmp = getenv("BEECRYPT_HASH");
-	if (tmp)
-		return hashFunctionFind(tmp);
+	char* selection = getenv("BEECRYPT_HASH");
+
+	if (selection)
+		return hashFunctionFind(selection);
 	else
 		return &sha1;
 }
@@ -251,13 +280,13 @@ int hashFunctionContextInit(hashFunctionContext* ctxt, const hashFunction* hash)
 	if (hash == (hashFunction*) 0)
 		return -1;
 
-	ctxt->hash = hash;
+	ctxt->algo = hash;
 	ctxt->param = (hashFunctionParam*) calloc(hash->paramsize, 1);
 
 	if (ctxt->param == (hashFunctionParam*) 0)
 		return -1;
 
-	return 0;
+	return ctxt->algo->reset(ctxt->param);
 }
 
 int hashFunctionContextFree(hashFunctionContext* ctxt)
@@ -280,13 +309,13 @@ int hashFunctionContextReset(hashFunctionContext* ctxt)
 	if (ctxt == (hashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (hashFunction*) 0)
+	if (ctxt->algo == (hashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (hashFunctionParam*) 0)
 		return -1;
 
-	return ctxt->hash->reset(ctxt->param);
+	return ctxt->algo->reset(ctxt->param);
 }
 
 int hashFunctionContextUpdate(hashFunctionContext* ctxt, const byte* data, int size)
@@ -294,7 +323,7 @@ int hashFunctionContextUpdate(hashFunctionContext* ctxt, const byte* data, int s
 	if (ctxt == (hashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (hashFunction*) 0)
+	if (ctxt->algo == (hashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (hashFunctionParam*) 0)
@@ -303,7 +332,7 @@ int hashFunctionContextUpdate(hashFunctionContext* ctxt, const byte* data, int s
 	if (data == (const byte*) 0)
 		return -1;
 
-	return ctxt->hash->update(ctxt->param, data, size);
+	return ctxt->algo->update(ctxt->param, data, size);
 }
 
 int hashFunctionContextUpdateMC(hashFunctionContext* ctxt, const memchunk* m)
@@ -311,7 +340,7 @@ int hashFunctionContextUpdateMC(hashFunctionContext* ctxt, const memchunk* m)
 	if (ctxt == (hashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (hashFunction*) 0)
+	if (ctxt->algo == (hashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (hashFunctionParam*) 0)
@@ -320,7 +349,7 @@ int hashFunctionContextUpdateMC(hashFunctionContext* ctxt, const memchunk* m)
 	if (m == (memchunk*) 0)
 		return -1;
 
-	return ctxt->hash->update(ctxt->param, m->data, m->size);
+	return ctxt->algo->update(ctxt->param, m->data, m->size);
 }
 
 int hashFunctionContextUpdateMP32(hashFunctionContext* ctxt, const mp32number* n)
@@ -328,7 +357,7 @@ int hashFunctionContextUpdateMP32(hashFunctionContext* ctxt, const mp32number* n
 	if (ctxt == (hashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (hashFunction*) 0)
+	if (ctxt->algo == (hashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (hashFunctionParam*) 0)
@@ -343,12 +372,12 @@ int hashFunctionContextUpdateMP32(hashFunctionContext* ctxt, const mp32number* n
 		{
 			temp[0] = 0;
 			encodeInts((javaint*) n->data, temp+1, n->size);
-			rc = ctxt->hash->update(ctxt->param, temp, (n->size << 2) + 1);
+			rc = ctxt->algo->update(ctxt->param, temp, (n->size << 2) + 1);
 		}
 		else
 		{
 			encodeInts((javaint*) n->data, temp, n->size);
-			rc = ctxt->hash->update(ctxt->param, temp, n->size << 2);
+			rc = ctxt->algo->update(ctxt->param, temp, n->size << 2);
 		}
 		free(temp);
 
@@ -362,7 +391,7 @@ int hashFunctionContextDigest(hashFunctionContext* ctxt, mp32number* dig)
 	if (ctxt == (hashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (hashFunction*) 0)
+	if (ctxt->algo == (hashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (hashFunctionParam*) 0)
@@ -370,9 +399,9 @@ int hashFunctionContextDigest(hashFunctionContext* ctxt, mp32number* dig)
 
 	if (dig != (mp32number*) 0)
 	{
-		mp32nsize(dig, (ctxt->hash->digestsize + 3) >> 2);
+		mp32nsize(dig, (ctxt->algo->digestsize + 3) >> 2);
 
-		return ctxt->hash->digest(ctxt->param, dig->data);
+		return ctxt->algo->digest(ctxt->param, dig->data);
 	}
 	return -1;
 }
@@ -410,9 +439,10 @@ int keyedHashFunctionCount()
 
 const keyedHashFunction* keyedHashFunctionDefault()
 {
-	char* tmp = getenv("BEECRYPT_KEYEDHASH");
-	if (tmp)
-		return keyedHashFunctionFind(tmp);
+	char* selection = getenv("BEECRYPT_KEYEDHASH");
+
+	if (selection)
+		return keyedHashFunctionFind(selection);
 	else
 		return &hmacsha1;
 }
@@ -437,21 +467,21 @@ const keyedHashFunction* keyedHashFunctionFind(const char* name)
 	return (const keyedHashFunction*) 0;
 }
 
-int keyedHashFunctionContextInit(keyedHashFunctionContext* ctxt, const keyedHashFunction* hash)
+int keyedHashFunctionContextInit(keyedHashFunctionContext* ctxt, const keyedHashFunction* mac)
 {
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (hash == (keyedHashFunction*) 0)
+	if (mac == (keyedHashFunction*) 0)
 		return -1;
 
-	ctxt->hash = hash;
-	ctxt->param = (keyedHashFunctionParam*) calloc(hash->paramsize, 1);
+	ctxt->algo = mac;
+	ctxt->param = (keyedHashFunctionParam*) calloc(mac->paramsize, 1);
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
 		return -1;
 
-	return 0;
+	return ctxt->algo->reset(ctxt->param);
 }
 
 int keyedHashFunctionContextFree(keyedHashFunctionContext* ctxt)
@@ -459,7 +489,7 @@ int keyedHashFunctionContextFree(keyedHashFunctionContext* ctxt)
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
@@ -477,7 +507,7 @@ int keyedHashFunctionContextSetup(keyedHashFunctionContext* ctxt, const uint32* 
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
@@ -486,7 +516,7 @@ int keyedHashFunctionContextSetup(keyedHashFunctionContext* ctxt, const uint32* 
 	if (key == (uint32*) 0)
 		return -1;
 
-	return ctxt->hash->setup(ctxt->param, key, keybits);
+	return ctxt->algo->setup(ctxt->param, key, keybits);
 }
 
 int keyedHashFunctionContextReset(keyedHashFunctionContext* ctxt)
@@ -494,13 +524,13 @@ int keyedHashFunctionContextReset(keyedHashFunctionContext* ctxt)
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
 		return -1;
 
-	return ctxt->hash->reset(ctxt->param);
+	return ctxt->algo->reset(ctxt->param);
 }
 
 int keyedHashFunctionContextUpdate(keyedHashFunctionContext* ctxt, const byte* data, int size)
@@ -508,7 +538,7 @@ int keyedHashFunctionContextUpdate(keyedHashFunctionContext* ctxt, const byte* d
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
@@ -517,7 +547,7 @@ int keyedHashFunctionContextUpdate(keyedHashFunctionContext* ctxt, const byte* d
 	if (data == (byte*) 0)
 		return -1;
 
-	return ctxt->hash->update(ctxt->param, data, size);
+	return ctxt->algo->update(ctxt->param, data, size);
 }
 
 int keyedHashFunctionContextUpdateMC(keyedHashFunctionContext* ctxt, const memchunk* m)
@@ -525,7 +555,7 @@ int keyedHashFunctionContextUpdateMC(keyedHashFunctionContext* ctxt, const memch
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
@@ -534,7 +564,7 @@ int keyedHashFunctionContextUpdateMC(keyedHashFunctionContext* ctxt, const memch
 	if (m == (memchunk*) 0)
 		return -1;
 
-	return ctxt->hash->update(ctxt->param, m->data, m->size);
+	return ctxt->algo->update(ctxt->param, m->data, m->size);
 }
 
 int keyedHashFunctionContextUpdateMP32(keyedHashFunctionContext* ctxt, const mp32number* n)
@@ -542,7 +572,7 @@ int keyedHashFunctionContextUpdateMP32(keyedHashFunctionContext* ctxt, const mp3
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
@@ -557,12 +587,12 @@ int keyedHashFunctionContextUpdateMP32(keyedHashFunctionContext* ctxt, const mp3
 		{
 			temp[0] = 0;
 			encodeInts((javaint*) n->data, temp+1, n->size);
-			rc = ctxt->hash->update(ctxt->param, temp, (n->size << 2) + 1);
+			rc = ctxt->algo->update(ctxt->param, temp, (n->size << 2) + 1);
 		}
 		else
 		{
 			encodeInts((javaint*) n->data, temp, n->size);
-			rc = ctxt->hash->update(ctxt->param, temp, n->size << 2);
+			rc = ctxt->algo->update(ctxt->param, temp, n->size << 2);
 		}
 		free(temp);
 
@@ -576,7 +606,7 @@ int keyedHashFunctionContextDigest(keyedHashFunctionContext* ctxt, mp32number* d
 	if (ctxt == (keyedHashFunctionContext*) 0)
 		return -1;
 
-	if (ctxt->hash == (keyedHashFunction*) 0)
+	if (ctxt->algo == (keyedHashFunction*) 0)
 		return -1;
 
 	if (ctxt->param == (keyedHashFunctionParam*) 0)
@@ -584,9 +614,9 @@ int keyedHashFunctionContextDigest(keyedHashFunctionContext* ctxt, mp32number* d
 
 	if (dig != (mp32number*) 0)
 	{
-		mp32nsize(dig, (ctxt->hash->digestsize + 3) >> 2);
+		mp32nsize(dig, (ctxt->algo->digestsize + 3) >> 2);
 
-		return ctxt->hash->digest(ctxt->param, dig->data);
+		return ctxt->algo->digest(ctxt->param, dig->data);
 	}
 	return -1;
 }
@@ -624,10 +654,10 @@ int blockCipherCount()
 
 const blockCipher* blockCipherDefault()
 {
-	char* tmp = getenv("BEECRYPT_CIPHER");
+	char* selection = getenv("BEECRYPT_CIPHER");
 
-	if (tmp)
-		return blockCipherFind(tmp);
+	if (selection)
+		return blockCipherFind(selection);
 	else
 		return &blowfish;
 }
@@ -661,7 +691,7 @@ int blockCipherContextInit(blockCipherContext* ctxt, const blockCipher* ciph)
 	if (ciph == (blockCipher*) 0)
 		return -1;
 
-	ctxt->ciph = ciph;
+	ctxt->algo = ciph;
 	ctxt->param = (blockCipherParam*) calloc(ciph->paramsize, 1);
 
 	if (ctxt->param == (blockCipherParam*) 0)
@@ -675,7 +705,7 @@ int blockCipherContextSetup(blockCipherContext* ctxt, const uint32* key, int key
 	if (ctxt == (blockCipherContext*) 0)
 		return -1;
 
-	if (ctxt->ciph == (blockCipher*) 0)
+	if (ctxt->algo == (blockCipher*) 0)
 		return -1;
 
 	if (ctxt->param == (blockCipherParam*) 0)
@@ -684,7 +714,7 @@ int blockCipherContextSetup(blockCipherContext* ctxt, const uint32* key, int key
 	if (key == (uint32*) 0)
 		return -1;
 
-	return ctxt->ciph->setup(ctxt->param, key, keybits, op);
+	return ctxt->algo->setup(ctxt->param, key, keybits, op);
 }
 
 int blockCipherContextSetIV(blockCipherContext* ctxt, const uint32* iv)
@@ -692,7 +722,7 @@ int blockCipherContextSetIV(blockCipherContext* ctxt, const uint32* iv)
 	if (ctxt == (blockCipherContext*) 0)
 		return -1;
 
-	if (ctxt->ciph == (blockCipher*) 0)
+	if (ctxt->algo == (blockCipher*) 0)
 		return -1;
 
 	if (ctxt->param == (blockCipherParam*) 0)
@@ -700,7 +730,7 @@ int blockCipherContextSetIV(blockCipherContext* ctxt, const uint32* iv)
 
 	/* null is an allowed value for iv, so don't test it */
 
-	return ctxt->ciph->setiv(ctxt->param, iv);
+	return ctxt->algo->setiv(ctxt->param, iv);
 }
 
 int blockCipherContextFree(blockCipherContext* ctxt)
@@ -717,3 +747,20 @@ int blockCipherContextFree(blockCipherContext* ctxt)
 
 	return 0;
 }
+
+#if WIN32
+__declspec(dllexport)
+BOOL WINAPI DllMain(HINSTANCE hInst, DWORD wDataSeg, LPVOID lpReserved)
+{
+	switch (wDataSeg)
+	{
+   	case DLL_PROCESS_ATTACH:
+   		entropy_provider_setup(hInst);
+   		break;
+	case DLL_PROCESS_DETACH:
+		entropy_provider_cleanup();
+		break;
+   	}
+   	return TRUE;
+}
+#endif

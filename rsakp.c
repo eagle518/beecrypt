@@ -34,6 +34,12 @@
 #if HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
+#if HAVE_MALLOC_H
+# include <malloc.h>
+#endif
+#if HAVE_STRING_H
+# include <string.h>
+#endif
 
 int rsakpMake(rsakp* kp, randomGeneratorContext* rgc, int nsize)
 {

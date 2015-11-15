@@ -44,10 +44,10 @@ extern "C" {
 #endif
 
 #if defined(__GNUC__)
-#if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
-#define ASM_BLOWFISHENCRYPT
-#define ASM_BLOWFISHDECRYPT
-#endif
+# if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
+#  define ASM_BLOWFISHENCRYPT
+#  define ASM_BLOWFISHDECRYPT
+# endif
 #endif
 
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)

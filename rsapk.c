@@ -29,6 +29,10 @@
 
 #include "rsapk.h"
 
+#if HAVE_STRING_H
+# include <string.h>
+#endif
+
 int rsapkInit(rsapk* pk)
 {
 	memset(pk, 0, sizeof(rsapk));

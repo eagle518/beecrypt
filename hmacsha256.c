@@ -27,7 +27,7 @@
 
 #include "hmacsha256.h"
 
-const keyedHashFunction hmacsha256 = { "HMAC-SHA-256", sizeof(hmacsha256Param), 64, 8 * sizeof(uint32), 64, 512, 32, (const keyedHashFunctionSetup) hmacsha256Setup, (const keyedHashFunctionReset) hmacsha256Reset, (const keyedHashFunctionUpdate) hmacsha256Update, (const keyedHashFunctionDigest) hmacsha256Digest };
+const keyedHashFunction hmacsha256 = { "HMAC-SHA-256", sizeof(hmacsha256Param), 64, 8 * sizeof(uint32), 64, 512, 32, (keyedHashFunctionSetup) hmacsha256Setup, (keyedHashFunctionReset) hmacsha256Reset, (keyedHashFunctionUpdate) hmacsha256Update, (keyedHashFunctionDigest) hmacsha256Digest };
 
 int hmacsha256Setup (hmacsha256Param* sp, const uint32* key, int keybits)
 {

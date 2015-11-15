@@ -29,7 +29,10 @@
 #include "mp32.h"
 
 #if HAVE_STDLIB_H
-#include <stdlib.h>
+# include <stdlib.h>
+#endif
+#if HAVE_MALLOC_H
+# include <malloc.h>
 #endif
 
 void mp32nzero(mp32number* n)

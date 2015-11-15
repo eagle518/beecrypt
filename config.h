@@ -32,7 +32,7 @@
 
 
 #if WIN32 && !__CYGWIN32__
-# include <win32/config.win.h>
+# include "config.win.h"
 # ifdef BEECRYPT_DLL_EXPORT
 #  define BEEDLLAPI
 # else
@@ -40,7 +40,7 @@
 # endif
 /*typedef UINT8_TYPE	byte;*/
 #else
-# include <gnu/config.gnu.h>
+# include "config.gnu.h"
 # define BEEDLLAPI
 typedef UINT8_TYPE	byte;
 #endif

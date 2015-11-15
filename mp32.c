@@ -470,7 +470,8 @@ uint32 mp32add(register uint32 size, register uint32* xdata, register const uint
 	while (size--)
 	{
 		temp = *(--xdata);
-		temp += *(--ydata) + carry;
+		temp += *(--ydata);
+		temp += carry;
 		*xdata = (uint32) temp;
 		carry = (uint32) (temp >> 32);
 	}
@@ -529,7 +530,8 @@ uint32 mp32sub(register uint32 size, register uint32* xdata, register const uint
 	while (size--)
 	{
 		temp = *(--xdata);
-		temp -= *(--ydata) + carry;
+		temp -= *(--ydata);
+		temp -= carry;
 		*xdata = (uint32) temp;
 		carry = (temp >> 32) != 0;
 	}
@@ -1112,6 +1114,7 @@ void mp32print(register uint32 xsize, register const uint32* xdata)
 {
 	while (xsize--)
 		printf("%08x", *(xdata++));
+	fflush(stdout);
 }
 #endif
 
@@ -1121,5 +1124,6 @@ void mp32println(register uint32 xsize, register const uint32* xdata)
 	while (xsize--)
 		printf("%08x", *(xdata++));
 	printf("\n");
+	fflush(stdout);
 }
 #endif

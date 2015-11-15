@@ -152,10 +152,10 @@ void md5Process(md5Param* p)
 	II(c, d, a, b, w[ 2], 15, 0x2ad7d2bb);
 	II(b, c, d, a, w[ 9], 21, 0xeb86d391);
 
-    p->h[0] += a;
-    p->h[1] += b;
-    p->h[2] += c;
-    p->h[3] += d;
+	p->h[0] += a;
+	p->h[1] += b;
+	p->h[2] += c;
+	p->h[3] += d;
 }
 #endif
 

@@ -42,15 +42,15 @@ extern "C" {
 #endif
 
 #ifdef __GNUC__
-#if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
-#define ASM_SHA1PROCESS
-#endif
+# if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
+#  define ASM_SHA1PROCESS
+# endif
 #endif
 
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
-#define ASM_SHA1PROCESS
-#endif
+# if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
+#  define ASM_SHA1PROCESS
+# endif
 #endif
 
 #ifdef __cplusplus

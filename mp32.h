@@ -29,7 +29,7 @@
 #include "beecrypt.h"
 
 #if HAVE_STRING_H
-#include <string.h>
+# include <string.h>
 #endif
 
 #include "mp32opt.h"

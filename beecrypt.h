@@ -1,7 +1,7 @@
 /*
  * beecrypt.h
  *
- * Beecrypt library hooks & stubs, header
+ * BeeCrypt library hooks & stubs, header
  *
  * Copyright (c) 1999, 2000, 2001 Virtual Unlimited B.V.
  *
@@ -20,6 +20,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
  */
 
 #ifndef _BEECRYPT_H
@@ -29,13 +30,8 @@
 # include "config.h"
 #endif
 
+#include "memchunk.h"
 #include "mp32number.h"
-
-typedef struct
-{
-	int		size;
-	byte*	data;
-} memchunk;
 
 /*
  * Entropy Sources
@@ -89,6 +85,14 @@ BEEDLLAPI
 const entropySource*	entropySourceFind(const char*);
 BEEDLLAPI
 const entropySource*	entropySourceDefault();
+
+/*
+ * The following function can try multiple entropy sources for gathering
+ * the requested amount. It will only try multiple sources if variable
+ * BEECRYPT_ENTROPY is not set.
+ */
+BEEDLLAPI
+int						entropyGatherNext(uint32*, int);
 
 #ifdef __cplusplus
 }
@@ -302,7 +306,7 @@ const hashFunction*	hashFunctionDefault();
 
 typedef struct
 {
-	const hashFunction* hash;
+	const hashFunction* algo;
 	hashFunctionParam* param;
 } hashFunctionContext;
 
@@ -441,7 +445,7 @@ const keyedHashFunction*	keyedHashFunctionDefault();
 
 typedef struct
 {
-	const keyedHashFunction*	hash;
+	const keyedHashFunction*	algo;
 	keyedHashFunctionParam*		param;
 } keyedHashFunctionContext;
 
@@ -597,7 +601,7 @@ const blockCipher*		blockCipherDefault();
 
 typedef struct
 {
-	const blockCipher* ciph;
+	const blockCipher* algo;
 	blockCipherParam* param;
 } blockCipherContext;
 

@@ -1,48 +1,58 @@
 dnl Process this file with autoconf to produce a configure script
+
+dnl Initialization
 AC_INIT()
 AC_CANONICAL_SYSTEM
 
+dnl Automake
+AM_INIT_AUTOMAKE(beecrypt, 2.1.0)
+AM_CONFIG_HEADER(config.gnu.h)
+AM_DISABLE_STATIC
+AC_LIBTOOL_WIN32_DLL
 
 dnl Check system type
 case $target_os in
   cygwin*)
     AC_DEFINE(CYGWIN)
-	AC_DEFINE(LEADING_UNDERSCORE)
+    AC_DEFINE(WIN32)
     ;;
   darwin*)
     AC_DEFINE(DARWIN)
-	AC_DEFINE(LEADING_UNDERSCORE)
     ;;
   freebsd*)
     AC_DEFINE(FREEBSD)
-	AC_DEFINE(NO_UNDERSCORES)
     ;;
   linux*)
     AC_DEFINE(LINUX)
-	AC_DEFINE(NO_UNDERSCORES)
+    ;;
+  netbsd*)
+    AC_DEFINE(NETBSD)
     ;;
   openbsd*)
     AC_DEFINE(OPENBSD)
-	AC_DEFINE(NO_UNDERSCORES)
     ;;
   osf*)
     AC_DEFINE(OSF)
-    AC_DEFINE(NO_UNDERSCORES)
     ;;
   *qnx)
     AC_DEFINE(QNX)
-    AC_DEFINE(NO_UNDERSCORES)
     ;;
   solaris*)
     AC_DEFINE(SOLARIS)
-	AC_DEFINE(NO_UNDERSCORES)
     ;;
   sysv*uv*)
     AC_DEFINE(SCO_UNIX)
-    AC_DEFINE(NO_UNDERSCORES)
     ;;
   *)
     AC_MSG_WARN([Operating system type $target_os currently not supported and/or tested])
+    ;;
+esac
+case $target_os in
+  cygwin* | darwin*)
+    AC_DEFINE(LEADING_UNDERSCORE)
+    ;;
+  *)
+    AC_DEFINE(NO_UNDERSCORES)
     ;;
 esac
 
@@ -50,30 +60,31 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_LN_S
-AC_PROG_INSTALL
+AM_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 
 AC_C_INLINE
 
 if test "$ac_cv_prog_gcc" != yes; then
-  AC_MSG_CHECKING([whether we are using Sun Workshop C])
-  AC_EGREP_CPP(yes,
-[ #ifdef __SUNPRO_C
-  yes;
-#endif
-], ac_cv_prog_SUNPRO_CC=yes, ac_cv_prog_SUNPRO_CC=no)
-  AC_MSG_RESULT($ac_cv_prog_SUNPRO_CC)
+  AC_CACHE_CHECK([whether we are using Sun Workshop C], ac_cv_prog_SUNPRO_CC, [
+    AC_EGREP_CPP(yes, [
+      #ifdef __SUNPRO_C
+        yes;
+      #endif
+      ], ac_cv_prog_SUNPRO_CC=yes, ac_cv_prog_SUNPRO_CC=no)
+    ])
   if test "$ac_cv_prog_SUNPRO_CC" != yes; then
-    AC_MSG_CHECKING([whether we are using Compaq's C compiler])
-    AC_EGREP_CPP(yes,
-[ #ifdef __DECC
-  yes;
-#endif
-], ac_cv_prog_DECC=yes, ac_cv_prog_DECC=no)
-    AC_MSG_RESULT($ac_cv_prog_DECC)
+    AC_CACHE_CHECK([whether we are using Compaq's C compiler], ac_cv_prog_DECC, [
+      AC_EGREP_CPP(yes, [
+        #ifdef __DECC
+          yes;
+        #endif
+        ], ac_cv_prog_DECC=yes, ac_cv_prog_DECC=no)
+      ])
   fi
 fi
 
-AC_ARG_ENABLE(debug, [  --enable-debug	creates debugging code [default=no]],
+AC_ARG_ENABLE(debug, [  --enable-debug          creates debugging code [default=no]],
   [ if test "$enableval" = no; then
       ac_enable_debug=no
     else
@@ -82,16 +93,22 @@ AC_ARG_ENABLE(debug, [  --enable-debug	creates debugging code [default=no]],
   ], [ ac_enable_debug=no])
 
 dnl Check if we need to disable optimizations
-AC_ARG_ENABLE(optimized, [  --enable-optimized    enables the assembler optimizations [default=yes]],
+AC_ARG_ENABLE(optimized, [  --enable-optimized      enables the assembler optimizations [default depends on --enable-debug value]],
   [ if test "$enableval" = no; then
       ac_enable_optimized=no
     else
       ac_enable_optimized=yes
    fi
-  ], [ ac_enable_optimized=yes ])
+  ],
+  [ if test "$ac_enable_debug" = no; then
+      ac_enable_optimized=yes
+    else
+      ac_enable_optimized=no
+    fi
+  ])
 
 dnl Check if we have the necessary java components installed
-AC_ARG_WITH(javaglue, [  --with-javaglue	creates the java glue code [default=yes]],
+AC_ARG_WITH(javaglue, [  --with-javaglue         creates the java glue code [default=yes]],
   [ if test "$withval" = no; then
       ac_with_javaglue=no
     else
@@ -101,11 +118,11 @@ AC_ARG_WITH(javaglue, [  --with-javaglue	creates the java glue code [default=yes
 
 if test "$ac_with_javaglue" = yes ; then
   AC_CHECK_PROG(ac_cv_have_java, java, yes, no)
-  AC_CHECK_PROG(ac_cv_have_javac, javac, yes, no)
   if test "$ac_cv_have_java" = yes; then
+    AC_CHECK_PROG(ac_cv_have_javac, javac, yes, no)
     if test "$ac_cv_have_javac" = yes; then
-      AC_MSG_CHECKING([for Java JNI headers])
-      cat > conftest.java << EOF
+      AC_CACHE_CHECK([for java native interface headers], ac_cv_java_include, [
+        cat > conftest.java << EOF
 public class conftest
 {
   public static void main(String[[]] argv)
@@ -114,22 +131,26 @@ public class conftest
   }
 }
 EOF
-      ac_cv_java_home=`javac conftest.java; java conftest`
-      ac_cv_java_include="$ac_cv_java_home"/include
-      if test -d "$ac_java_cv_include" ; then
-        AC_MSG_RESULT($ac_cv_java_headers)
-        ac_cv_java_headers=yes
-      else
-        ac_cv_java_include="$ac_cv_java_home"/../include
-        if test -d "$ac_cv_java_include" ; then
-          AC_MSG_RESULT($ac_cv_java_headers)
-          ac_cv_java_headers=yes
-        else
-          AC_MSG_WARN([java headers not found, disabling javaglue])
-          ac_cv_java_headers=no
-          ac_with_javaglue=no
-        fi
-      fi
+          java_home=`javac conftest.java; java -classpath . conftest`
+          case $target_os in
+          cygwin*)
+            java_home=`cygpath -u -p "$java_home"`
+            ;;
+          esac
+          if test -d "$ac_cv_java_include" ; then
+            ac_cv_java_headers=yes
+          else
+            ac_cv_java_include="$java_home"/../include
+            if test -d "$ac_cv_java_include" ; then
+              ac_cv_java_headers=yes
+            else
+              AC_MSG_WARN([java headers not found, disabling javaglue])
+              ac_cv_java_headers=no
+              ac_with_javaglue=no
+            fi
+          fi
+          rm -fr conftest*
+        ])
     else
       AC_MSG_WARN([javac not found, disabling javaglue])
       ac_cv_java_headers=no
@@ -144,52 +165,41 @@ fi
 
 if test "$ac_with_javaglue" = yes ; then
   AC_DEFINE(JAVAGLUE,1)
-  JAVAGLUE="javaglue.o"
-  JNIFLAGS="-I$ac_cv_java_include"
-  case $target_os in
-  linux*)
-    JNIFLAGS="$JNIFLAGS -I$ac_cv_java_include"/linux
-    ;;
-  solaris*)
-    JNIFLAGS="$JNIFLAGS -I$ac_cv_java_include"/solaris
-    ;;
-  *)
-    AC_MSG_WARN([please add approriate -I$ac_cv_java_include/<operating system> directory to JNIFLAGS])
-    ;;
-  esac
 else
   AC_DEFINE(JAVAGLUE,0)
-  JAVAGLUE=""
-  JNIFLAGS=""
 fi
 
+dnl Check if we want to enable threads
+AC_ARG_ENABLE(threads, [  --enable-threads        enables multithread safety [default=yes]],
+  [ if test "$enableval" = no; then
+      ac_enable_threads=no
+    else
+      ac_enable_threads=yes
+    fi
+  ], [ ac_enable_threads=yes ])
+
+dnl Check if we want to enable aio
+AC_ARG_ENABLE(aio, [  --enable-aio            enables asynchronous i/o for entropy gathering [default=yes]],
+  [ if test "$enableval" = no; then
+      ac_enable_aio=no
+    else
+      ac_enable_aio=yes
+    fi
+  ], [ ac_enable_aio=yes ])
+
+dnl Check if we want to use mtmalloc
+AC_ARG_WITH(mtmalloc, [  --with-mtmalloc         links against the mtmalloc library [default=no]],
+  [ if test "$withval" = no; then
+      ac_with_mtmalloc=no
+    else
+      ac_with_mtmalloc=yes
+    fi
+  ], [ ac_with_mtmalloc=no ])
+
 dnl Product and version
-MAJOR=2
-MINOR=0
-VERSION=$MAJOR.$MINOR.0
-PRODUCT=beecrypt
-SHARED_LIBRARY=lib$PRODUCT.so
-SHARED_LIBRARY_NAME=$SHARED_LIBRARY.$VERSION
-AC_DEFINE_UNQUOTED(PRODUCT, "$PRODUCT")
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
-AC_DEFINE_UNQUOTED(MAJOR, "$MAJOR")
-AC_DEFINE_UNQUOTED(MINOR, "$MINOR")
-AC_DEFINE(JNIFLAGS, $JNIFLAGS)
-AC_SUBST(PRODUCT)
-AC_SUBST(VERSION)
-AC_SUBST(MAJOR)
-AC_SUBST(MINOR)
 AC_SUBST(CC)
 AC_SUBST(CPP)
 AC_SUBST(LD)
-AC_SUBST(CONFASFLAGS)
-AC_SUBST(CONFCPPFLAGS)
-AC_SUBST(CONFCFLAGS)
-AC_SUBST(CONFCLIBFLAGS)
-AC_SUBST(CONFLDFLAGS)
-AC_SUBST(CONFLDLIBFLAGS)
-AC_SUBST(JAVAGLUE)
-AC_SUBST(JNIFLAGS)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -199,16 +209,13 @@ dnl Checks for library functions.
 AC_FUNC_MEMCMP
 
 dnl Checks for header files.
-AC_STDC_HEADERS
-
 AC_CHECK_HEADERS(errno.h string.h ctype.h stdlib.h)
-AC_CHECK_HEADERS(unistd.h fcntl.h limits.h)
-AC_CHECK_HEADERS(time.h)
-AC_CHECK_HEADERS(sys/types.h sys/stat.h sys/time.h)
-AC_CHECK_HEADERS(thread.h pthread.h synch.h semaphore.h)
+AC_CHECK_HEADERS(unistd.h fcntl.h)
+AC_CHECK_HEADERS(sys/types.h sys/stat.h)
 AC_CHECK_HEADERS(termio.h termios.h)
 AC_CHECK_HEADERS(sys/audioio.h sys/ioctl.h sys/soundcard.h)
 
+AC_CHECK_HEADERS(time.h sys/time.h)
 if test "$ac_cv_header_sys_time_h" = yes; then
   AC_CHECK_FUNC(gettimeofday, [
     AC_DEFINE(HAVE_GETTIMEOFDAY, 1)
@@ -218,47 +225,170 @@ if test "$ac_cv_header_sys_time_h" = yes; then
     ])
 fi
 
-if test "$ac_cv_header_thread_h" = yes; then
-  AC_HAVE_LIBRARY(thread)
-elif test  "$ac_cv_header_pthread_h" = yes; then
-  AC_HAVE_LIBRARY(pthread)
-fi
+case $target_os in
+  cygwin*)
+    ;;
+  *)
+    if test "$ac_enable_threads" = yes; then
+      AC_DEFINE(ENABLE_THREADS, 1)
+      AC_CHECK_HEADERS(thread.h pthread.h synch.h semaphore.h)
+      if test "$ac_cv_header_thread_h" = yes; then
+        AC_HAVE_LIBRARY(thread)
+      elif test  "$ac_cv_header_pthread_h" = yes; then
+        AC_HAVE_LIBRARY(pthread)
+      else
+        AC_MSG_WARN([Can't find any thread libraries])
+        AC_DEFINE(ENABLE_THREADS, 0)
+      fi
+    fi
+
+    if test "$ac_enable_aio" = yes; then
+      AC_CHECK_HEADERS(aio.h)
+      if test "$ac_cv_header_aio_h" = yes; then
+        AC_SEARCH_LIBS(aio_read, [c rt aio posix4], [ ], [
+          AC_MSG_ERROR([no library containing aio routines found])
+      	])
+        AC_CACHE_CHECK([whether aio works], ac_cv_have_working_aio, [
+          cat > conftest.aio << EOF
+The quick brown fox jumps over the lazy dog.
+EOF
+          AC_TRY_RUN([
+#if HAVE_ERRNO_H
+# include <errno.h>
+#endif
+#if HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+#if HAVE_STRING_H
+# include <string.h>
+#endif
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+#include <aio.h>
+#include <stdio.h>
+
+main()
+{
+        struct aiocb    a;
+  const struct aiocb*   a_list = &a;
+        struct timespec a_timeout;
+
+  char buffer[32];
+
+  int i, rc, fd = open("conftest.aio", O_RDONLY);
+
+  if (fd < 0)
+    exit(1);
+
+  memset(&a, 0, sizeof(struct aiocb));
+
+  a.aio_fildes = fd;
+  a.aio_offset = 0;
+  a.aio_reqprio = 0;
+  a.aio_buf = buffer;
+  a.aio_nbytes = sizeof(buffer);
+  a.aio_sigevent.sigev_notify = SIGEV_NONE;
+
+  a_timeout.tv_sec = 1;
+  a_timeout.tv_nsec = 0;
+
+  if (aio_read(&a) < 0)
+    exit(1);
+
+  if (aio_suspend(&a_list, 1, &a_timeout) < 0)
+  {
+    #if HAVE_ERRNO_H
+    /* some linux systems don't await timeout and return instantly */
+    if (errno == EAGAIN)
+    {
+      nanosleep(&a_timeout, (struct timespec*) 0);
+      if (aio_suspend(&a_list, 1, &a_timeout) < 0)
+        exit(1);
+    }
+    else
+      exit(1);
+    #else
+    exit(1);
+    #endif
+  }
+
+  if (aio_error(&a) < 0)
+    exit(1);
+
+  if (aio_return(&a) < 0)
+    exit(1);
+
+  exit(0);
+}
+            ], ac_cv_have_working_aio=yes, ac_cv_have_working_aio=no)
+          ])
+        if test "$ac_cv_have_working_aio" = yes; then
+          AC_DEFINE(ENABLE_AIO, 1)
+        fi
+        rm -fr conftest*
+      fi
+    fi
+
+    if test "$ac_with_mtmalloc" = yes; then
+      AC_CHECK_HEADERS(mtmalloc.h)
+      AC_HAVE_LIBRARY(mtmalloc)
+    fi
+    ;;
+esac
 
 dnl Checks for compiler flags
-CONFCPPFLAGS=""
-CONFCFLAGS=""
-CONFCLIBFLAGS=""
-CONFLDFLAGS=""
-CONFLDLIBFLAGS=""
+CFLAGS=""
+CPPFLAGS=""
+LDFLAGS=""
 
 if test "$ac_enable_optimized" = yes; then
   case $target_cpu in
   alpha*)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_ALPHA"
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_ALPHA"
     ;;
-  i386)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_I386"
-    ;;
-  i486)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_I486"
-    ;;
-  i586)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_I586"
-    ;;
-  i686)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_I686"
+  arm*)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_ARM"
     ;;
   ia64)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_IA64"
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_IA64"
+    ;;
+  i386)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I386"
+    ;;
+  i486)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I486"
+    ;;
+  i586)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I586"
+    ;;
+  i686)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686"
+    ;;
+  ia64)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_IA64"
     ;;
   powerpc)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_POWERPC"
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_POWERPC"
+    ;;
+  sparcv8)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV8"
     ;;
   sparcv8plus*)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_SPARCV8PLUS"
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV8PLUS"
+    CFLAGS="$CFLAGS -Wa,-xarch=v8plus"
     ;;
-  sparcv9*)
-    CONFCPPFLAGS="$CONFCPPFLAGS -DOPTIMIZE_SPARCV9"
+  sparcv9)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV9"
+    CFLAGS="$CFLAGS -Wa,-xarch=v9"
+    ;;
+  sparcv9a)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV9"
+    CFLAGS="$CFLAGS -Wa,-xarch=v9a"
+    ;;
+  sparcv9b)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV9"
+    CFLAGS="$CFLAGS -Wa,-xarch=v9b"
     ;;
   x86)
   # QNX Neutrino doesn't list the exact cpu type
@@ -266,230 +396,353 @@ if test "$ac_enable_optimized" = yes; then
   esac
 fi
 
-if test "$ac_cv_prog_gcc" = yes; then
-  CONFCLIBFLAGS="$CONFCFLAGS -shared"
-  CONFLDLIBFLAGS="$CONFLDFLAGS -shared -dy -soname $SHARED_LIBRARY_NAME"
-elif test "$ac_cv_prog_SUNPRO_CC" = yes; then
-  CONFCFLAGS="$CONFCFLAGS -mt"
-  CONFCLIBFLAGS="$CONFCLIBFLAGS -KPIC"
-  CONFLDLIBFLAGS="$CONFLDLIBFLAGS -G -h $SHARED_LIBRARY_NAME"
-else
-  CONFCLIBFLAGS="$CONFCLIBFLAGS -shared"
-  CONFLDLIBFLAGS="$CONFLDLIBFLAGS -shared"
-fi
-
 if test "$ac_enable_debug" = yes; then
-  CONFCFLAGS="$CONFCFLAGS -g"
+  CFLAGS="$CFLAGS -g"
   if test "$ac_cv_prog_gcc" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -Wall"
+    CFLAGS="$CFLAGS -Wall"
+  elif test "$ac_cv_prog_SUNPRO_CC" = yes; then
+    if test "$ac_enable_threads" = yes; then
+      CFLAGS="$CFLAGS -mt"
+    fi
   fi
 else
   if test "$ac_cv_prog_gcc" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -O3"
+    CFLAGS="$CFLAGS -O3"
     if test "$ac_enable_optimized" = yes; then
       case $target_cpu in
 # This switch makes the mp32 routines slower by about 10%, so it's disabled
 #     alphaev6)
-#       CONFCFLAGS="$CONFCFLAGS -mcpu=ev6"
+#       CFLAGS="$CFLAGS -mcpu=ev6"
 #       ;;
+      arm*)
+        CFLAGS="$CFLAGS -fomit-frame-pointer"
+        ;;
+      i386)
+        CFLAGS="$CFLAGS -m386 -march=i386 -fomit-frame-pointer"
+        ;;
       i486)
-        CONFCFLAGS="$CONFCFLAGS -m486"
+        CFLAGS="$CFLAGS -m486 -march=i486 -fomit-frame-pointer"
         ;;
       i586)
-        CONFCFLAGS="$CONFCFLAGS -mpentium"
+        CFLAGS="$CFLAGS -mpentium -march=pentium -fomit-frame-pointer"
         ;;
       i686)
-        CONFCFLAGS="$CONFCFLAGS -mpentiumpro"
+        CFLAGS="$CFLAGS -mpentiumpro -march=pentiumpro -fomit-frame-pointer"
         ;;
-# This switch makes some code more than 10% slower, for a 2% speedup in mp32 routines, so it's disabled
+      sparcv8)
+        CFLAGS="$CFLAGS -mv8"
+        ;;
+# This actually performs WORSE on gcc up to 2.95.3!
 #     sparcv8plus*)
-#       CONFCFLAGS="$CONFCFLAGS -mcpu=ultrasparc"
+#       CFLAGS="$CFLAGS -mv8plus"
 #       ;;
-#     sparcv9*)
-#       CONFCFLAGS="$CONFCFLAGS -mcpu=ultrasparc"
-#       ;;
+      sparcv9*)
+        AC_MSG_WARN([gcc currently cannot build 64-bit objects])
+        CFLAGS="$CFLAGS -mcpu=v9 -m64 -mptr64"
+        ;;
       esac
     fi
   elif test "$ac_cv_prog_SUNPRO_CC" = yes; then
-    CONFCFLAGS="$CONFCFLAGS -fast"
+    CFLAGS="$CFLAGS -fast"
+    if test "$ac_enable_threads" = yes; then
+      CFLAGS="$CFLAGS -mt"
+    fi
     if test "$ac_enable_optimized" = yes; then
       case $target_cpu in
+      sparcv8)
+        CFLAGS="$CFLAGS -xtarget=generic -xarch=v8"
+        ;;
       sparcv8plus)
-        CONFCFLAGS="$CONFCFLAGS -xtarget=generic -xarch=v8plus"
+        CFLAGS="$CFLAGS -xtarget=generic -xarch=v8plus"
         ;;
       sparcv8plusa)
-        CONFCFLAGS="$CONFCFLAGS -xtarget=generic -xarch=v8plusa"
+        CFLAGS="$CFLAGS -xtarget=generic -xarch=v8plusa"
         ;;
       sparcv8plusb)
-        CONFCFLAGS="$CONFCFLAGS -xtarget=generic -xarch=v8plusb"
+        CFLAGS="$CFLAGS -xtarget=generic -xarch=v8plusb"
         ;;
       sparcv9)
         CFLAGS="-xarch=v9"
-        CONFCFLAGS="$CONFCFLAGS -xtarget=generic64 -xarch=v9"
-        CONFLDFLAGS="$CONFLDFLAGS -64"
+        CFLAGS="$CFLAGS -xtarget=generic64 -xarch=v9"
+        LDFLAGS="$LDFLAGS -64"
         ;;
       sparcv9a)
         CFLAGS="-xarch=v9"
-        CONFCFLAGS="$CONFCFLAGS -xtarget=generic64 -xarch=v9a"
-        CONFLDFLAGS="$CONFLDFLAGS -64"
+        CFLAGS="$CFLAGS -xtarget=generic64 -xarch=v9a"
+        LDFLAGS="$LDFLAGS -64"
         ;;
       sparcv9b)
         CFLAGS="-xarch=v9"
-        CONFCFLAGS="$CONFCFLAGS -xtarget=generic64 -xarch=v9b"
-        CONFLDFLAGS="$CONFLDFLAGS -64"
+        CFLAGS="$CFLAGS -xtarget=generic64 -xarch=v9b"
+        LDFLAGS="$LDFLAGS -64"
         ;;
       esac
     fi
+  elif test "$ac_cv_prog_DECC" = yes; then
+    CFLAGS="$CFLAGS -fast"
+    if test "$ac_enable_threads" = yes; then
+      CFLAGS="$CFLAGS -pthread"
+    fi
   else
-    CONFCFLAGS="$CONFCFLAGS -O2"
+    CFLAGS="$CFLAGS -O2"
   fi
 fi
 
 case $target_os in
   freebsd*)
-	LD=$CC
-    CONFCFLAGS="$CONFCFLAGS -pthread"
-    CONFLDFLAGS="$CONFLDFLAGS -pthread"
-    ;;
-  osf*)
-	LD=$CC
-    CONFLDLIBFLAGS="$CONFLDLIBFLAGS -msym -soname $SHARED_LIBRARY_NAME"
-    ;;
-  solaris*)
-    if test "$ac_cv_prog_SUNPRO_CC" = yes; then
-      LD=/usr/ccs/bin/ld
-    else
-      LD=ld
+    if test "$ac_enable_threads" = yes; then
+      CFLAGS="$CFLAGS -pthread"
+      LDFLAGS="$LDFLAGS -pthread"
     fi
-    ;;
-  *)
-    LD=ld
     ;;
 esac
 
-dnl Checks for assembler flags
-CONFASFLAGS=""
-if test "$ac_enable_optimized" = yes; then
-  case $target_cpu in
-  sparcv8plus)
-    CONFASFLAGS="-Av8plus"
+if test "$ac_with_javaglue" = yes ; then
+  CFLAGS="$CFLAGS -I$ac_cv_java_include"
+  case $target_os in
+  cygwin*)
+    CFLAGS="$CFLAGS -I$ac_cv_java_include"/win32
     ;;
-  sparcv9)
-    CONFASFLAGS="-Av9 -64"
+  linux*)
+    CFLAGS="$CFLAGS -I$ac_cv_java_include"/linux
+    ;;
+  osf*)
+    CFLAGS="$CFLAGS -I$ac_cv_java_include"/osf
+    ;;
+  solaris*)
+    CFLAGS="$CFLAGS -I$ac_cv_java_include"/solaris
+    ;;
+  *)
+    AC_MSG_WARN([please add appropriate -I$ac_cv_java_include/<operating system> flag])
     ;;
   esac
 fi
 
+dnl Checks for endianness
+AC_C_BIGENDIAN
+
 dnl Checks for word sizes
 AC_CHECK_SIZEOF(char)
 AC_CHECK_SIZEOF(unsigned char)
+if test "$ac_cv_sizeof_char" -eq 1; then
+  AC_DEFINE(INT8_TYPE, [char])
+else
+  AC_MSG_ERROR([compiler has no 1 byte char])
+fi
+if test "$ac_cv_sizeof_unsigned_char" -eq 1; then
+  AC_DEFINE(UINT8_TYPE, [unsigned char])
+else
+  AC_MSG_ERROR([compiler has no 1 byte unsigned char])
+fi
+
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(unsigned short)
+if test "$ac_cv_sizeof_short" -eq 2; then
+  AC_DEFINE(INT16_TYPE, [short])
+else
+  AC_MSG_ERROR([compiler has no 2 byte short])
+fi
+if test "$ac_cv_sizeof_unsigned_short" -eq 2; then
+  AC_DEFINE(UINT16_TYPE, [unsigned short])
+else
+  AC_MSG_ERROR([compiler has no 2 byte unsigned short])
+fi
+
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(unsigned long)
-AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(unsigned long long)
-AC_CHECK_SIZEOF(float)
-AC_CHECK_SIZEOF(double)
+if test "$ac_cv_sizeof_int" -eq 4; then
+  AC_DEFINE(INT32_TYPE, [int])
+elif test "$ac_cv_sizeof_long" -eq 4; then
+  AC_DEFINE(INT32_TYPE, [long])
+else
+  AC_MSG_ERROR([compiler has no 4 byte integer])
+fi
+if test "$ac_cv_sizeof_unsigned_int" -eq 4; then
+  AC_DEFINE(UINT32_TYPE, [unsigned int])
+elif test "$ac_cv_sizeof_unsigned_long" -eq 4; then
+  AC_DEFINE(UINT32_TYPE, [unsigned long])
+else
+  AC_MSG_ERROR([compiler has no 4 byte unsigned integer])
+fi
 
-dnl Checks for endianness
-AC_C_BIGENDIAN
+if test "$ac_cv_sizeof_long" -eq 8; then
+  AC_DEFINE(INT64_TYPE, [long])
+else
+  AC_CHECK_SIZEOF(long long)
+  if test "$ac_cv_sizeof_long_long" -eq 8; then
+    AC_DEFINE(HAVE_LONG_LONG)
+    AC_DEFINE(INT64_TYPE, [long long])
+  else
+    AC_MSG_ERROR([compiler has no 8 byte integer])
+  fi
+fi
+if test "$ac_cv_sizeof_unsigned_long" -eq 8; then
+  AC_DEFINE(UINT64_TYPE, [unsigned long])
+else
+  AC_CHECK_SIZEOF(unsigned long long)
+  if test "$ac_cv_sizeof_unsigned_long_long" -eq 8; then
+    AC_DEFINE(HAVE_UNSIGNED_LONG_LONG)
+    AC_DEFINE(UINT64_TYPE, [unsigned long long])
+  else
+    AC_MSG_ERROR([compiler has no 8 byte unsigned integer])
+  fi
+fi
+
+AC_CHECK_SIZEOF(float)
+if test "$ac_cv_sizeof_float" -eq 4; then
+  AC_DEFINE(FLOAT4_TYPE, [float])
+else
+  AC_MSG_ERROR([compiler has no 4 byte float])
+fi
+
+AC_CHECK_SIZEOF(double)
+if test "$ac_cv_sizeof_double" -eq 8; then
+  AC_DEFINE(DOUBLE8_TYPE, [double])
+else
+  AC_MSG_ERROR([compiler has no 8 byte double])
+fi
 
 dnl Checks for devices
 AC_CHECKING(for specific entropy devices)
 case $target_os in
-  solaris*)
-    AC_MSG_CHECKING([for /dev/audio])
-    if test -r /dev/audio; then
-      AC_DEFINE(HAVE_DEV_AUDIO,1)
-      AC_MSG_RESULT(yes)
-    else
-      AC_MSG_RESULT(no)
-    fi
+  cygwin*)
+    AC_MSG_CHECKING([for wavein])
+    AC_MSG_RESULT(yes)
+    AC_MSG_CHECKING([for wincrypt])
+    AC_MSG_RESULT(yes)
+    AC_MSG_CHECKING([for console])
+    AC_MSG_RESULT(yes)
     ;;
   linux*)
-    AC_MSG_CHECKING([for /dev/dsp])
-    if test -r /dev/dsp; then
-      AC_DEFINE(HAVE_DEV_DSP,1)
-      AC_MSG_RESULT(yes)
-    else
-      AC_MSG_RESULT(no)
+    AC_CACHE_CHECK([for /dev/dsp], ac_cv_have_dev_dsp, [
+      if test -r /dev/dsp; then
+        ac_cv_have_dev_dsp=yes
+      else
+        ac_cv_have_dev_dsp=no
+      fi
+      ])
+    if test "$ac_cv_have_dev_dsp" = yes; then
+      AC_DEFINE(HAVE_DEV_DSP, 1)
+    fi
+    ;;
+  solaris*)
+    AC_CACHE_CHECK([for /dev/audio], ac_cv_have_dev_audio, [
+      if test -r /dev/audio; then
+        ac_cv_have_dev_audio=yes
+      else
+        ac_cv_have_dev_audio=no
+      fi
+      ])
+    if test "$ac_cv_have_dev_audio" = yes; then
+      AC_DEFINE(HAVE_DEV_AUDIO, 1)
     fi
     ;;
   *)
     AC_MSG_WARN(no specific entropy devices present)
     ;;
 esac
-AC_CHECKING(for generic entropy devices)
-AC_MSG_CHECKING([for /dev/random])
-if test -r /dev/random; then
-  AC_DEFINE(HAVE_DEV_RANDOM,1)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING([for /dev/urandom])
-if test -r /dev/urandom; then
-  AC_DEFINE(HAVE_DEV_URANDOM,1)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING([for /dev/tty])
-if test -r /dev/tty; then
-  AC_DEFINE(HAVE_DEV_TTY,1)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+
+case $target_os in
+  cygwin*)
+    ;;
+  *)
+    AC_CHECKING(for generic entropy devices)
+    AC_CACHE_CHECK([for /dev/random], ac_cv_have_dev_random, [
+      if test -r /dev/random; then
+        ac_cv_have_dev_random=yes
+      else
+        ac_cv_have_dev_random=no
+      fi
+      ])
+    if test "$ac_cv_have_dev_random" = yes; then
+      AC_DEFINE(HAVE_DEV_RANDOM, 1)
+    fi
+    AC_CACHE_CHECK([for /dev/urandom], ac_cv_have_dev_urandom, [
+      if test -r /dev/urandom; then
+        ac_cv_have_dev_urandom=yes
+      else
+        ac_cv_have_dev_urandom=no
+      fi
+      ])
+    if test "$ac_cv_have_dev_urandom" = yes; then
+      AC_DEFINE(HAVE_DEV_URANDOM, 1)
+    fi
+    AC_CACHE_CHECK([for /dev/tty], ac_cv_have_dev_tty, [
+      if test -r /dev/tty; then
+        ac_cv_have_dev_tty=yes
+      else
+        ac_cv_have_dev_tty=no
+      fi
+      ])
+    if test "$ac_cv_have_dev_tty" = yes; then
+      AC_DEFINE(HAVE_DEV_TTY, 1)
+    fi
+    ;;
+esac
 
 dnl Generate the assembler optimizations
-BLOWFISHOPTDEP="blowfishopt.o: blowfishopt.c"
-BLOWFISHOPTRULE="	\$(COMPILE.c) \$(CLIBFLAGS)"
-FIPS180OPTDEP="fips180opt.o: fips180opt.c"
-FIPS180OPTRULE="	\$(COMPILE.c) \$(CLIBFLAGS)"
-MP32OPTDEP="mp32opt.o: mp32opt.c"
-MP32OPTRULE="	\$(COMPILE.c) \$(CLIBFLAGS)"
+rm -f $srcdir/blowfishopt.c $srcdir/blowfishopt.S
+rm -f $srcdir/fips180opt.c $srcdir/fips180opt.S
+rm -f $srcdir/mp32opt.c $srcdir/mp32opt.S
 if test "$ac_enable_optimized" = yes; then
   case $target_cpu in
-    i386)
-      MP32OPTDEP="mp32opt.o: gnu/mp32opt.gas.i386.S"
-      MP32OPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/mp32opt.gas.i386.S | \$(AS) \$(ASFLAGS) -o mp32opt.o"
+    arm*)
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.arm.S"
+EOF
+      ;;
+    i[[34]]86)
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.i386.S"
+EOF
       ;;
     i[[56]]86)
-      BLOWFISHOPTDEP="blowfishopt.o: gnu/blowfishopt.gas.i586.S"
-      BLOWFISHOPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/blowfishopt.gas.i586.S | \$(AS) \$(ASFLAGS) -o blowfishopt.o"
-      FIPS180OPTDEP="fips180opt.o: gnu/fips180opt.gas.i586.S"
-      FIPS180OPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/fips180opt.gas.i586.S | \$(AS) \$(ASFLAGS) -o fips180opt.o"
-      MP32OPTDEP="mp32opt.o: gnu/mp32opt.gas.i386.S"
-      MP32OPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/mp32opt.gas.i386.S | \$(AS) \$(ASFLAGS) -o mp32opt.o"
+      cat > $srcdir/blowfishopt.S << EOF
+#include "gas/blowfishopt.i586.S"
+EOF
+      cat > $srcdir/fips180opt.S << EOF
+#include "gas/fips180opt.i586.S"
+EOF
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.i386.S"
+EOF
       ;;
     ia64)
-      MP32OPTDEP="mp32opt.o: gnu/mp32opt.gas.ia64.S"
-      MP32OPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/mp32opt.gas.ia64.S | \$(AS) \$(ASFLAGS) -o mp32opt.o"
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.ia64.S"
+EOF
       ;;
     powerpc)
-      MP32OPTDEP="mp32opt.o: gnu/mp32opt.gas.powerpc.S"
-      MP32OPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/mp32opt.gas.powerpc.S | \$(AS) \$(ASFLAGS) -o mp32opt.o"
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.powerpc.S"
+EOF
       ;;
-    sparcv8plus) 
-      MP32OPTDEP="mp32opt.o: gnu/mp32opt.gas.sparcv9.S"
-      MP32OPTRULE="	\$(CPP) \$(CPPFLAGS) gnu/mp32opt.gas.sparcv9.S | \$(AS) \$(ASFLAGS) -o mp32opt.o"
+    sparcv8) 
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.sparcv8.S"
+EOF
+      ;;
+    sparcv8plus* | sparcv9*)
+      cat > $srcdir/mp32opt.S << EOF
+#include "gas/mp32opt.sparcv9.S"
+EOF
       ;;
   esac
 fi
-
-AC_SUBST(BLOWFISHOPTDEP)
-AC_SUBST(BLOWFISHOPTRULE)
-AC_SUBST(FIPS180OPTDEP)
-AC_SUBST(FIPS180OPTRULE)
-AC_SUBST(MP32OPTDEP)
-AC_SUBST(MP32OPTRULE)
-
-dnl Generate the config header
-AC_CONFIG_HEADER(gnu/config.gnu.h)
+if test ! -r $srcdir/blowfishopt.S; then
+  cat > $srcdir/blowfishopt.c << EOF
+EOF
+fi
+if test ! -r $srcdir/fips180opt.S; then
+  cat > $srcdir/fips180opt.c << EOF
+EOF
+fi
+if test ! -r $srcdir/mp32opt.S; then
+  cat > $srcdir/mp32opt.c << EOF
+EOF
+fi
 
 dnl Output
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile docs/Makefile gas/Makefile masm/Makefile mwerks/Makefile tests/Makefile)

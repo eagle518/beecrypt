@@ -8,8 +8,15 @@
 #if HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
+#if HAVE_MALLOC_H
+# include <malloc.h>
+#endif
 
 #include "javaglue.h"
+
+#ifndef WORDS_BIGENDIAN
+# define WORDS_BIGENDIAN	0
+#endif
 
 static const char* JAVA_OUT_OF_MEMORY_ERROR = "java/lang/OutOfMemoryError";
 static const char* JAVA_PROVIDER_EXCEPTION = "java/security/ProviderException";
