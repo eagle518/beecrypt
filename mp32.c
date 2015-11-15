@@ -299,6 +299,21 @@ int mp32isone(register uint32 xsize, register const uint32* xdata)
 }
 #endif
 
+#ifndef ASM_MP32ISTWO
+int mp32istwo(register uint32 xsize, register const uint32* xdata)
+{
+	xdata += xsize;
+	if (*(--xdata) == 2)
+	{
+		while (--xsize)
+			if (*(--xdata))
+				return 0;
+		return 1;
+	}
+	return 0;
+}
+#endif
+
 #ifndef ASM_MP32EQMONE
 int mp32eqmone(register uint32 size, register const uint32* xdata, register const uint32* ydata)
 {
@@ -873,28 +888,32 @@ void mp32rshift(register uint32 xsize, register uint32* xdata, uint32 count)
 }
 #endif
 
-#ifndef ASM_MP32GCD
-void mp32gcd(uint32* result, uint32 size, const uint32* xdata, const uint32* ydata, uint32* workspace)
+#ifndef ASM_MP32GCD_W
+/**
+ * mp32gcd_w
+ *  need workspace of (size) words
+ */
+void mp32gcd_w(uint32 size, const uint32* xdata, const uint32* ydata, uint32* result, uint32* wksp)
 {
 	register uint32 shift = 0;
 	register uint32 temp;
 
 	if (mp32ge(size, xdata, ydata))
 	{
-		mp32copy(size, workspace, xdata);
+		mp32copy(size, wksp, xdata);
 		mp32copy(size, result, ydata);
 	}
 	else
 	{
-		mp32copy(size, workspace, ydata);
+		mp32copy(size, wksp, ydata);
 		mp32copy(size, result, xdata);
 	}
 		
 	/* start with doing mp32divpowtwo on both workspace and result, and store the returned values */
 	/* get the smallest returned values, and set shift to that */
 
-	if ((temp = mp32lszcnt(size, workspace)))
-		mp32rshift(size, workspace, temp);
+	if ((temp = mp32lszcnt(size, wksp)))
+		mp32rshift(size, wksp, temp);
 
 	shift = temp;
 
@@ -904,18 +923,18 @@ void mp32gcd(uint32* result, uint32 size, const uint32* xdata, const uint32* yda
 	if (shift > temp)
 		shift = temp;
 
-	while (mp32nz(size, workspace))
+	while (mp32nz(size, wksp))
 	{
-		if ((temp = mp32lszcnt(size, workspace)))
-			mp32rshift(size, workspace, temp);
+		if ((temp = mp32lszcnt(size, wksp)))
+			mp32rshift(size, wksp, temp);
 
 		if ((temp = mp32lszcnt(size, result)))
 			mp32rshift(size, result, temp);
 
-		if (mp32ge(size, workspace, result))
-			mp32sub(size, workspace, result);
+		if (mp32ge(size, wksp, result))
+			mp32sub(size, wksp, result);
 		else
-			mp32sub(size, result, workspace);
+			mp32sub(size, result, wksp);
 	}
 	mp32lshift(size, result, shift);
 }

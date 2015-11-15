@@ -7,7 +7,7 @@
  *  "Handbook of Applied Cryptography"
  *  11.5.2 "The ElGamal signature scheme", p. 454-459
  *
- * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -59,39 +59,56 @@
 #include "elgamal.h"
 #include "dldp.h"
 #include "mp32.h"
-#include "mp32barrett.h"
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
-void elgv1sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
+int elgv1sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rgc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)
 {
-	register uint32  size   = p->size;
-	register uint32* kdata  = p->wksp+size*4+4; /* leave enough workspace for a powmod operation */
-	register uint32* u1data = n->wksp+size*4+4; /* leave enough workspace for a mulmod and addmod operation */
-	register uint32* u2data = u1data+size;
+	register uint32  size = p->size;
+	register uint32* temp = (uint32*) malloc((8*size+6)*sizeof(uint32));
 
-	/* get a random k, invertible modulo n, and store the inverse in u1 */
-	mp32brndinvres(n, kdata, rc);
-	mp32copy(n->size, u1data, n->data);
+	if (temp)
+	{
+		/* get a random k, invertible modulo (p-1) */
+		mp32brndinv_w(n, rgc, temp, temp+size, temp+2*size);
 
-	/* compute r = g^k mod p */
-	mp32bpowmod(p, g->size, g->data, size, kdata);
-	mp32nset(r, size, p->data);
+		/* compute r = g^k mod p */
+		mp32nfree(r);
+		mp32nsize(r, size);
+		mp32bpowmod_w(p, g->size, g->data, size, temp, r->data, temp+2*size);
 
-	/* compute u2 = h(m) - x*r mod n */
-	mp32bmulmod(n, x->size, x->data, r->size, r->data);
-	mp32bneg(n);
+		/* compute x*r mod n */
+		mp32bmulmod_w(n, x->size, x->data, r->size, r->data, temp, temp+2*size);
 
-	/* to be completed */
+		/* compute -(x*r) mod n */
+		mp32neg(size, temp);
+		mp32add(size, temp, n->modl);
+
+		/* compute h(m) - x*r mod n */
+		mp32baddmod_w(n, hm->size, hm->data, size, temp, temp, temp+2*size);
+
+		/* compute s = inv(k)*(h(m) - x*r) mod n */
+		mp32nfree(s);
+		mp32nsize(s, size);
+		mp32bmulmod_w(n, size, temp, size, temp+size, s->data, temp+2*size);
+
+		free(temp);
+
+		return 0;
+	}
+	return -1;
 }
 
 int elgv1vrfy(const mp32barrett* p, const mp32barrett* n, const mp32number* g, const mp32number* hm, const mp32number* y, const mp32number* r, const mp32number* s)
 {
-	register uint32  size =   p->size;
-	register uint32* v1data = p->wksp+size*4+4;
-	register uint32* u1data = v1data+size;
+	register uint32  size = p->size;
+	register uint32* temp;
 
 	if (mp32z(r->size, r->data))
 		return 0;
@@ -105,57 +122,70 @@ int elgv1vrfy(const mp32barrett* p, const mp32barrett* n, const mp32number* g, c
 	if (mp32gex(s->size, s->data, n->size, n->modl))
 		return 0;
 
-	#ifdef COMING_SOON
-	/* here we need the simultaneous multiple exponentiation with three pairs */
-	#endif
+	temp = (uint32*) malloc((6*size+2)*sizeof(uint32));
 
-	/* compute v1 = g^h(m) mod p */
-	mp32bpowmod(p, g->size, g->data, hm->size, hm->data);
-	mp32copy(size, v1data, p->data);
+	if (temp)
+	{
+		register int rc;
 
-	/* compute u1 = y^r mod p */
-	mp32bpowmod(p, y->size, y->data, r->size, r->data);
-	mp32copy(size, u1data, p->data);
+		/* compute u1 = y^r mod p */
+		mp32bpowmod_w(p, y->size, y->data, r->size, r->data, temp, temp+2*size);
 
-	/* compute u2 = r^s mod p */
-	mp32bpowmod(p, r->size, r->data, s->size, s->data);
+		/* compute u2 = r^s mod p */
+		mp32bpowmod_w(p, r->size, r->data, s->size, s->data, temp+size, temp+2*size);
 
-	/* compute v2 = u1*u2 mod p */
-	mp32bmulmod(p, size, p->data, size, u1data);
+		/* compute v2 = u1*u2 mod p */
+		mp32bmulmod_w(p, size, temp, size, temp+size, temp+size, temp+2*size);
 
-	return mp32eq(size, v1data, p->data);
+		/* compute v1 = g^h(m) mod p */
+		mp32bpowmod_w(p, g->size, g->data, hm->size, hm->data, temp, temp+2*size);
+
+		rc = mp32eq(size, temp, temp+size);
+
+		free(temp);
+
+		return rc;
+	}
+	return 0;
 }
 
-void elgv3sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)
+int elgv3sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rgc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)
 {
-	register uint32  size   = p->size;
-	register uint32* kdata  = p->wksp+size*4+4; /* leave enough workspace for a powmod operation */
-	register uint32* u1data = n->wksp+size*4+4; /* leave enough workspace for a mulmod and addmod operation */
-	register uint32* u2data = u1data+size;
+	register uint32  size = p->size;
+	register uint32* temp = (uint32*) malloc((6*size+2)*sizeof(uint32));
 
-	/* get a random k */
-	mp32brndres(p, kdata, rc);
+	if (temp)
+	{
+		/* get a random k */
+		mp32brnd_w(p, rgc, temp, temp+2*size);
 
-	/* compute r = g^k mod p */
-	mp32bpowmod(p, g->size, g->data, size, kdata);
-	mp32nset(r, size, p->data);
+		/* compute r = g^k mod p */
+		mp32nfree(r);
+		mp32nsize(r, size);
+		mp32bpowmod_w(p, g->size, g->data, size, temp, r->data, temp+2*size);
 
-	/* compute u1 = x*r mod n */
-	mp32bmulmodres(n, u1data, x->size, x->data, size, p->data);
+		/* compute u1 = x*r mod n */
+		mp32bmulmod_w(n, x->size, x->data, size, r->data, temp+size, temp+2*size);
 
-	/* compute u2 = k*h(m) mod n */
-	mp32bmulmodres(n, u2data, hm->size, hm->data, size, kdata);
+		/* compute u2 = k*h(m) mod n */
+		mp32bmulmod_w(n, size, temp, hm->size, hm->data, temp, temp+2*size);
 
-	/* compute s = u1+u2 mod n */
-	mp32baddmod(n, size, u1data, size, u2data);
-	mp32nset(s, size, n->data);
+		/* compute s = u1+u2 mod n */
+		mp32nfree(s);
+		mp32nsize(s, n->size);
+		mp32baddmod_w(n, size, temp, size, temp+size, s->data, temp+2*size);
+
+		free(temp);
+
+		return 0;
+	}
+	return -1;
 }
 
 int elgv3vrfy(const mp32barrett* p, const mp32barrett* n, const mp32number* g, const mp32number* hm, const mp32number* y, const mp32number* r, const mp32number* s)
 {
-	register uint32  size =   p->size;
-	register uint32* v1data = p->wksp+size*4+4;
-	register uint32* u1data = v1data+size;
+	register uint32  size = p->size;
+	register uint32* temp;
 
 	if (mp32z(r->size, r->data))
 		return 0;
@@ -169,23 +199,29 @@ int elgv3vrfy(const mp32barrett* p, const mp32barrett* n, const mp32number* g, c
 	if (mp32gex(s->size, s->data, n->size, n->modl))
 		return 0;
 
-	#ifdef COMING_SOON
-	/* here we need the simultaneous multiple exponentiation with three pairs */
-	#endif
+	temp = (uint32*) malloc((6*size+2)*sizeof(uint32));
 
-	/* compute v1 = g^s mod p */
-	mp32bpowmod(p, g->size, g->data, s->size, s->data);
-	mp32copy(size, v1data, p->data);
+	if (temp)
+	{
+		register int rc;
 
-	/* compute u1 = y^r mod p */
-	mp32bpowmod(p, y->size, y->data, r->size, r->data);
-	mp32copy(size, u1data, p->data);
+		/* compute u1 = y^r mod p */
+		mp32bpowmod_w(p, y->size, y->data, r->size, r->data, temp, temp+2*size);
 
-	/* compute u2 = r^h(m) mod p */
-	mp32bpowmod(p, r->size, r->data, hm->size, hm->data);
+		/* compute u2 = r^h(m) mod p */
+		mp32bpowmod_w(p, r->size, r->data, hm->size, hm->data, temp+size, temp+2*size);
 
-	/* compute v2 = u1*u2 mod p */
-	mp32bmulmod(p, size, p->data, size, u1data);
+		/* compute v2 = u1*u2 mod p */
+		mp32bmulmod_w(p, size, temp, size, temp+size, temp+size, temp+2*size);
 
-	return mp32eq(size, v1data, p->data);
+		/* compute v1 = g^s mod p */
+		mp32bpowmod_w(p, g->size, g->data, s->size, s->data, temp, temp+2*size);
+
+		rc = mp32eq(size, temp, temp+size);
+
+		free(temp);
+
+		return rc;
+	}
+	return 0;
 }

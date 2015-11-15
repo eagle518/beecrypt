@@ -94,6 +94,8 @@ int mp32lex(uint32, const uint32*, uint32, const uint32*);
 BEEDLLAPI
 int mp32isone(uint32, const uint32*);
 BEEDLLAPI
+int mp32istwo(uint32, const uint32*);
+BEEDLLAPI
 int mp32leone(uint32, const uint32*);
 BEEDLLAPI
 int mp32eqmone(uint32, const uint32*, const uint32*);
@@ -178,7 +180,7 @@ BEEDLLAPI
 void mp32sqr(uint32*, uint32, const uint32*);
 
 BEEDLLAPI
-void mp32gcd(uint32*, uint32, const uint32*, const uint32*, uint32*);
+void mp32gcd_w(uint32, const uint32*, const uint32*, uint32*, uint32*);
 
 BEEDLLAPI
 uint32 mp32nmodw(uint32*, uint32, const uint32*, uint32, uint32*);

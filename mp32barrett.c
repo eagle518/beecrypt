@@ -8,7 +8,7 @@
  *  Menezes, van Oorschot, Vanstone
  *  CRC Press
  *
- * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -35,19 +35,181 @@
 #include "mp32barrett.h"
 
 #if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_ALLOCA_H
-#include <alloca.h>
+# include <stdlib.h>
 #endif
 
 #include <stdio.h>
 
-void mp32bmu(mp32barrett* b)
+/**
+ * mp32bzero
+ */
+void mp32bzero(mp32barrett* b)
 {
-	/* workspace needs to acommodate the dividend (size*2+1), and the divmod result (size*2+1) */
+	b->size = 0;
+	b->modl = b->mu = (uint32*) 0;
+}
+
+/**
+ * mp32binit
+ *  allocates the data words for an mp32barrett structure
+ *  will allocate 2*size+1 words
+ */
+void mp32binit(mp32barrett* b, uint32 size)
+{
+	b->size	= size;
+	b->modl	= (uint32*) calloc(2*size+1, sizeof(uint32));
+
+	if (b->modl != (uint32*) 0)
+		b->mu = b->modl+size;
+	else
+		b->mu = (uint32*) 0;
+}
+
+/**
+ * mp32bfree
+ */
+void mp32bfree(mp32barrett* b)
+{
+	if (b->modl != (uint32*) 0)
+	{
+		free(b->modl);
+		b->modl = b->mu = (uint32*) 0;
+	}
+	b->size = 0;
+}
+
+void mp32bcopy(mp32barrett* b, const mp32barrett* copy)
+{
+	register uint32 size = copy->size;
+
+	if (size)
+	{
+		if (b->modl)
+		{
+			if (b->size != size)
+				b->modl = (uint32*) realloc(b->modl, (2*size+1) * sizeof(uint32));
+		}
+		else
+			b->modl = (uint32*) malloc((2*size+1) * sizeof(uint32));
+
+		if (b->modl)
+		{
+			b->size = size;
+			b->mu = b->modl+copy->size;
+			mp32copy(2*size+1, b->modl, copy->modl);
+		}
+		else
+		{
+			b->size = 0;
+			b->mu = (uint32*) 0;
+		}
+	}
+	else if (b->modl)
+	{
+		free(b->modl);
+		b->size = 0;
+		b->modl = b->mu = (uint32*) 0;
+	}
+}
+
+/**
+ * mp32bset
+ */
+void mp32bset(mp32barrett* b, uint32 size, const uint32 *data)
+{
+	if (size > 0)
+	{
+		if (b->modl)
+		{
+			if (b->size != size)
+				b->modl = (uint32*) realloc(b->modl, (2*size+1) * sizeof(uint32));
+		}
+		else
+			b->modl = (uint32*) malloc((2*size+1) * sizeof(uint32));
+
+		if (b->modl)
+		{
+			uint32* temp = (uint32*) malloc((6*size+4) * sizeof(uint32));
+
+			b->size = size;
+			b->mu = b->modl+size;
+			mp32copy(size, b->modl, data);
+			mp32bmu_w(b, temp);
+
+			free(temp);
+		}
+		else
+		{
+			b->size = 0;
+			b->mu = (uint32*) 0;
+		}
+	}
+}
+
+void mp32bsethex(mp32barrett* b, const char* hex)
+{
+	uint32 length = strlen(hex);
+	uint32 size = (length+7) >> 3;
+	uint8 rem = (uint8)(length & 0x7);
+
+	if (b->modl)
+	{
+		if (b->size != size)
+			b->modl = (uint32*) realloc(b->modl, (2*size+1) * sizeof(uint32));
+	}
+	else
+		b->modl = (uint32*) malloc((2*size+1) * sizeof(uint32));
+
+	if (b->modl != (uint32*) 0)
+	{
+		register uint32  val = 0;
+		register uint32* dst = b->modl;
+		register uint32* temp = (uint32*) malloc((6*size+4) * sizeof(uint32));
+		register char ch;
+
+		b->size = size;
+		b->mu = b->modl+size;
+
+		while (length-- > 0)
+		{
+			ch = *(hex++);
+			val <<= 4;
+			if (ch >= '0' && ch <= '9')
+				val += (ch - '0');
+			else if (ch >= 'A' && ch <= 'F')
+				val += (ch - 'A') + 10;
+			else if (ch >= 'a' && ch <= 'f')
+				val += (ch - 'a') + 10;
+
+			if ((length & 0x7) == 0)
+			{
+				*(dst++) = val;
+				val = 0;
+			}
+		}
+		if (rem)
+			*dst = val;
+
+		mp32bmu_w(b, temp);
+
+		free(temp);
+	}
+	else
+	{
+		b->size = 0;
+		b->mu = 0;
+	}
+}
+
+/**
+ * mp32bmu_w
+ *  computes the Barrett 'mu' coefficient
+ *  needs workspace of (6*size+4) words
+ */
+void mp32bmu_w(mp32barrett* b, uint32* wksp)
+{
 	register uint32  size = b->size;
-	register uint32* divmod = b->mu-1; /* uses the last word of b->modl, which we made large enough */
+	register uint32* divmod = wksp;
 	register uint32* dividend = divmod+(size*2+2);
 	register uint32* workspace = dividend+(size*2+1);
 	register uint32  shift;
@@ -55,19 +217,25 @@ void mp32bmu(mp32barrett* b)
 	/* normalize modulus before division */
 	shift = mp32norm(size, b->modl);
 	/* make the dividend, initialize first word to 1 (shifted); the rest is zero */
-	*dividend = (1 << shift);
+	*dividend = (uint32) (1 << shift);
 	mp32zero(size*2, dividend+1);
 	mp32ndivmod(divmod, size*2+1, dividend, size, b->modl, workspace);
+	mp32copy(size+1, b->mu, divmod+1);
 	/* de-normalize */
 	mp32rshift(size, b->modl, shift);
 }
 
-void mp32brndres(const mp32barrett* b, uint32* result, randomGeneratorContext* rc)
+/**
+ * mp32brnd_w
+ *  generates a random number in the range 1 < r < b-1
+ *  need workspace of (size) words
+ */
+void mp32brnd_w(const mp32barrett* b, randomGeneratorContext* rc, uint32* result, uint32* wksp)
 {
 	uint32 msz = mp32mszcnt(b->size, b->modl);
 
-	mp32copy(b->size, b->wksp, b->modl);
-	mp32subw(b->size, b->wksp, 1);
+	mp32copy(b->size, wksp, b->modl);
+	mp32subw(b->size, wksp, 1);
 
 	do
 	{
@@ -75,17 +243,22 @@ void mp32brndres(const mp32barrett* b, uint32* result, randomGeneratorContext* r
 
 		result[0] &= (0xffffffff >> msz);
 
-		while (mp32ge(b->size, result, b->wksp))
-			mp32sub(b->size, result, b->wksp);
+		while (mp32ge(b->size, result, wksp))
+			mp32sub(b->size, result, wksp);
 	} while (mp32leone(b->size, result));
 }
 
-void mp32brndoddres(const mp32barrett* b, uint32* result, randomGeneratorContext* rc)
+/**
+ * mp32brndodd_w
+ *  generates a random odd number in the range 1 < r < b-1
+ *  needs workspace of (size) words
+ */
+void mp32brndodd_w(const mp32barrett* b, randomGeneratorContext* rc, uint32* result, uint32* wksp)
 {
 	uint32 msz = mp32mszcnt(b->size, b->modl);
 
-	mp32copy(b->size, b->wksp, b->modl);
-	mp32subw(b->size, b->wksp, 1);
+	mp32copy(b->size, wksp, b->modl);
+	mp32subw(b->size, wksp, 1);
 
 	do
 	{
@@ -94,32 +267,44 @@ void mp32brndoddres(const mp32barrett* b, uint32* result, randomGeneratorContext
 		result[0] &= (0xffffffff >> msz);
 		mp32setlsb(b->size, result);
 
-		while (mp32ge(b->size, result, b->wksp))
+		while (mp32ge(b->size, result, wksp))
 		{
-			mp32sub(b->size, result, b->wksp);
+			mp32sub(b->size, result, wksp);
 			mp32setlsb(b->size, result);
 		}
 	} while (mp32leone(b->size, result));
 }
 
-void mp32brndinvres(const mp32barrett* b, uint32* result, randomGeneratorContext* rc)
+/**
+ * mp32brndinv_w
+ *  generates a random invertible (modulo b) in the range 1 < r < b-1
+ *  needs workspace of (6*size+6) words
+ */
+void mp32brndinv_w(const mp32barrett* b, randomGeneratorContext* rc, uint32* result, uint32* inverse, uint32* wksp)
 {
+	register uint32  size = b->size;
+
 	do
 	{
-		if (mp32even(b->size, b->modl))
-			mp32brndoddres(b, result, rc);
+		if (mp32even(size, b->modl))
+			mp32brndodd_w(b, rc, result, wksp);
 		else
-			mp32brndres(b, result, rc);
+			mp32brnd_w(b, rc, result, wksp);
 
-	} while (mp32binv(b, b->size, result) == 0);
+	} while (mp32binv_w(b, size, result, inverse, wksp) == 0);
 }
 
-void mp32bmodres(const mp32barrett* b, uint32* result, const uint32* xdata)
+/**
+ * mp32bmod_w
+ *  computes the barrett modular reduction of a number x, which has twice the size of b
+ *  needs workspace of (2*size+2) words
+ */
+void mp32bmod_w(const mp32barrett* b, const uint32* xdata, uint32* result, uint32* wksp)
 {
 	register uint32 rc;
 	register uint32 sp = 2;
 	register const uint32* src = xdata+b->size+1;
-	register       uint32* dst = b->wksp+b->size+1;
+	register       uint32* dst = wksp +b->size+1;
 
 	rc = mp32setmul(sp, dst, b->mu, *(--src));
 	*(--dst) = rc;
@@ -149,7 +334,7 @@ void mp32bmodres(const mp32barrett* b, uint32* result, const uint32* xdata)
 	sp = b->size;
 	rc = 0;
 
-	dst = b->wksp+b->size+1;
+	dst = wksp+b->size+1;
 	src = dst;
 
 	*dst = mp32setmul(sp, dst+1, b->modl, *(--src));
@@ -159,232 +344,113 @@ void mp32bmodres(const mp32barrett* b, uint32* result, const uint32* xdata)
 		mp32addmul(sp--, dst, b->modl+(rc++), *(--src));
 	}
 
-	mp32setx(b->size+1, b->wksp, b->size*2, xdata);
-	mp32sub(b->size+1, b->wksp, b->wksp+b->size+1);
-	while (mp32gex(b->size+1, b->wksp, b->size, b->modl))
+	mp32setx(b->size+1, wksp, b->size*2, xdata);
+	mp32sub(b->size+1, wksp, wksp+b->size+1);
+
+	while (mp32gex(b->size+1, wksp, b->size, b->modl))
 	{
-		mp32subx(b->size+1, b->wksp, b->size, b->modl);
+		mp32subx(b->size+1, wksp, b->size, b->modl);
 	}
-	mp32copy(b->size, result, b->wksp+1);
+	mp32copy(b->size, result, wksp+1);
 }
 
-void mp32binit(mp32barrett* b, uint32 size)
-{
-	/*
-	 * NOTE: consider having the mp32prime routines allocate their own memory when necessary;
-	 *       this would limit the size to 3*size+2 + 4*size+2 = 7*size+4
-	 * NOTE: sliding window exponentiation will also use its own storage
-	 * NOTE: this memory can be allocated with either alloca (if available) or malloc.
-	 */
-
-	/* data, modulus and mu take 3*size+2 words, wksp needed = 7*size+2; total = 10*size+4 */
-	b->size	= size;
-	b->data	= (uint32*) calloc(size*10+4, sizeof(uint32));
-
-	if (b->data)
-	{
-		b->modl = b->data+size+0;
-		b->mu   = b->modl+size+1;
-		b->wksp	= b->mu  +size+1;
-	}
-	else
-	{
-		b->modl = b->mu = b->wksp = (uint32*) 0;
-	}
-}
-
-void mp32bzero(mp32barrett* b)
-{
-	b->size = 0;
-	b->data = b->modl = b->mu = b->wksp = (uint32*) 0;
-}
-
-void mp32bfree(mp32barrett* b)
-{
-	if (b->data)
-	{
-		free(b->data);
-		b->data = b->modl = b->mu = b->wksp = (uint32*) 0;
-	}
-	b->size = 0;
-}
-
-void mp32bset(mp32barrett* b, uint32 size, const uint32 *data)
-{
-	/* assumes that the msw of data is not zero */
-	if (b->data)
-		mp32bfree(b);
-
-	if (size)
-	{
-		mp32binit(b, size);
-
-		if (b->data)
-		{
-			mp32copy(size, b->modl, data);
-			mp32bmu(b);
-		}
-	}
-}
-
-/* function mp32bsethex would be very useful! */
-
-void mp32bmod(const mp32barrett* b, uint32 xsize, const uint32* xdata)
-{
-	register uint32  size = b->size;
-	register uint32* opnd = b->wksp + size*2+2;
-
-	mp32setx(size*2, opnd, xsize, xdata);
-	mp32bmodres(b, b->data, opnd);
-}
-
-void mp32bmodsubone(const mp32barrett* b)
+/**
+ * mp32bsubone
+ *  copies (b-1) into result
+ */
+void mp32bsubone(const mp32barrett* b, uint32* result)
 {
 	register uint32 size = b->size;
 
-	mp32copy(size, b->data, b->modl);
-	mp32subw(size, b->data, 1);
+	mp32copy(size, result, b->modl);
+	mp32subw(size, result, 1);
 }
 
-void mp32bneg(const mp32barrett* b)
+/**
+ * mp32bneg
+ *  computes the negative (modulo b) of x, where x must contain a value between 0 and b-1
+ */
+void mp32bneg(const mp32barrett* b, const uint32* xdata, uint32* result)
 {
 	register uint32  size = b->size;
 
-	mp32neg(size, b->data);
-	mp32add(size, b->data, b->modl);
+	mp32copy(size, result, xdata);
+	mp32neg(size, result);
+	mp32add(size, result, b->modl);
 }
 
-void mp32baddmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
-{
-	/* xsize and ysize must be less than or equal to b->size */
-	register uint32  size = b->size;
-	register uint32* opnd = b->wksp+size*2+2;
-
-	mp32setx(2*size, opnd, xsize, xdata);
-	mp32addx(2*size, opnd, ysize, ydata);
-
-	mp32bmodres(b, b->data, opnd);
-}
-
-void mp32bsubmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
+/**
+ * mp32baddmod_w
+ *  computes the sum (modulo b) of x and y
+ *  needs a workspace of (4*size+2) words
+ */
+void mp32baddmod_w(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata, uint32* result, uint32* wksp)
 {
 	/* xsize and ysize must be less than or equal to b->size */
 	register uint32  size = b->size;
-	register uint32* opnd = b->wksp+size*2+2;
+	register uint32* temp = wksp + size*2+2;
+
+	mp32setx(2*size, temp, xsize, xdata);
+	mp32addx(2*size, temp, ysize, ydata);
+
+	mp32bmod_w(b, temp, result, wksp);
+}
+
+/**
+ * mp32bsubmod_w
+ *  computes the difference (modulo b) of x and y
+ *  needs a workspace of (4*size+2) words
+ */
+void mp32bsubmod_w(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata, uint32* result, uint32* wksp)
+{
+	/* xsize and ysize must be less than or equal to b->size */
+	register uint32  size = b->size;
+	register uint32* temp = wksp + size*2+2;
 	
-	mp32setx(2*size, opnd, xsize, xdata);
-	if (mp32subx(2*size, opnd, ysize, ydata)) /* if there's carry, i.e. the result would be negative, add the modulus */
-		mp32addx(2*size, opnd, size, b->modl);
+	mp32setx(2*size, temp, xsize, xdata);
+	if (mp32subx(2*size, temp, ysize, ydata)) /* if there's carry, i.e. the result would be negative, add the modulus */
+		mp32addx(2*size, temp, size, b->modl);
 
-	mp32bmodres(b, b->data, opnd);
+	mp32bmod_w(b, temp, result, wksp);
 }
 
-void mp32bmulmodres(const mp32barrett* b, uint32* result, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
+/**
+ * mp32mulmod_w
+ *  computes the product (modulo b) of x and y
+ *  needs a workspace of (4*size+2) words
+ */
+void mp32bmulmod_w(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata, uint32* result, uint32* wksp)
 {
-	/* needs workspace of (size*2) in addition to what is needed by mp32bmodres (size*2+2) */
 	/* xsize and ysize must be <= b->size */
-	/* stores result in b->data */
 	register uint32  size = b->size;
-	register uint32  fill = 2*size-xsize-ysize;
-	register uint32* opnd = b->wksp+size*2+2;
+	register uint32* temp = wksp + size*2+2;
+	register uint32  fill = size*2-xsize-ysize;
 
 	if (fill)
-		mp32zero(fill, opnd);
+		mp32zero(fill, temp);
 
-	mp32mul(opnd+fill, xsize, xdata, ysize, ydata);
-	mp32bmodres(b, result, opnd);
+	mp32mul(temp+fill, xsize, xdata, ysize, ydata);
+	mp32bmod_w(b, temp, result, wksp);
 }
 
-void mp32bsqrmodres(const mp32barrett* b, uint32* result, uint32 xsize, const uint32* xdata)
+/**
+ * mp32bsqrmod_w
+ *  computes the square (modulo b) of x
+ *  needs a workspace of (4*size+2) words
+ */
+void mp32bsqrmod_w(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32* result, uint32* wksp)
 {
-	/* needs workspace of (size*2) in addition to what is needed by mp32bmodres (size*2+2) */
 	/* xsize must be <= b->size */
 	register uint32  size = b->size;
+	register uint32* temp = wksp + size*2+2;
 	register uint32  fill = 2*(size-xsize);
-	register uint32* opnd = b->wksp + size*2+2;
 
 	if (fill)
-		mp32zero(fill, opnd);
+		mp32zero(fill, temp);
 
-	mp32sqr(opnd+fill, xsize, xdata);
-	mp32bmodres(b, result, opnd);
+	mp32sqr(temp+fill, xsize, xdata);
+	mp32bmod_w(b, temp, result, wksp);
 }
-
-void mp32bmulmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
-{
-	mp32bmulmodres(b, b->data, xsize, xdata, ysize, ydata);
-}
-
-void mp32bsqrmod(const mp32barrett* b, uint32 xsize, const uint32* xdata)
-{
-	mp32bsqrmodres(b, b->data, xsize, xdata);
-}
-
-#if 0
-/*
- * This algorithm will be phased out in favor of the sliding window method,
- * which is about 25% more efficient
- */
-
-void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 psize, const uint32* pdata)
-{
-	/*
-	 * Modular exponention
-	 *
-	 * Uses left-to-right exponentiation; needs no extra storage
-	 *
-	 */
-	
-	/* this routine calls mp32bmod, which needs (size*2+2), this routine needs (size*2) for sdata */
-
-	register uint32  temp;
-
-	mp32setw(b->size, b->data, 1);
-
-	while (psize)
-	{
-		if ((temp = *(pdata++))) /* break when first non-zero word found */
-			break;
-		psize--;
-	}
-
-	/* if temp is still zero, then we're trying to raise x to power zero, and result stays one */
-	if (temp)
-	{
-		register int count = 32;
-
-		/* first skip bits until we reach a one */
-		while (count)
-		{
-			if (temp & 0x80000000)
-				break;
-			temp <<= 1;
-			count--;
-		}
-
-		while (psize)
-		{
-			while (count)
-			{
-				/* always square */
-				mp32bnsqrmodres(b, b->data, (mp32number*) b);
-				
-				/* multiply by x if bit is 1 */
-				if (temp & 0x80000000)
-					mp32bmulmod(b, xsize, xdata, b->size, b->data);
-
-				temp <<= 1;
-				count--;
-			}
-			if (--psize)
-			{
-				count = 32;
-				temp = *(pdata++);
-			}
-		}
-	}
-}
-#endif
 
 /*
  * Sliding Window Exponentiation technique, slightly altered from the method Applied Cryptography:
@@ -418,6 +484,25 @@ void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32
  *
  */
 
+/**
+ * mp32bslide_w
+ *  precomputes the sliding window table for computing powers of x modulo b
+ *  needs workspace (4*size+2)
+ */
+void mp32bslide_w(const mp32barrett* b, const uint32 xsize, const uint32* xdata, uint32* slide, uint32* wksp)
+{
+	register uint32 size = b->size;
+	mp32bsqrmod_w(b, xsize, xdata,                     slide       , wksp); /* x^2 mod b, temp */
+	mp32bmulmod_w(b, xsize, xdata, size, slide       , slide+size  , wksp); /* x^3 mod b */
+	mp32bmulmod_w(b,  size, slide, size, slide+size  , slide+2*size, wksp); /* x^5 mod b */
+	mp32bmulmod_w(b,  size, slide, size, slide+2*size, slide+3*size, wksp); /* x^7 mod b */
+	mp32bmulmod_w(b,  size, slide, size, slide+3*size, slide+4*size, wksp); /* x^9 mod b */
+	mp32bmulmod_w(b,  size, slide, size, slide+4*size, slide+5*size, wksp); /* x^11 mod b */
+	mp32bmulmod_w(b,  size, slide, size, slide+5*size, slide+6*size, wksp); /* x^13 mod b */
+	mp32bmulmod_w(b,  size, slide, size, slide+6*size, slide+7*size, wksp); /* x^15 mod b */
+	mp32setx(size, slide, xsize, xdata);                                    /* x^1 mod b */
+}
+
 static byte mp32bslide_presq[16] = 
 { 0, 1, 1, 2, 1, 3, 2, 3, 1, 4, 3, 4, 2, 4, 3, 4 };
 
@@ -427,7 +512,10 @@ static byte mp32bslide_mulg[16] =
 static byte mp32bslide_postsq[16] =
 { 0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0 };
 
-void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 psize, const uint32* pdata)
+/**
+ * needs workspace of 4*size+2 words
+ */
+void mp32bpowmod_w(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 psize, const uint32* pdata, uint32* result, uint32* wksp)
 {
 	/*
 	 * Modular exponention
@@ -439,10 +527,7 @@ void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32
 	/* K == 4 for the first try */
 	
 	uint32  size = b->size;
-	uint32* data = b->data;
 	uint32  temp;
-
-	mp32setw(size, data, 1);
 
 	while (psize)
 	{
@@ -451,24 +536,42 @@ void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32
 		psize--;
 	}
 
+	/* if temp is still zero, then we're trying to raise x to power zero, and result stays one */
 	if (temp)
 	{
-		#if HAVE_ALLOCA
-		uint32* xpow = (uint32*) alloca(size*8*sizeof(uint32));
-		#else
-		uint32* xpow = (uint32*) malloc(size*8*sizeof(uint32));
-		#endif
+		uint32* slide = (uint32*) malloc((8*size)*sizeof(uint32));
+
+		mp32bslide_w(b, xsize, xdata, slide, wksp);
+
+		mp32bpowmodsld_w(b, slide, psize, pdata-1, result, wksp);
+
+		free(slide);
+	}
+}
+
+void mp32bpowmodsld_w(const mp32barrett* b, const uint32* slide, uint32 psize, const uint32* pdata, uint32* result, uint32* wksp)
+{
+	/*
+	 * Modular exponentiation with precomputed sliding window table, so no x is required
+	 *
+	 */
+
+	uint32 size = b->size;
+	uint32 temp;
+
+	mp32setw(size, result, 1);
+
+	while (psize)
+	{
+		if ((temp = *(pdata++))) /* break when first non-zero word found in power */
+			break;
+		psize--;
+	}
+
+	/* if temp is still zero, then we're trying to raise x to power zero, and result stays one */
+	if (temp)
+	{
 		uint8 l = 0, n = 0, count = 32;
-	
-		mp32bsqrmodres(b, xpow       , xsize, xdata);                    /* x^2 mod b, temp */
-		mp32bmulmodres(b, xpow+size  , xsize, xdata, size, xpow);        /* x^3 mod b */
-		mp32bmulmodres(b, xpow+2*size,  size,  xpow, size, xpow+size);   /* x^5 mod b */
-		mp32bmulmodres(b, xpow+3*size,  size,  xpow, size, xpow+2*size); /* x^7 mod b */
-		mp32bmulmodres(b, xpow+4*size,  size,  xpow, size, xpow+3*size); /* x^9 mod b */
-		mp32bmulmodres(b, xpow+5*size,  size,  xpow, size, xpow+4*size); /* x^11 mod b */
-		mp32bmulmodres(b, xpow+6*size,  size,  xpow, size, xpow+5*size); /* x^13 mod b */
-		mp32bmulmodres(b, xpow+7*size,  size,  xpow, size, xpow+6*size); /* x^15 mod b */
-		mp32setx(size, xpow, xsize, xdata);                              /* x^1 mod b */
 
 		/* first skip bits until we reach a one */
 		while (count)
@@ -500,20 +603,20 @@ void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32
 						uint8 s = mp32bslide_presq[n];
 						
 						while (s--)
-							mp32bnsqrmodres(b, data, (mp32number*) b);
+							mp32bsqrmod_w(b, size, result, result, wksp);
 						
-						mp32bmulmod(b, size, xpow+mp32bslide_mulg[n]*size, b->size, b->data);
+						mp32bmulmod_w(b, size, result, size, slide+mp32bslide_mulg[n]*size, result, wksp);
 						
 						s = mp32bslide_postsq[n];
 						
 						while (s--)
-							mp32bnsqrmodres(b, data, (mp32number*) b);
+							mp32bsqrmod_w(b, size, result, result, wksp);
 
 						l = n = 0;
 					}
 				}
 				else
-					mp32bnsqrmodres(b, data, (mp32number*) b);
+					mp32bsqrmod_w(b, size, result, result, wksp);
 
 				temp <<= 1;
 				count--;
@@ -529,22 +632,23 @@ void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32
 		{
 			uint8 s = mp32bslide_presq[n];
 			while (s--)
-				mp32bnsqrmodres(b, data, (mp32number*) b);
+				mp32bsqrmod_w(b, size, result, result, wksp);
 				
-			mp32bmulmod(b, size, xpow+mp32bslide_mulg[n]*size, b->size, b->data);
+			mp32bmulmod_w(b, size, result, size, slide+mp32bslide_mulg[n]*size, result, wksp);
 			
 			s = mp32bslide_postsq[n];
 			
 			while (s--)
-				mp32bnsqrmodres(b, data, (mp32number*) b);
+				mp32bsqrmod_w(b, size, result, result, wksp);
 		}
-		#if !HAVE_ALLOCA
-		free(xpow);
-		#endif
-	}
+	}	
 }
 
-void mp32btwopowmod(const mp32barrett* b, uint32 psize, const uint32* pdata)
+/**
+ * mp32btwopowmod_w
+ *  needs workspace of (4*size+2) words
+ */
+void mp32btwopowmod_w(const mp32barrett* b, uint32 psize, const uint32* pdata, uint32* result, uint32* wksp)
 {
 	/*
 	 * Modular exponention, 2^p mod modulus, special optimization
@@ -555,9 +659,10 @@ void mp32btwopowmod(const mp32barrett* b, uint32 psize, const uint32* pdata)
 
 	/* this routine calls mp32bmod, which needs (size*2+2), this routine needs (size*2) for sdata */
 
-	register uint32  temp;
+	register uint32 size = b->size;
+	register uint32 temp;
 
-	mp32setw(b->size, b->data, 1);
+	mp32setw(size, result, 1);
 
 	while (psize)
 	{
@@ -580,55 +685,59 @@ void mp32btwopowmod(const mp32barrett* b, uint32 psize, const uint32* pdata)
 			count--;
 		}
 
-		while (psize)
+		while (psize--)
 		{
 			while (count)
 			{
 				/* always square */
-				mp32bnsqrmodres(b, b->data, (mp32number*) b);
+				mp32bsqrmod_w(b, size, result, result, wksp);
 				
 				/* multiply by two if bit is 1 */
 				if (temp & 0x80000000)
 				{
-					if (mp32add(b->size, b->data, b->data) || mp32ge(b->size, b->data, b->modl))
+					if (mp32add(size, result, result) || mp32ge(size, result, b->modl))
 					{
 						/* there was carry, or the result is greater than the modulus, so we need to adjust */
-						mp32sub(b->size, b->data, b->modl);
+						mp32sub(size, result, b->modl);
 					}
 				}
 
 				temp <<= 1;
 				count--;
 			}
-			if (psize--)
-			{
-				count = 32;
-				temp = *(pdata++);
-			}
+			count = 32;
+			temp = *(pdata++);
 		}
 	}
 }
 
-int mp32binv(const mp32barrett* b, uint32 xsize, const uint32* xdata)
+/**
+ * mp32binv_w
+ *  computes the inverse (modulo b) of x, and returns 1 if x was invertible
+ *  needs workspace of (6*size+6) words
+ *  note: xdata and result cannot point to the same area
+ */
+int mp32binv_w(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32* result, uint32* wksp)
 {
 	/*
 	 * Fact: if a element of Zn, then a is invertible if and only if gcd(a,n) = 1
-	 * 
+	 * Hence: if b->modl is even, then x must be odd, otherwise the gcd(x,n) >= 2
+	 *
+	 * The calling routine must guarantee this condition.
 	 */
 
-	/* where x or modl is odd, that algorithm will need (4*size+4) */
+	register uint32  size = b->size;
 
-	if (mp32odd(b->size, b->modl))
+	uint32* udata = wksp;
+	uint32* vdata = udata+size+1;
+	uint32* adata = vdata+size+1;
+	uint32* bdata = adata+size+1;
+	uint32* cdata = bdata+size+1;
+	uint32* ddata = cdata+size+1;
+
+	if (mp32odd(b->size, b->modl) && mp32even(xsize, xdata))
 	{
 		/* use simplified binary extended gcd algorithm */
-
-		register uint32  size = b->size;
-
-		uint32* udata = b->wksp;
-		uint32* vdata = udata+size+1;
-		uint32* bdata = vdata+size+1;
-		uint32* ddata = bdata+size+1;
-
 		mp32setx(size+1, udata, size, b->modl);
 		mp32setx(size+1, vdata, xsize, xdata);
 		mp32zero(size+1, bdata);
@@ -669,30 +778,26 @@ int mp32binv(const mp32barrett* b, uint32 xsize, const uint32* xdata)
 			{
 				if (mp32isone(size+1, vdata))
 				{
-					mp32setx(size, b->data, size+1, ddata);
-					if (*ddata & 0x80000000)
-						mp32add(size, b->data, b->modl);
-
+					if (result)
+					{
+						mp32setx(size, result, size+1, ddata);
+						if (*ddata & 0x80000000)
+							mp32add(size, result, b->modl);
+					}
 					return 1;
 				}
 				return 0;
 			}
 		}
 	}
-	else if (mp32odd(xsize, xdata))
+	else
 	{
-		/* use simplified binary extended gcd algorithm */
-
-		register uint32  size = b->size;
-
-		uint32* udata = b->wksp;
-		uint32* vdata = udata+size+1;
-		uint32* bdata = vdata+size+1;
-		uint32* ddata = bdata+size+1;
-
-		mp32setx(size+1, udata, xsize, xdata);
-		mp32setx(size+1, vdata, size, b->modl);
+		/* use full binary extended gcd algorithm */
+		mp32setx(size+1, udata, size, b->modl);
+		mp32setx(size+1, vdata, xsize, xdata);
+		mp32setw(size+1, adata, 1);
 		mp32zero(size+1, bdata);
+		mp32zero(size+1, cdata);
 		mp32setw(size+1, ddata, 1);
 
 		while (1)
@@ -701,28 +806,38 @@ int mp32binv(const mp32barrett* b, uint32 xsize, const uint32* xdata)
 			{
 				mp32divtwo(size+1, udata);
 
-				if (mp32odd(size+1, bdata))
-					mp32subx(size+1, bdata, xsize, xdata);
+				if (mp32odd(size+1, adata) || mp32odd(size+1, bdata))
+				{
+					mp32addx(size+1, adata, xsize, xdata);
+					mp32subx(size+1, bdata, size, b->modl);
+				}
 
+				mp32sdivtwo(size+1, adata);
 				mp32sdivtwo(size+1, bdata);
 			}
 			while (mp32even(size+1, vdata))
 			{
 				mp32divtwo(size+1, vdata);
 
-				if (mp32odd(size+1, ddata))
-					mp32subx(size+1, ddata, xsize, xdata);
+				if (mp32odd(size+1, cdata) || mp32odd(size+1, ddata))
+				{
+					mp32addx(size+1, cdata, xsize, xdata);
+					mp32subx(size+1, ddata, size, b->modl);
+				}
 
+				mp32sdivtwo(size+1, cdata);
 				mp32sdivtwo(size+1, ddata);
 			}
 			if (mp32ge(size+1, udata, vdata))
 			{
 				mp32sub(size+1, udata, vdata);
+				mp32sub(size+1, adata, cdata);
 				mp32sub(size+1, bdata, ddata);
 			}
 			else
 			{
 				mp32sub(size+1, vdata, udata);
+				mp32sub(size+1, cdata, adata);
 				mp32sub(size+1, ddata, bdata);
 			}
 
@@ -730,28 +845,33 @@ int mp32binv(const mp32barrett* b, uint32 xsize, const uint32* xdata)
 			{
 				if (mp32isone(size+1, vdata))
 				{
-					mp32setx(size, b->data, size+1, ddata);
-					if (*ddata & 0x80000000)
-						mp32addx(size, b->data, xsize, xdata);
-
+					if (result)
+					{
+						mp32setx(size, result, size+1, ddata);
+						if (*ddata & 0x80000000)
+							mp32add(size, result, b->modl);
+					}
 					return 1;
 				}
 				return 0;
 			}
 		}
 	}
-
-	return 0;
 }
 
-int mp32bpprime(const mp32barrett* b, randomGeneratorContext* r, int t)
+/**
+ * needs workspace of (7*size+2) words
+ */
+int mp32bpprime_w(const mp32barrett* b, randomGeneratorContext* r, int t, uint32* wksp)
 {
 	/*
-	 * This test works for candidate probable primes >= 3, which are also not small primes 
+	 * This test works for candidate probable primes >= 3, which are also not small primes.
 	 *
 	 * It assumes that b->modl contains the candidate prime
 	 *
 	 */
+
+	uint32 size = b->size;
 
 	/* first test if modl is odd */
 
@@ -767,77 +887,101 @@ int mp32bpprime(const mp32barrett* b, randomGeneratorContext* r, int t)
 		 *
 		 */
 		
-		if (b->size > SMALL_PRIMES_PRODUCT_MAX)
+		if (size > SMALL_PRIMES_PRODUCT_MAX)
 		{
-			mp32setx(b->size, b->wksp+b->size, SMALL_PRIMES_PRODUCT_MAX, mp32spprod[SMALL_PRIMES_PRODUCT_MAX-1]);
-			mp32gcd(b->data, b->size, b->modl, b->wksp+b->size, b->wksp);
+			mp32setx(size, wksp+size, SMALL_PRIMES_PRODUCT_MAX, mp32spprod[SMALL_PRIMES_PRODUCT_MAX-1]);
+			mp32gcd_w(size, b->modl, wksp+size, wksp, wksp+2*size);
 		}
 		else
 		{
-			mp32gcd(b->data, b->size, b->modl, mp32spprod[b->size-1], b->wksp);
+			mp32gcd_w(size, b->modl, mp32spprod[size-1], wksp, wksp+2*size);
 		}
 
-		if (mp32isone(b->size, b->data))
+		if (mp32isone(size, wksp))
 		{
-			return mp32pmilrab(b, r, t);
+			return mp32pmilrab_w(b, r, t, wksp);
 		}
 	}
 
 	return 0;
 }
 
-void mp32brnd(const mp32barrett* b, randomGeneratorContext* rc)
+void mp32bnrnd(const mp32barrett* b, randomGeneratorContext* rc, mp32number* result)
 {
-	mp32brndres(b, b->data, rc);
+	register uint32  size = b->size;
+	register uint32* temp = (uint32*) malloc(size * sizeof(uint32));
+
+	mp32nfree(result);
+	mp32nsize(result, size);
+	mp32brnd_w(b, rc, result->data, temp);
+
+	free(temp);
 }
 
-void mp32bnmulmodres(const mp32barrett* b, uint32* result, const mp32number* x, const mp32number* y)
+void mp32bnmulmod(const mp32barrett* b, const mp32number* x, const mp32number* y, mp32number* result)
 {
-	/* needs workspace of (size*2) in addition to what is needed by mp32bmodres (size*2+2) */
-	/* xsize and ysize must be <= b->size */
-	/* stores result in b->data */
 	register uint32  size = b->size;
+	register uint32* temp = (uint32*) malloc((4*size+2) * sizeof(uint32));
+
+	/* xsize and ysize must be <= b->size */
 	register uint32  fill = 2*size-x->size-y->size;
-	register uint32* opnd = b->wksp+size*2+2;
+	register uint32* opnd = temp+size*2+2;
+
+	mp32nfree(result);
+	mp32nsize(result, size);
 
 	if (fill)
 		mp32zero(fill, opnd);
 
 	mp32mul(opnd+fill, x->size, x->data, y->size, y->data);
-	mp32bmodres(b, result, opnd);
+	mp32bmod_w(b, opnd, result->data, temp);
+
+	free(temp);
 }
 
-void mp32bnsqrmodres(const mp32barrett* b, uint32* result, const mp32number* x)
+void mp32bnsqrmod(const mp32barrett* b, const mp32number* x, mp32number* result)
 {
-	/* needs workspace of (size*2) in addition to what is needed by mp32bmodres (size*2+2) */
-	/* xsize must be <= b->size */
 	register uint32  size = b->size;
+	register uint32* temp = (uint32*) malloc(size * sizeof(uint32));
+
+	/* xsize must be <= b->size */
 	register uint32  fill = 2*(size-x->size);
-	register uint32* opnd = b->wksp + size*2+2;
+	register uint32* opnd = temp + size*2+2;
+
+	mp32nfree(result);
+	mp32nsize(result, size);
 
 	if (fill)
 		mp32zero(fill, opnd);
 
 	mp32sqr(opnd+fill, x->size, x->data);
-	mp32bmodres(b, result, opnd);
+	mp32bmod_w(b, opnd, result->data, temp);
+
+	free(temp);
 }
 
-void mp32bnmulmod(const mp32barrett* b, const mp32number* x, const mp32number* y)
+void mp32bnpowmod(const mp32barrett* b, const mp32number* x, const mp32number* pow, mp32number* y)
 {
-	mp32bnmulmodres(b, b->data, x, y);
+	register uint32  size = b->size;
+	register uint32* temp = (uint32*) malloc((4*size+2) * sizeof(uint32));
+
+	mp32nfree(y);
+	mp32nsize(y, size);
+
+	mp32bpowmod_w(b, x->size, x->data, pow->size, pow->data, y->data, temp);
+
+	free(temp);
 }
 
-void mp32bnpowmod(const mp32barrett* b, const mp32number* x, const mp32number* y)
+void mp32bnpowmodsld(const mp32barrett* b, const uint32* slide, const mp32number* pow, mp32number* y)
 {
-	mp32bpowmod(b, x->size, x->data, y->size, y->data);
-}
+	register uint32  size = b->size;
+	register uint32* temp = (uint32*) malloc((4*size+2) * sizeof(uint32));
 
-void mp32bnsqrmod(const mp32barrett* b, const mp32number* x)
-{
-	mp32bnsqrmodres(b, b->data, x);
-}
+	mp32nfree(y);
+	mp32nsize(y, size);
 
-void mp32bspowmod3(const mp32number* b, const uint32* x0, const uint32* p0, const uint32* x1, const uint32* p1, const uint32* x2, const uint32* p2)
-{
-	/* this algorithm needs (size*8) storage, which won't fit in the normal buffer */
+	mp32bpowmodsld_w(b, slide, pow->size, pow->data, y->data, temp);
+
+	free(temp);
 }

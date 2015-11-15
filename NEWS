@@ -1,3 +1,25 @@
+2.0.0:
+	- Changed mp32barrett struct and operations to be multithread-safe; this required a change in API.
+	- Changed hashFunction struct to incorporate internal block size parameter.
+	- Changed HMAC algorithm and file names to match names in RFC 2104.
+	- Changed SHA-1 C code for slightly faster results.
+	- Changed detection of entropy devices.
+	- Changed most void-returning functions to return int for error conditions.
+	- Changed beecrypt-java class names in javaglue.
+	- Added RSA keypair generation.
+	- Added RSA private & public key operations.
+	- Added SHA-256 hash function.
+	- Added HMAC/MD5 and HMAC/SHA-256 keyed hash functions.
+	- Added PKCS#5 padding.
+	- Added DHAES encryption scheme.
+	- Added Microsoft Visual C support, added Makefile.mak for this purpose.
+	- Added Solaris/Sparc Forte C 64 bit support.
+	- Added configure --disable-optimized option (disables assembler & processor-specific optimizations).
+	- Fixed bug in SHA-1 assembler code for Pentium, where local variables were used below the current stack pointer; this could cause a problem if the routine was interrupted. This was pointed out by Richard Clayton.
+	- Fixed bug in (certain cases of) modular inverse computation.
+	- Fixed buffer overrun in base64 encoding. This was pointed out by Jon Sturgeon.
+	- Fixed various minor bugs.
+	- Renamed text files to match automake conventions.
 
 1.1.2:
 	- Fixed bugs in discrete logarithm domain parameter generator. The code to make a generator of order q and (p-1) was wrong. This was pointed out by Susumu Yamamoto.

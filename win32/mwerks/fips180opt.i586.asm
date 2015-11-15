@@ -107,12 +107,12 @@ _sha1Process:
 	push edi
 	push esi
 	push ebx
-	# allocate local variables
 	push ebp
-	lea ebp,[esp-24]
-
+	# allocate local variables
 	mov esi,[esp+20]
+	sub esp,20
 	lea edi,[esi+PARAM_DATA]
+	mov ebp,esp
 
 	mov ecx,4
 @loads:
@@ -284,6 +284,7 @@ _sha1Process:
 	dec ecx
 	jns @adds
 
+	add esp,20
 	pop ebp
 	pop ebx
 	pop esi

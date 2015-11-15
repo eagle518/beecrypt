@@ -1,7 +1,7 @@
 #
 # Makefile.in for the beecrypt library
 #
-# Copyright (c) 1999-2000, Virtual Unlimited B.V.
+# Copyright (c) 1999, 2000, 2001, Virtual Unlimited B.V.
 #
 # Author: Bob Deblier <bob@virtualunlimited.com>
 #
@@ -38,6 +38,8 @@ COMPILE.c = $(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 PRODUCT = @PRODUCT@
 VERSION = @VERSION@
 MAJOR = @MAJOR@
+MINOR = @MINOR@
+SUFFIX = $(MAJOR).$(MINOR)
 
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -47,12 +49,14 @@ CPP = @CPP@
 LD = @LD@
 
 RM = rm
-LN = ln
+LN_S = @LN_S@
 
 ASFLAGS = @CONFASFLAGS@
-CFLAGS = @CONFCFLAGS@
 CPPFLAGS = @DEFS@ @CONFCPPFLAGS@ -I. -I${srcdir}
+CFLAGS = @CONFCFLAGS@
+CLIBFLAGS = @CONFCLIBFLAGS@
 LDFLAGS = @CONFLDFLAGS@ @LIBS@
+LDLIBFLAGS = @CONFLDLIBFLAGS@
 
 JAVAGLUE = @JAVAGLUE@
 JNIFLAGS = @JNIFLAGS@
@@ -73,8 +77,10 @@ OBJFILES = \
 	base64.o \
 	beecrypt.o \
 	blockmode.o \
+	blockpad.o \
 	blowfish.o \
 	blowfishopt.o \
+	dhaes.o \
 	dldp.o \
 	dlkp.o \
 	dlpk.o \
@@ -87,6 +93,9 @@ OBJFILES = \
 	fips186.o \
 	$(JAVAGLUE) \
 	hmac.o \
+	hmacmd5.o \
+	hmacsha1.o \
+	hmacsha256.o \
 	md5.o \
 	mp32.o \
 	mp32barrett.o \
@@ -94,19 +103,25 @@ OBJFILES = \
 	mp32opt.o \
 	mp32prime.o \
 	mtprng.o \
-	sha1hmac.o \
+	rsa.o \
+	rsakp.o \
+	rsapk.o \
+	sha256.o \
 	timestamp.o
 
 DISTFILES = \
-	LICENSE README DOCUMENTATION CHANGELOG BUGS BENCHMARKS \
+	COPYING INSTALL NEWS README README.WIN32 AUTHORS DOCUMENTATION BUGS BENCHMARKS ChangeLog \
 	config.guess config.sub install-sh \
-	configure.in configure Makefile.in \
+	configure.in configure Makefile.in Makefile.mak \
+	beecrypt.mcp \
 	config.h \
 	base64.h base64.c \
 	beecrypt.h beecrypt.c \
 	blockmode.h blockmode.c \
+	blockpad.h blockpad.c \
 	blowfish.h blowfish.c \
 	blowfishopt.h blowfishopt.c  \
+	dhaes.h dhaes.c \
 	dldp.h dldp.c \
 	dlkp.h dlkp.c \
 	dlpk.h dlpk.c \
@@ -118,6 +133,9 @@ DISTFILES = \
 	fips180opt.h fips180opt.c \
 	fips186.h fips186.c \
 	hmac.h hmac.c \
+	hmacmd5.h hmacmd5.c \
+	hmacsha1.h hmacsha1.c \
+	hmacsha256.h hmacsha256.c \
 	javaglue.h javaglue.c \
 	md5.h md5.c \
 	mp32barrett.h mp32barrett.c \
@@ -126,7 +144,10 @@ DISTFILES = \
 	mp32opt.h mp32opt.c \
 	mp32prime.h mp32prime.c \
 	mtprng.h mtprng.c \
-	sha1hmac.h sha1hmac.c \
+	rsa.h rsa.c \
+	rsakp.h rsakp.c \
+	rsapk.h rsapk.c \
+	sha256.h sha256.c \
 	timestamp.h timestamp.c \
 	gnu/config.gnu.h.in \
 	gnu/config.gas.h \
@@ -134,48 +155,147 @@ DISTFILES = \
 	gnu/mp32opt.gas.ia64.S \
 	gnu/mp32opt.gas.powerpc.S \
 	gnu/mp32opt.gas.sparcv9.S \
-	beecrypt.mcp \
 	win32/config.win.h \
 	win32/beecrypt.dll.c win32/beecrypt.rc win32/beecrypt.def \
+	win32/masm/blowfishopt.i586.asm win32/masm/fips180opt.i586.asm win32/masm/mp32opt.i386.asm \
 	win32/mwerks/blowfishopt.i586.asm win32/mwerks/fips180opt.i586.asm win32/mwerks/mp32opt.i386.asm \
 	win32/mwerks/beecrypt.pch \
 	beetest.c
 
 LIBBEECRYPT = libbeecrypt.so
 
-all: $(LIBBEECRYPT) $(LIBBEECRYPT).$(MAJOR)
+all: $(LIBBEECRYPT) $(LIBBEECRYPT).$(MAJOR) $(LIBBEECRYPT).$(VERSION)
 
-javaglue.o: javaglue.c
-	$(COMPILE.c) $(JNIFLAGS)
+base64.o: base64.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+beecrypt.o: beecrypt.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+blockmode.o: blockmode.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+blockpad.o: blockpad.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+blowfish.o: blowfish.c
+	$(COMPILE.c) $(CLIBFLAGS)
 
 @BLOWFISHOPTDEP@
 	@BLOWFISHOPTRULE@
 
+dhaes.o: dhaes.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+dldp.o: dldp.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+dlkp.o: dlkp.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+dlpk.o: dlpk.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+dlsvdp-dh.o: dlsvdp-dh.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+elgamal.o: elgamal.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+endianness.o: endianness.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+entropy.o: entropy.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+fips180.o: fips180.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
 @FIPS180OPTDEP@
 	@FIPS180OPTRULE@
+
+fips186.o: fips186.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+hmac.o: hmac.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+hmacmd5.o: hmacmd5.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+hmacsha1.o: hmacsha1.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+hmacsha256.o: hmacsha256.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+javaglue.o: javaglue.c
+	$(COMPILE.c) $(CLIBFLAGS) $(JNIFLAGS)
+
+md5.o: md5.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+mp32.o: mp32.c
+	$(COMPILE.c) $(CLIBFLAGS)
 
 @MP32OPTDEP@
 	@MP32OPTRULE@
 
-$(LIBBEECRYPT): $(LIBBEECRYPT).$(MAJOR)
-	$(LN) -s $(LIBBEECRYPT).$(MAJOR) $(LIBBEECRYPT)
+mp32barrett.o: mp32barrett.c
+	$(COMPILE.c) $(CLIBFLAGS)
 
-$(LIBBEECRYPT).$(MAJOR): $(OBJFILES)
-	$(LD) $(LDFLAGS) -o $@ $(OBJFILES)
+mp32number.o: mp32number.c
+	$(COMPILE.c) $(CLIBFLAGS)
 
-install: $(LIBBEECRYPT).$(MAJOR)
+mp32prime.o: mp32prime.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+mtprng.o: mtprng.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+rsa.o: rsa.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+rsakp.o: rsakp.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+rsapk.o: rsapk.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+sha256.o: sha256.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+timestamp.o: timestamp.c
+	$(COMPILE.c) $(CLIBFLAGS)
+
+$(LIBBEECRYPT): $(LIBBEECRYPT).$(VERSION)
+	$(LN_S) $(LIBBEECRYPT).$(VERSION) $@
+
+$(LIBBEECRYPT).$(MAJOR): $(LIBBEECRYPT).$(VERSION)
+	$(LN_S) $(LIBBEECRYPT).$(VERSION) $@
+
+$(LIBBEECRYPT).$(VERSION): $(OBJFILES)
+	$(LD) $(LDFLAGS) $(LDLIBFLAGS) -o $@ $(OBJFILES)
+
+java-header:
+	javah -o javaglue.h javax.crypto.Cipher beecrypt.security.NativeMessageDigest beecrypt.security.NativeSecureRandom beecrypt.crypto.NativeBlockCipher
+
+install: $(LIBBEECRYPT).$(VERSION)
 	$(INSTALL) -d ${libdir}
-	$(INSTALL) $(LIBBEECRYPT).$(MAJOR) ${libdir}
-	$(RM) -f ${libdir}/$(LIBBEECRYPT)
-	$(LN) -s ${libdir}/$(LIBBEECRYPT).$(MAJOR) ${libdir}/$(LIBBEECRYPT)
+	$(INSTALL) $(LIBBEECRYPT).$(VERSION) ${libdir}
+	$(RM) -f ${libdir}/$(LIBBEECRYPT) ${libdir}/$(LIBBEECRYPT).$(MAJOR)
+	$(LN_S) ${libdir}/$(LIBBEECRYPT).$(VERSION) ${libdir}/$(LIBBEECRYPT)
+	$(LN_S) ${libdir}/$(LIBBEECRYPT).$(VERSION) ${libdir}/$(LIBBEECRYPT).$(MAJOR)
 	
 install-headers:
 	$(INSTALL) -d ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/base64.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/beecrypt.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/blockmode.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/blockpad.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/blowfish.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/blowfishopt.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/dhaes.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/dldp.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/dlkp.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/dlpk.h ${includedir}/beecrypt
@@ -187,6 +307,9 @@ install-headers:
 	$(INSTALL_DATA) ${srcdir}/fips180opt.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/fips186.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/hmac.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/hmacmd5.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/hmacsha1.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/hmacsha256.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/md5.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mp32.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mp32barrett.h ${includedir}/beecrypt
@@ -194,17 +317,20 @@ install-headers:
 	$(INSTALL_DATA) ${srcdir}/mp32opt.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mp32prime.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mtprng.h ${includedir}/beecrypt
-	$(INSTALL_DATA) ${srcdir}/sha1hmac.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/rsa.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/rsakp.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/rsapk.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/sha256.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/timestamp.h ${includedir}/beecrypt
 
 beetest: beetest.o
-	$(CC) -o $@ beetest.o -L. -lbeecrypt
+	$(CC) $(CFLAGS) -o $@ beetest.o -L. -lbeecrypt
 
 clean:
-	rm -f *.so *.so.$(MAJOR) *.o beetest
+	rm -f *.so *.so.$(MAJOR) *.so.$(VERSION) *.o beetest
 
 distclean:
-	rm -f *.so *.o beetest ${srcdir}/config.log ${srcdir}/config.cache ${srcdir}/config.status conftest.c ${srcdir}/Makefile ${srcdir}/gnu/config.gnu.h
+	rm -f *.so *.so.$(MAJOR) *.so.$(VERSION) *.o beetest ${srcdir}/config.log ${srcdir}/config.cache ${srcdir}/config.status conftest.c ${srcdir}/Makefile ${srcdir}/gnu/config.gnu.h
 
 dist: $(DISTFILES)
 	@rm -rf $(PRODUCT)-$(VERSION)
@@ -225,7 +351,7 @@ tarball: $(DISTFILES)
 	@rm -rf $(PRODUCT)
 
 depend:
-	makedepend -I${srcdir} *.c
+	makedepend $(CPPFLAGS) $(JNIFLAGS) *.c
 
 ${srcdir}/configure: ${srcdir}/configure.in
 	cd ${top_srcdir} && autoconf

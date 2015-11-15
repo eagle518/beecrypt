@@ -25,6 +25,14 @@
  *
  */
 
+/*
+ * I will need to implement 64 bit multiprecision assembler-optimized routines
+ * before this platform can be tested adequately. The current 32 bit ones suffer
+ * from loading into integer registers, conversion to floating point, doing to xma
+ * and converting back to integer; 64 bit values can be loaded directly into
+ * floating point registers, which should shave off a lot of cycles.
+ */
+
 #include <gnu/config.gas.h>
 
 #define saved_pfs	r14
@@ -34,13 +42,17 @@
 #define dst			r17
 #define src			r18
 
-	.file	"mp32opt.gas.ia64.s"
+	.file	"mp32opt.gas.ia64.S"
 
 	.text
 
 	.explicit
 
-C_FUNCTION(mp32zero)
+	.align	32
+	.global	mp32zero#
+	.proc	mp32zero#
+
+mp32zero:
 	alloc saved_pfs = ar.pfs,2,0,0,0
 	mov saved_lc = ar.lc
 	sub size = in0,r0,1;;
@@ -53,8 +65,14 @@ C_FUNCTION(mp32zero)
 	mov ar.lc = saved_lc
 	mov ar.pfs = saved_pfs
 	br.ret.sptk b0
+	.endp	mp32zero#
 
-C_FUNCTION(mp32copy)
+
+	.align	32
+	.global	mp32copy#
+	.proc	mp32copy#
+
+mp32copy:
 	alloc saved_pfs = ar.pfs,3,5,0,8
 	mov saved_lc = ar.lc
 	sub size = in0,r0,1
@@ -70,9 +88,8 @@ C_FUNCTION(mp32copy)
 	mov ar.lc = saved_lc
 	mov ar.pfs = saved_pfs
 	br.ret.sptk b0
+	.endp	mp32copy#
 
-
-	.if	0
 
 	.if		0
 	.align	32
@@ -98,8 +115,8 @@ mp32z:
 
 
 	.align	32
-	.global	mp32add
-	.type	mp32add,@function
+	.global	mp32add#
+	.proc	mp32add#
 
 mp32add:
 	alloc r14 = ar.pfs,3,0,0,0
@@ -125,11 +142,12 @@ mp32add:
 	mov ar.lc = r15
 	mov ar.pfs = r14
 	br.ret.sptk b0
+	.endp	mp32add#
 
 
 	.align	32
-	.global	mp32sub
-	.type	mp32sub,@function
+	.global	mp32sub#
+	.proc	mp32sub#
 
 mp32sub:
 	alloc r14 = ar.pfs,3,0,0,0
@@ -155,15 +173,20 @@ mp32sub:
 	mov ar.lc = r15
 	mov ar.pfs = r14
 	br.ret.sptk b0
+	.endp	mp32sub#
 
+
+	.if		0
 
 	.align	32
-	.global	mp32setmul
-	.type	mp32setmul,@function
+	.global	mp32setmul#
+	.proc	mp32setmul#
 
 mp32setmul:
 	alloc r14 = ar.pfs,4,0,0,0
 	mov r15 = ar.lc
+	# load mul
+	setf.sig f96 = in3
 	# adjust size by -1
 	sub r16 = in0,r0,1
 	# clear carry
@@ -172,15 +195,13 @@ mp32setmul:
 	shladd r17 = r16,2,in1
 	shladd r18 = r16,2,in2
 	# load loop count
-	mov ar.lc = r16
-	# load mul
-	setf.sig f96 = in3;;
+	mov ar.lc = r16;;
 .L40:
 	ld4 r19 = [r18],-4;;
 	setf.sig f98 = r8
 	setf.sig f97 = r19;;
 	# multiplication can only be done in f registers, but we do have a multiply-add
-	xma.l f98 = f96, f97, f98;;
+	xma.l f98 = f96,f97,f98;;
 	getf.sig r8 = f98;;
 	st4 [r17] = r8,-4
 	shr.u r8 = r8,32
@@ -188,18 +209,22 @@ mp32setmul:
 	mov ar.lc = r15
 	mov ar.pfs = r14
 	br.ret.sptk b0
+	.endp	mp32setmul#
 
 
-C_FUNCTION(mp32addmul)
-	alloc saved_pfd = ar.pfs,4,0,0,0
+	.align	32
+	.global	mp32addmul#
+	.proc	mp32addmul#
+
+mp32addmul:
+	alloc saved_pfs = ar.pfs,4,0,0,0
 	mov saved_lc = ar.lc
+	# load mul
+	setf.sig f96 = in3
 	# adjust size by -1
 	sub size = in0,r0,1
-	# load multiplier
 	# clear carry
 	mov r8 = r0;;
-	# mux multiplier
-	
 	# adjust addresses
 	shladd dst = size,2,in1
 	shladd src = size,2,in2
@@ -208,12 +233,11 @@ C_FUNCTION(mp32addmul)
 .L50:
 	ld4 r19 = [dst]
 	ld4 r20 = [dst],-4;;
-	mux2 r21=
-	setf.sig f8 = r8
-	setf.sig f32 = r20;;
+	setf.sig f98 = r8
+	setf.sig f97 = r20;;
 	# multiplication can only be done in f registers, but we do have a multiply-add
-	xma.l f8 = f7,f32,f8;;
-	getf.sig r8 = f8;;
+	xma.l f98 = f96,f97,f98;;
+	getf.sig r8 = f98;;
 	add r8 = r8,r19;;
 	st4 [r17] = r8,-4
 	shr.u r8 = r8,32
@@ -221,6 +245,9 @@ C_FUNCTION(mp32addmul)
 	mov ar.lc = r15
 	mov ar.pfs = r14
 	br.ret.sptk b0
+	.endp	mp32addmul#
+
+	.endif
 
 
 	.if 0
@@ -230,6 +257,4 @@ C_FUNCTION(mp32addmul)
 
 mp32addsqrtrc:
 	.endp	mp32addsqrtrc#
-	.endif
-
 	.endif

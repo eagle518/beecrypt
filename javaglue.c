@@ -21,7 +21,7 @@ static const char* MSG_INVALID_KEY = "invalid key";
 
 /* NativeMessageDigest */
 
-jlong JNICALL Java_com_beeyond_security_NativeMessageDigest_find(JNIEnv* env, jclass dummy, jstring algorithm)
+jlong JNICALL Java_beecrypt_security_NativeMessageDigest_find(JNIEnv* env, jclass dummy, jstring algorithm)
 {
 	const char* name = (*env)->GetStringUTFChars(env, algorithm, (jboolean*) 0);
 	const hashFunction* hash = hashFunctionFind(name);
@@ -35,7 +35,7 @@ jlong JNICALL Java_com_beeyond_security_NativeMessageDigest_find(JNIEnv* env, jc
 	return (jlong) hash;
 }
 
-jlong JNICALL Java_com_beeyond_security_NativeMessageDigest_allocParam(JNIEnv* env, jclass dummy, jlong hash)
+jlong JNICALL Java_beecrypt_security_NativeMessageDigest_allocParam(JNIEnv* env, jclass dummy, jlong hash)
 {
 	void *param = malloc(((const hashFunction*) hash)->paramsize);
 	if (param == (void*) 0)
@@ -47,7 +47,7 @@ jlong JNICALL Java_com_beeyond_security_NativeMessageDigest_allocParam(JNIEnv* e
 	return (jlong) param;
 }
 
-jlong JNICALL Java_com_beeyond_security_NativeMessageDigest_cloneParam(JNIEnv* env, jclass dummy, jlong hash, jlong param)
+jlong JNICALL Java_beecrypt_security_NativeMessageDigest_cloneParam(JNIEnv* env, jclass dummy, jlong hash, jlong param)
 {
 	unsigned int paramsize = ((const hashFunction*) hash)->paramsize;
 	void *clone = malloc(paramsize);
@@ -55,23 +55,23 @@ jlong JNICALL Java_com_beeyond_security_NativeMessageDigest_cloneParam(JNIEnv* e
 	return (jlong) clone;
 }
 
-void JNICALL Java_com_beeyond_security_NativeMessageDigest_freeParam(JNIEnv* env, jclass dummy, jlong param)
+void JNICALL Java_beecrypt_security_NativeMessageDigest_freeParam(JNIEnv* env, jclass dummy, jlong param)
 {
 	if (param)
 		free((void*) param);
 }
 
-void JNICALL Java_com_beeyond_security_NativeMessageDigest_reset(JNIEnv* env, jclass dummy, jlong hash, jlong param)
+void JNICALL Java_beecrypt_security_NativeMessageDigest_reset(JNIEnv* env, jclass dummy, jlong hash, jlong param)
 {
 	((const hashFunction*) hash)->reset((hashFunctionParam*) param);
 }
 
-void JNICALL Java_com_beeyond_security_NativeMessageDigest_update(JNIEnv* env, jclass dummy, jlong hash, jlong param, jbyte input)
+void JNICALL Java_beecrypt_security_NativeMessageDigest_update(JNIEnv* env, jclass dummy, jlong hash, jlong param, jbyte input)
 {
 	((const hashFunction*) hash)->update((hashFunctionParam*) param, (const byte*) &input, 1);
 }
 
-void JNICALL Java_com_beeyond_security_NativeMessageDigest_updateBlock(JNIEnv* env, jclass dummy, jlong hash, jlong param, jbyteArray input, jint offset, jint len)
+void JNICALL Java_beecrypt_security_NativeMessageDigest_updateBlock(JNIEnv* env, jclass dummy, jlong hash, jlong param, jbyteArray input, jint offset, jint len)
 {
 	jbyte* data = (*env)->GetByteArrayElements(env, input, (jboolean*) 0);
 	if (data == (jbyte*) 0)
@@ -86,7 +86,7 @@ void JNICALL Java_com_beeyond_security_NativeMessageDigest_updateBlock(JNIEnv* e
 	(*env)->ReleaseByteArrayElements(env, input, data, JNI_ABORT);
 }
 
-jbyteArray JNICALL Java_com_beeyond_security_NativeMessageDigest_digest(JNIEnv* env, jclass dummy, jlong hash, jlong param)
+jbyteArray JNICALL Java_beecrypt_security_NativeMessageDigest_digest(JNIEnv* env, jclass dummy, jlong hash, jlong param)
 {
 	jbyteArray digestArray;
 	jbyte* digest;
@@ -132,14 +132,14 @@ jbyteArray JNICALL Java_com_beeyond_security_NativeMessageDigest_digest(JNIEnv* 
 	return digestArray;
 }
 
-jint JNICALL Java_com_beeyond_security_NativeMessageDigest_digestLength(JNIEnv* env, jclass dummy, jlong hash)
+jint JNICALL Java_beecrypt_security_NativeMessageDigest_digestLength(JNIEnv* env, jclass dummy, jlong hash)
 {
 	return (jint) ((const hashFunction*) hash)->digestsize;
 }
 
 /* NativeSecureRandom */
 
-jlong JNICALL Java_com_beeyond_security_NativeSecureRandom_find(JNIEnv* env, jclass dummy, jstring algorithm)
+jlong JNICALL Java_beecrypt_security_NativeSecureRandom_find(JNIEnv* env, jclass dummy, jstring algorithm)
 {
 	const char* name = (*env)->GetStringUTFChars(env, algorithm, (jboolean*) 0);
 	const randomGenerator* prng = randomGeneratorFind(name);
@@ -153,7 +153,7 @@ jlong JNICALL Java_com_beeyond_security_NativeSecureRandom_find(JNIEnv* env, jcl
 	return (jlong) prng;
 }
 
-jlong JNICALL Java_com_beeyond_security_NativeSecureRandom_allocParam(JNIEnv* env, jclass dummy, jlong prng)
+jlong JNICALL Java_beecrypt_security_NativeSecureRandom_allocParam(JNIEnv* env, jclass dummy, jlong prng)
 {
 	void *param = malloc(((const randomGenerator*) prng)->paramsize);
 	if (param == (void*) 0)
@@ -165,7 +165,7 @@ jlong JNICALL Java_com_beeyond_security_NativeSecureRandom_allocParam(JNIEnv* en
 	return (jlong) param;
 }
 
-jlong JNICALL Java_com_beeyond_security_NativeSecureRandom_cloneParam(JNIEnv* env, jclass dummy, jlong prng, jlong param)
+jlong JNICALL Java_beecrypt_security_NativeSecureRandom_cloneParam(JNIEnv* env, jclass dummy, jlong prng, jlong param)
 {
 	unsigned int paramsize = ((const randomGenerator*) prng)->paramsize;
 	void *clone = malloc(paramsize);
@@ -173,18 +173,18 @@ jlong JNICALL Java_com_beeyond_security_NativeSecureRandom_cloneParam(JNIEnv* en
 	return (jlong) clone;
 }
 
-void JNICALL Java_com_beeyond_security_NativeSecureRandom_freeParam(JNIEnv* env, jclass dummy, jlong param)
+void JNICALL Java_beecrypt_security_NativeSecureRandom_freeParam(JNIEnv* env, jclass dummy, jlong param)
 {
 	if (param)
 		free((void*) param);
 }
 
-void JNICALL Java_com_beeyond_security_NativeSecureRandom_setup(JNIEnv* env, jclass dummy, jlong prng, jlong param)
+void JNICALL Java_beecrypt_security_NativeSecureRandom_setup(JNIEnv* env, jclass dummy, jlong prng, jlong param)
 {
 	((const randomGenerator*) prng)->setup((randomGeneratorParam*) param);
 }
 
-void JNICALL Java_com_beeyond_security_NativeSecureRandom_setSeed(JNIEnv* env, jclass dummy, jlong prng, jlong param, jbyteArray seedArray)
+void JNICALL Java_beecrypt_security_NativeSecureRandom_setSeed(JNIEnv* env, jclass dummy, jlong prng, jlong param, jbyteArray seedArray)
 {
 	/* BeeCrypt takes size in words */
 	jsize seedSize = (*env)->GetArrayLength(env, seedArray);
@@ -225,7 +225,7 @@ void JNICALL Java_com_beeyond_security_NativeSecureRandom_setSeed(JNIEnv* env, j
 	}
 }
 
-void JNICALL Java_com_beeyond_security_NativeSecureRandom_nextBytes(JNIEnv* env, jclass dummy, jlong prng, jlong param, jbyteArray bytesArray)
+void JNICALL Java_beecrypt_security_NativeSecureRandom_nextBytes(JNIEnv* env, jclass dummy, jlong prng, jlong param, jbyteArray bytesArray)
 {
 	/* BeeCrypt takes size in words */
 	jsize bytesSize = (*env)->GetArrayLength(env, bytesArray);
@@ -268,7 +268,7 @@ void JNICALL Java_com_beeyond_security_NativeSecureRandom_nextBytes(JNIEnv* env,
 	}
 }
 
-void JNICALL Java_com_beeyond_security_NativeSecureRandom_generateSeed(JNIEnv* env, jclass dummy, jbyteArray seedArray)
+void JNICALL Java_beecrypt_security_NativeSecureRandom_generateSeed(JNIEnv* env, jclass dummy, jbyteArray seedArray)
 {
 	/* BeeCrypt takes size in words */
 	jsize seedSize = (*env)->GetArrayLength(env, seedArray);
@@ -316,7 +316,7 @@ void JNICALL Java_com_beeyond_security_NativeSecureRandom_generateSeed(JNIEnv* e
 
 /* NativeBlockCipher */
 
-jlong JNICALL Java_com_beeyond_crypto_NativeBlockCipher_find(JNIEnv* env, jclass dummy, jstring algorithm)
+jlong JNICALL Java_beecrypt_crypto_NativeBlockCipher_find(JNIEnv* env, jclass dummy, jstring algorithm)
 {
 	const char* name = (*env)->GetStringUTFChars(env, algorithm, (jboolean*) 0);
 	const blockCipher* ciph = blockCipherFind(name);
@@ -330,7 +330,7 @@ jlong JNICALL Java_com_beeyond_crypto_NativeBlockCipher_find(JNIEnv* env, jclass
 	return (jlong) ciph;
 }
 
-jlong JNICALL Java_com_beeyond_crypto_NativeBlockCipher_allocParam(JNIEnv* env, jclass dummy, jlong ciph)
+jlong JNICALL Java_beecrypt_crypto_NativeBlockCipher_allocParam(JNIEnv* env, jclass dummy, jlong ciph)
 {
 	void *param = malloc(((const blockCipher*) ciph)->paramsize);
 	if (param == (void*) 0)
@@ -342,18 +342,18 @@ jlong JNICALL Java_com_beeyond_crypto_NativeBlockCipher_allocParam(JNIEnv* env, 
 	return (jlong) param;
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_freeParam(JNIEnv* env, jclass dummy, jlong param)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_freeParam(JNIEnv* env, jclass dummy, jlong param)
 {
 	if (param)
 		free((void*) param);
 }
 
-jint JNICALL Java_com_beeyond_crypto_NativeBlockCipher_getBlockSize(JNIEnv* env, jclass dummy, jlong ciph)
+jint JNICALL Java_beecrypt_crypto_NativeBlockCipher_getBlockSize(JNIEnv* env, jclass dummy, jlong ciph)
 {
 	return ((const blockCipher*) ciph)->blocksize;
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_setup(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jint mode, jbyteArray keyArray)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_setup(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jint mode, jbyteArray keyArray)
 {
 	/* BeeCrypt takes key in 32 bit words with size in bits */
 	jsize keysize = (*env)->GetArrayLength(env, keyArray);
@@ -417,7 +417,7 @@ void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_setup(JNIEnv* env, jclass
 	}
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_setIV(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray ivArray)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_setIV(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray ivArray)
 {
 	if (ivArray == (jbyteArray) 0)
 	{
@@ -466,7 +466,7 @@ void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_setIV(JNIEnv* env, jclass
 	}
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_encryptECB(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_encryptECB(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
 {
 	jbyte* input;
 	jbyte* output;
@@ -528,7 +528,7 @@ void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_encryptECB(JNIEnv* env, j
 	(*env)->ReleaseByteArrayElements(env, outputArray, output, 0);
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_decryptECB(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_decryptECB(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
 {
 	jbyte* input;
 	jbyte* output;
@@ -590,7 +590,7 @@ void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_decryptECB(JNIEnv* env, j
 	(*env)->ReleaseByteArrayElements(env, outputArray, output, 0);
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_encryptCBC(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_encryptCBC(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
 {
 	jbyte* input;
 	jbyte* output;
@@ -652,7 +652,7 @@ void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_encryptCBC(JNIEnv* env, j
 	(*env)->ReleaseByteArrayElements(env, outputArray, output, 0);
 }
 
-void JNICALL Java_com_beeyond_crypto_NativeBlockCipher_decryptCBC(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
+void JNICALL Java_beecrypt_crypto_NativeBlockCipher_decryptCBC(JNIEnv* env, jclass dummy, jlong ciph, jlong param, jbyteArray inputArray, jint inputOffset, jbyteArray outputArray, jint outputOffset, jint blocks)
 {
 	jbyte* input;
 	jbyte* output;

@@ -3,7 +3,7 @@
  *
  * Endianness-dependant encoding/decoding - implementation
  *
- * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -164,6 +164,25 @@ int encodeInts(const javaint* i, byte* data, int count)
 		tmp = swap32(*(i++));
 		memcpy(data, &tmp, 4);
 		data += 4;
+	}
+	#endif
+	return rc;
+}
+
+int encodeIntsPartial(const javaint* i, byte* data, int bytecount)
+{
+	register int rc = bytecount;
+	#if (WORDS_BIGENDIAN)
+	memcpy(data, i, rc);
+	#else
+	javaint tmp;
+
+	while (bytecount > 0)
+	{
+		tmp = swap32(*(i++));
+		memcpy(data, &tmp, (bytecount > 4) ? 4 : bytecount);
+		data += 4;
+		bytecount -= 4;
 	}
 	#endif
 	return rc;

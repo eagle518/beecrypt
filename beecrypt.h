@@ -3,7 +3,7 @@
  *
  * Beecrypt library hooks & stubs, header
  *
- * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -207,9 +207,9 @@ extern "C" {
 #endif
 
 BEEDLLAPI
-void randomGeneratorContextInit(randomGeneratorContext*, const randomGenerator*);
+int randomGeneratorContextInit(randomGeneratorContext*, const randomGenerator*);
 BEEDLLAPI
-void randomGeneratorContextFree(randomGeneratorContext*);
+int randomGeneratorContextFree(randomGeneratorContext*);
 
 #ifdef __cplusplus
 }
@@ -247,7 +247,7 @@ typedef int (*hashFunctionDigest)(hashFunctionParam*, uint32*);
  * This function computes the digest of all the data passed to the hash
  * function, and stores the result in data.
  * Return value is 0 on success, or -1 on failure.
- * NOTE: data must be at least have a bytesize of 'digestsize' as described
+ * NOTE: data MUST have a size (in bytes) of at least 'digestsize' as described
  * in the hashFunction struct.
  * NOTE: for safety reasons, after calling digest, each specific implementation
  * MUST reset itself so that previous values in the parameters are erased.
@@ -257,6 +257,7 @@ typedef struct
 {
 	const char*					name;
 	const unsigned int			paramsize;	/* in bytes */
+	const unsigned int			blocksize;	/* in bytes */
 	const unsigned int			digestsize;	/* in bytes */
 	const hashFunctionReset		reset;
 	const hashFunctionUpdate	update;
@@ -316,9 +317,9 @@ extern "C" {
 #endif
 
 BEEDLLAPI
-void hashFunctionContextInit(hashFunctionContext*, const hashFunction*);
+int hashFunctionContextInit(hashFunctionContext*, const hashFunction*);
 BEEDLLAPI
-void hashFunctionContextFree(hashFunctionContext*);
+int hashFunctionContextFree(hashFunctionContext*);
 BEEDLLAPI
 int hashFunctionContextReset(hashFunctionContext*);
 BEEDLLAPI
@@ -329,6 +330,8 @@ BEEDLLAPI
 int hashFunctionContextUpdateMP32(hashFunctionContext*, const mp32number*);
 BEEDLLAPI
 int hashFunctionContextDigest(hashFunctionContext*, mp32number*);
+BEEDLLAPI
+int hashFunctionContextDigestMatch(hashFunctionContext*, const mp32number*);
 
 #ifdef __cplusplus
 }
@@ -389,6 +392,7 @@ typedef struct
 {
 	const char*						name;
 	const unsigned int				paramsize;	/* in bytes */
+	const unsigned int				blocksize;	/* in bytes */
 	const unsigned int				digestsize;	/* in bytes */
 	const unsigned int				keybitsmin;	/* in bits */
 	const unsigned int				keybitsmax;	/* in bits */
@@ -405,7 +409,7 @@ typedef struct
  *
  * keyedHashFunctionCount returns the number of keyed hash functions available.
  *
- * keyedHashFunctionGet returns the random generator with a given index
+ * keyedHashFunctionGet returns the keyed hash function with a given index
  * (starting at zero, up to keyedHashFunctionCount() - 1), or NULL if the index
  * was out of bounds.
  *
@@ -452,9 +456,9 @@ extern "C" {
 #endif
 
 BEEDLLAPI
-void keyedHashFunctionContextInit(keyedHashFunctionContext*, const keyedHashFunction*);
+int keyedHashFunctionContextInit(keyedHashFunctionContext*, const keyedHashFunction*);
 BEEDLLAPI
-void keyedHashFunctionContextFree(keyedHashFunctionContext*);
+int keyedHashFunctionContextFree(keyedHashFunctionContext*);
 BEEDLLAPI
 int keyedHashFunctionContextSetup(keyedHashFunctionContext*, const uint32*, int);
 BEEDLLAPI
@@ -467,6 +471,8 @@ BEEDLLAPI
 int keyedHashFunctionContextUpdateMP32(keyedHashFunctionContext*, const mp32number*);
 BEEDLLAPI
 int keyedHashFunctionContextDigest(keyedHashFunctionContext*, mp32number*);
+BEEDLLAPI
+int keyedHashFunctionContextDigestMatch(keyedHashFunctionContext*, const mp32number*);
 
 #ifdef __cplusplus
 }
@@ -606,13 +612,13 @@ extern "C" {
 #endif
 
 BEEDLLAPI
-void blockCipherContextInit(blockCipherContext*, const blockCipher*);
+int blockCipherContextInit(blockCipherContext*, const blockCipher*);
 BEEDLLAPI
-void blockCipherContextSetup(blockCipherContext*, const uint32*, int, cipherOperation);
+int blockCipherContextSetup(blockCipherContext*, const uint32*, int, cipherOperation);
 BEEDLLAPI
-void blockCipherContextSetIV(blockCipherContext*, const uint32*);
+int blockCipherContextSetIV(blockCipherContext*, const uint32*);
 BEEDLLAPI
-void blockCipherContextFree(blockCipherContext*);
+int blockCipherContextFree(blockCipherContext*);
 
 #ifdef __cplusplus
 }

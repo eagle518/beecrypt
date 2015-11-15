@@ -3,7 +3,7 @@
  *
  * Multiple precision numbers, code
  *
- * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -40,8 +40,28 @@ void mp32nzero(mp32number* n)
 
 void mp32nsize(mp32number* n, uint32 size)
 {
-	n->size = size;
-	n->data = (uint32*) malloc(size * sizeof(uint32));
+	if (size)
+	{
+		if (n->data)
+		{
+			if (n->size != size)
+				n->data = (uint32*) realloc(n->data, size * sizeof(uint32));
+		}
+		else
+			n->data = (uint32*) malloc(size * sizeof(uint32));
+
+		if (n->data == (uint32*) 0)
+			n->size = 0;
+		else
+			n->size = size;
+
+	}
+	else if (n->data)
+	{
+		free(n->data);
+		n->data = (uint32*) 0;
+		n->size = 0;
+	}
 }
 
 void mp32ninit(mp32number* n, uint32 size, const uint32* data)
@@ -50,9 +70,7 @@ void mp32ninit(mp32number* n, uint32 size, const uint32* data)
 	n->data = (uint32*) malloc(size * sizeof(uint32));
 
 	if (n->data)
-	{
 		mp32copy(size, n->data, data);
-	}
 }
 
 void mp32nfree(mp32number* n)
@@ -65,6 +83,16 @@ void mp32nfree(mp32number* n)
 	n->size = 0;
 }
 
+void mp32ncopy(mp32number* n, const mp32number* copy)
+{
+	mp32nset(n, copy->size, copy->data);
+}
+
+void mp32nwipe(mp32number* n)
+{
+	mp32zero(n->size, n->data);
+}
+
 void mp32nset(mp32number* n, uint32 size, const uint32* data)
 {
 	if (size)
@@ -75,23 +103,19 @@ void mp32nset(mp32number* n, uint32 size, const uint32* data)
 				n->data = (uint32*) realloc(n->data, size * sizeof(uint32));
 		}
 		else
-		{
 			n->data = (uint32*) malloc(size * sizeof(uint32));
-		}
+
+		if (n->data)
+			mp32copy(n->size = size, n->data, data);
+		else
+			n->size = 0;
 	}
-	else
+	else if (n->data)
 	{
 		free(n->data);
 		n->data = (uint32*) 0;
-	}
-
-	if (n->data)
-	{
-		n->size = size;
-		mp32copy(size, n->data, data);
-	}
-	else
 		n->size = 0;
+	}
 }
 
 void mp32nsetw(mp32number* n, uint32 val)
@@ -129,7 +153,7 @@ void mp32nsethex(mp32number* n, const char* hex)
 
 	if (n->data)
 	{
-		register uint32  temp = 0;
+		register uint32  val = 0;
 		register uint32* dst = n->data;
 		register char ch;
 
@@ -138,22 +162,22 @@ void mp32nsethex(mp32number* n, const char* hex)
 		while (length-- > 0)
 		{
 			ch = *(hex++);
-			temp <<= 4;
+			val <<= 4;
 			if (ch >= '0' && ch <= '9')
-				temp += (ch - '0');
+				val += (ch - '0');
 			else if (ch >= 'A' && ch <= 'F')
-				temp += (ch - 'A') + 10;
+				val += (ch - 'A') + 10;
 			else if (ch >= 'a' && ch <= 'f')
-				temp += (ch - 'a') + 10;
+				val += (ch - 'a') + 10;
 
 			if ((length & 0x7) == 0)
 			{
-				*(dst++) = temp;
-				temp = 0;
+				*(dst++) = val;
+				val = 0;
 			}
 		}
 		if (rem)
-			*dst = temp;
+			*dst = val;
 	}
 	else
 		n->size = 0;

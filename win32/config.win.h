@@ -37,6 +37,8 @@
 #if defined(_MSC_VER)
 # if defined(_M_IX86)
 #  define WORDS_BIGENDIAN		0
+#  define ROTL32(x, s) _rotl(x, s)
+#  define ROTR32(x, s) _rotr(x, s)
 # else
 #  error Unknown CPU type in Microsoft Visual C
 # endif
@@ -54,7 +56,6 @@
 #define HAVE_ERRNO_H		1
 #define HAVE_STRING_H		1
 #define HAVE_STDLIB_H		1
-#define HAVE_ALLOCA_H		0
 #define HAVE_CTYPE_H		1
 #define HAVE_FCNTL_H		1
 #define HAVE_TIME_H			1

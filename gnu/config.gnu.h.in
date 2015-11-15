@@ -49,6 +49,7 @@
 #define OPENBSD     0
 #define OSF         0
 #define QNX         0
+#define SCO_UNIX	0
 #define SOLARIS     0
 #define WIN32       0
 
@@ -60,7 +61,6 @@
 #define HAVE_ERRNO_H		0
 #define HAVE_STRING_H		0
 #define HAVE_STDLIB_H		0
-#define HAVE_ALLOCA_H		0
 #define HAVE_CTYPE_H		0
 #define HAVE_UNISTD_H		0
 #define HAVE_FCNTL_H		0

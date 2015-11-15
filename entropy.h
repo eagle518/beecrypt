@@ -3,7 +3,7 @@
  *
  * Entropy gathering routine(s) for pseudo-random generator initialization, header
  *
- * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -27,6 +27,10 @@
 #define _ENTROPY_H
 
 #include "beecrypt.h"
+
+#if WIN32
+#include <Windows.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

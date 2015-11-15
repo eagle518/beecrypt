@@ -3,7 +3,7 @@
  *
  * FIPS186 pseudo-random generator, with SHA-1 as H function, header
  *
- * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *

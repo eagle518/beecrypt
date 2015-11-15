@@ -3,7 +3,7 @@
  *
  * Endian-dependant encoding/decoding, header
  *
- * Copyright (c) 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -75,7 +75,7 @@ inline uint32 swapu32(uint32 n)
 
 inline int64 swap64(int64 n)
 {
-	#if (SIZEOF_LONG == 4)
+	#if HAVE_LONG_LONG
 	return (    ((n & 0xffLL) << 56) |
 				((n & 0xff00LL) << 40) |
 				((n & 0xff0000LL) << 24) |
@@ -125,6 +125,8 @@ int encodeDouble(javadouble, byte*);
 
 BEEDLLAPI
 int encodeInts(const javaint*, byte*, int);
+BEEDLLAPI
+int encodeIntsPartial(const javaint*, byte*, int);
 BEEDLLAPI
 int encodeChars(const javachar*, byte*, int);
 

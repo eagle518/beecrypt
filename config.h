@@ -30,7 +30,8 @@
 # define WIN32 1
 #endif
 
-#if WIN32
+
+#if WIN32 && !__CYGWIN32__
 # include <win32/config.win.h>
 # ifdef BEECRYPT_DLL_EXPORT
 #  define BEEDLLAPI
@@ -42,6 +43,13 @@
 # include <gnu/config.gnu.h>
 # define BEEDLLAPI
 typedef UINT8_TYPE	byte;
+#endif
+
+#ifndef ROTL32
+# define ROTL32(x, s) (((x) << (s)) | ((x) >> (32 - (s))))
+#endif
+#ifndef ROTR32
+# define ROTR32(x, s) (((x) >> (s)) | ((x) << (32 - (s))))
 #endif
 
 typedef INT8_TYPE	int8;

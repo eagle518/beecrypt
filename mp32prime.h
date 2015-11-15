@@ -37,18 +37,18 @@ extern "C" {
 #endif
 
 BEEDLLAPI
-int  mp32ptrials   (uint32);
+int  mp32ptrials     (uint32);
 BEEDLLAPI
-int  mp32pmilrab   (const mp32barrett*, randomGeneratorContext*, int);
+int  mp32pmilrab_w   (const mp32barrett*, randomGeneratorContext*, int, uint32*);
 
 BEEDLLAPI
-void mp32prnd      (mp32barrett*, randomGeneratorContext*, uint32, int, const mp32number*);
+void mp32prnd_w      (mp32barrett*, randomGeneratorContext*, uint32, int, const mp32number*, uint32*);
 BEEDLLAPI
-void mp32prndsafe  (mp32barrett*, randomGeneratorContext*, uint32, int);
+void mp32prndsafe_w  (mp32barrett*, randomGeneratorContext*, uint32, int, uint32*);
 BEEDLLAPI
-void mp32prndcon   (mp32barrett*, randomGeneratorContext*, uint32, int, const mp32number*, const mp32number*, const mp32number*, mp32number*);
+void mp32prndcon_w   (mp32barrett*, randomGeneratorContext*, uint32, int, const mp32number*, const mp32number*, const mp32number*, mp32number*, uint32*);
 BEEDLLAPI
-void mp32prndconone(mp32barrett*, randomGeneratorContext*, uint32, int, const mp32barrett*, const mp32number*, mp32number*, int);
+void mp32prndconone_w(mp32barrett*, randomGeneratorContext*, uint32, int, const mp32barrett*, const mp32number*, mp32number*, int, uint32*);
 
 #ifdef __cplusplus
 }

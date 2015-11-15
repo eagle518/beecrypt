@@ -3,7 +3,7 @@
  *
  * Multiprecision numbers, header
  *
- * Copyright (c) 1997, 1998, 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -48,6 +48,10 @@ BEEDLLAPI
 void mp32ninit(mp32number*, uint32, const uint32*);
 BEEDLLAPI
 void mp32nfree(mp32number*);
+BEEDLLAPI
+void mp32ncopy(mp32number*, const mp32number*);
+BEEDLLAPI
+void mp32nwipe(mp32number*);
 
 BEEDLLAPI
 void mp32nset   (mp32number*, uint32, const uint32*);

@@ -95,7 +95,7 @@ char* b64enc(const memchunk* chunk)
 			break;
 		}
 
-		*(buf++) = '\n';
+	/* 	*(buf++) = '\n'; This would result in a buffer overrun */
 		*buf = '\0';
 	}
 

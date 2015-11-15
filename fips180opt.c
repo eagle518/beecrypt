@@ -1,7 +1,7 @@
 /*
- * fips180pt.c
+ * fips180opt.c
  *
- * Inline assembler optimized sha1 routines
+ * Inline assembler optimized SHA-1 routines
  * 
  * Copyright (c) 2000 Virtual Unlimited B.V.
  *

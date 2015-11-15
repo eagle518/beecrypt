@@ -1,9 +1,9 @@
 /*
- * sha1hmac.c
+ * hmacsha1.c
  *
- * SHA-1/HMAC message authentication code, code
+ * HMAC-SHA-1 message authentication code, code
  *
- * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -25,26 +25,26 @@
 
 #define BEECRYPT_DLL_EXPORT
 
-#include "sha1hmac.h"
+#include "hmacsha1.h"
 
-const keyedHashFunction sha1hmac = { "SHA-1/HMAC", sizeof(sha1hmacParam), 5 * sizeof(uint32), 64, 512, 32, (const keyedHashFunctionSetup) sha1hmacSetup, (const keyedHashFunctionReset) sha1hmacReset, (const keyedHashFunctionUpdate) sha1hmacUpdate, (const keyedHashFunctionDigest) sha1hmacDigest };
+const keyedHashFunction hmacsha1 = { "HMAC-SHA-1", sizeof(hmacsha1Param), 64, 5 * sizeof(uint32), 64, 512, 32, (const keyedHashFunctionSetup) hmacsha1Setup, (const keyedHashFunctionReset) hmacsha1Reset, (const keyedHashFunctionUpdate) hmacsha1Update, (const keyedHashFunctionDigest) hmacsha1Digest };
 
-int sha1hmacSetup (sha1hmacParam* sp, const uint32* key, int keybits)
+int hmacsha1Setup (hmacsha1Param* sp, const uint32* key, int keybits)
 {
 	return hmacSetup((hmacParam*) sp, &sha1, &sp->param, key, keybits);
 }
 
-int sha1hmacReset (sha1hmacParam* sp)
+int hmacsha1Reset (hmacsha1Param* sp)
 {
 	return hmacReset((hmacParam*) sp, &sha1, &sp->param);
 }
 
-int sha1hmacUpdate(sha1hmacParam* sp, const byte* data, int size)
+int hmacsha1Update(hmacsha1Param* sp, const byte* data, int size)
 {
 	return hmacUpdate((hmacParam*) sp, &sha1, &sp->param, data, size);
 }
 
-int sha1hmacDigest(sha1hmacParam* sp, uint32* data)
+int hmacsha1Digest(hmacsha1Param* sp, uint32* data)
 {
 	return hmacDigest((hmacParam*) sp, &sha1, &sp->param, data);
 }

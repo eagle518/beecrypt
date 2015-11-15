@@ -1,9 +1,9 @@
 /*
- * sha1hmac.h
+ * dhaes.h
  *
- * SHA-1/HMAC message authentication code, header
+ * DHAES, header
  *
- * Copyright (c) 1999, 2000 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001 Virtual Unlimited, B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -22,37 +22,33 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-
-#ifndef _SHA1HMAC_H
-#define _SHA1HMAC_H
-
-#include "hmac.h"
-#include "fips180.h"
+ 
+#ifndef _DHAES_H
+#define _DHAES_H
+ 
+#include "beecrypt.h"
+#include "dldp.h"
 
 typedef struct
 {
-	byte kxi[64];
-	byte kxo[64];
-	sha1Param param;
-} sha1hmacParam;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern BEEDLLAPI const keyedHashFunction sha1hmac;
+	dldp_p param;
+	hashFunctionContext hash;
+	blockCipherContext cipher;
+	keyedHashFunctionContext mac;
+	randomGeneratorContext rng;
+} dhaes_p;
 
 BEEDLLAPI
-int sha1hmacSetup (sha1hmacParam*, const uint32*, int);
-BEEDLLAPI
-int sha1hmacReset (sha1hmacParam*);
-BEEDLLAPI
-int sha1hmacUpdate(sha1hmacParam*, const byte*, int);
-BEEDLLAPI
-int sha1hmacDigest(sha1hmacParam*, uint32*);
+int dhaes_usable(const blockCipher*, const keyedHashFunction*, const hashFunction*);
 
-#ifdef __cplusplus
-}
-#endif
+BEEDLLAPI
+int dhaes_pInit(dhaes_p*, const dldp_p*, const blockCipher*, const keyedHashFunction*, const hashFunction*, const randomGenerator*);
+BEEDLLAPI
+int dhaes_pFree(dhaes_p*);
+
+BEEDLLAPI
+memchunk* dhaes_pEncrypt(dhaes_p*, const mp32number*,       mp32number*,       mp32number*, const memchunk*);
+BEEDLLAPI
+memchunk* dhaes_pDecrypt(dhaes_p*, const mp32number*, const mp32number*, const mp32number*, const memchunk*);
 
 #endif

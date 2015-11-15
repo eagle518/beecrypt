@@ -5,7 +5,7 @@
  *
  * <conformance statement for IEEE P1363 needed here>
  *
- * Copyright (c) 2000 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001 Virtual Unlimited B.V.
  *
  * Author: Bob Deblier <bob@virtualunlimited.com>
  *
@@ -42,11 +42,13 @@ extern "C" {
 #endif
 
 BEEDLLAPI
-void dlkp_pPair(dlkp_p*, randomGeneratorContext*, const dldp_p*);
+int dlkp_pPair(dlkp_p*, randomGeneratorContext*, const dldp_p*);
 BEEDLLAPI
-void dlkp_pFree(dlkp_p*);
+int dlkp_pInit(dlkp_p*);
 BEEDLLAPI
-void dlkp_pCopy(dlkp_p*, const dlkp_p*);
+int dlkp_pFree(dlkp_p*);
+BEEDLLAPI
+int dlkp_pCopy(dlkp_p*, const dlkp_p*);
 
 #ifdef __cplusplus
 }

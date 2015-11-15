@@ -33,6 +33,8 @@ elgamal.h, elgamal.c: the ElGamal signature scheme (two variants) (only prime fi
 
 blockmode.h, blockmode.c: implementation of the different modes block ciphers can operate in (ECB, CBC, etc.)
 
+blockpad.h, blockpad.c: implementation of blockcipher padding (only PKCS#5 at this time)
+
 blowfish.h, blowfish.c: the blowfish blockciper, plus the stub for hooking it into the beecrypt library.
 
 blowfishopt.h, blowfishopt.gas.<platform>.s: the platform-specific assembler optimized routines for blowfish encryption/decryption.
@@ -45,6 +47,14 @@ fips186.h, fips186.c: the NIST FIPS-186 pseudo-random number generator, plus the
 
 hmac.h, hmac.c: the base for the HMAC algorithm; combined with a hash function, it can be used as a keyed hash function.
 
+md5.h, md5.c: the MD5 hash algorithm, plus the stub for hooking it into the beecrypt library.
+
+md5hmac.h, md5hmac.c: the implementation of the MD5/HMAC keyed hash function; uses routines from md5 and hmac.
+
 mtprng.h, mtprng.c: the Mersenne Twister pseudo-random number generator; it has a very high period, but needs more analysis on whether it's cryptographically strong enough.
 
-sha1hmac.h, sha1hmac.c: the implementation of the SHA-1/HMAC keyed hash function; uses routines from fips186 and hmac.
+sha1hmac.h, sha1hmac.c: the implementation of the SHA-1/HMAC keyed hash function; uses routines from fips180 and hmac.
+
+sha256.h, sha256.c: the SHA-256 hash algorithm, plus the stub for hooking it into the beecrypt library.
+
+sha256hmac.h, sha256hmac.c: the implementation of the SHA-256/HMAC keyed hash function; uses routines from sha256 and hmac.

@@ -317,56 +317,57 @@ const blockCipher blowfish = { "Blowfish", sizeof(blowfishParam), 8, 64, 448, 32
 
 int blowfishSetup(blowfishParam* bp, const uint32* key, int keybits, cipherOperation op)
 {
-	uint32 work[2];
-
-	register int keywords = (keybits >> 5); /* i.e. in 32 bit words */
-	register uint32* p = bp->p;
-	register uint32* s = bp->s;
-	register int i;
-
-	if ((keywords < 2) || (keywords > 14))
-		return -1;
-
-	memcpy(p, _bf_p, BLOWFISHPSIZE * sizeof(uint32));
-	memcpy(s, _bf_s, 1024 * sizeof(uint32));
-
-	for (i = 0; i < BLOWFISHPSIZE; i++)
+	if (((keybits & 31) == 0) && (keybits >= 64) && (keybits <= 448))
 	{
-		/* key is stored in 32 bit words in host-endian format; no swap necessary */
-		p[i] ^= key[i % keywords];
+		uint32 work[2];
+
+		register int keywords = (keybits >> 5); /* i.e. in 32 bit words */
+		register uint32* p = bp->p;
+		register uint32* s = bp->s;
+		register int i;
+
+		memcpy(p, _bf_p, BLOWFISHPSIZE * sizeof(uint32));
+		memcpy(s, _bf_s, 1024 * sizeof(uint32));
+
+		for (i = 0; i < BLOWFISHPSIZE; i++)
+		{
+			/* key is stored in 32 bit words in host-endian format; no swap necessary */
+			p[i] ^= key[i % keywords];
+		}
+
+		work[0] = work[1] = 0;
+
+		for (i = 0; i < BLOWFISHPSIZE; i += 2, p += 2)
+		{
+			blowfishEncrypt(bp, work, work);
+			#if WORDS_BIGENDIAN
+			p[0] = work[0];
+			p[1] = work[1];
+			#else
+			p[0] = swapu32(work[0]);
+			p[1] = swapu32(work[1]);
+			#endif
+		}
+
+		for (i = 0; i < 1024; i += 2, s += 2)
+		{
+			blowfishEncrypt(bp, work, work);
+			#if WORDS_BIGENDIAN
+			s[0] = work[0];
+			s[1] = work[1];
+			#else
+			s[0] = swapu32(work[0]);
+			s[1] = swapu32(work[1]);
+			#endif
+		}
+
+		/* clear fdback/iv */
+		bp->fdback[0] = 0;
+		bp->fdback[1] = 0;
+
+		return 0;
 	}
-
-	work[0] = work[1] = 0;
-
-	for (i = 0; i < BLOWFISHPSIZE; i += 2, p += 2)
-	{
-		blowfishEncrypt(bp, work, work);
-		#if WORDS_BIGENDIAN
-		p[0] = work[0];
-		p[1] = work[1];
-		#else
-		p[0] = swapu32(work[0]);
-		p[1] = swapu32(work[1]);
-		#endif
-	}
-
-	for (i = 0; i < 1024; i += 2, s += 2)
-	{
-		blowfishEncrypt(bp, work, work);
-		#if WORDS_BIGENDIAN
-		s[0] = work[0];
-		s[1] = work[1];
-		#else
-		s[0] = swapu32(work[0]);
-		s[1] = swapu32(work[1]);
-		#endif
-	}
-
-	/* clear fdback/iv */
-	bp->fdback[0] = 0;
-	bp->fdback[1] = 0;
-
-	return 0;
+	return -1;
 }
 
 #ifndef ASM_BLOWFISHSETIV

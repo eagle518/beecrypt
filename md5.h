@@ -27,7 +27,6 @@
 #define _MD5_H
 
 #include "beecrypt.h"
-/*#include "md5opt.h"*/
 
 typedef struct
 {

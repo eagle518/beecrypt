@@ -3,7 +3,7 @@
 ;
 ; BeeCrypt DLL exports
 ;
-; Copyright (c) 2000 Virtual Unlimited B.V.
+; Copyright (c) 2000, 2001 Virtual Unlimited B.V.
 ;
 ; Author: Bob Deblier <bob@virtualunlimited.com>
 ;
@@ -55,6 +55,11 @@ EXPORTS
  decodeInts
  decodeLong
  decodeShort
+ dhaes_pDecrypt
+ dhaes_pEncrypt
+ dhaes_pFree
+ dhaes_pInit
+ dhaes_usable
  dldp_pCopy
  dldp_pEqual
  dldp_pFree
@@ -72,15 +77,17 @@ EXPORTS
  dldp_pgoqValidate
  dlkp_pCopy
  dlkp_pFree
+ dlkp_pInit
  dlkp_pPair
  dlpk_pCopy
  dlpk_pEqual
  dlpk_pFree
+ dlpk_pInit
  dlpk_pgoqValidate
  dlpk_pgonValidate
  dlsvdp_pDHSecret
- ;elgv1sign
- ;elgv1vrfy 
+ elgv1sign
+ elgv1vrfy 
  elgv3sign
  elgv3vrfy
  encodeByte
@@ -90,6 +97,7 @@ EXPORTS
  encodeFloat
  encodeInt
  encodeInts
+ encodeIntsPartial
  encodeLong
  encodeShort
  entropySourceCount
@@ -101,8 +109,13 @@ EXPORTS
  fips186Seed
  fips186Setup
  fips186prng data
+ hashFunctionContextDigest
+ hashFunctionContextDigestMatch
  hashFunctionContextFree
  hashFunctionContextInit
+ hashFunctionContextUpdate
+ hashFunctionContextUpdateMC
+ hashFunctionContextUpdateMP32
  hashFunctionCount
  hashFunctionDefault
  hashFunctionFind
@@ -111,8 +124,29 @@ EXPORTS
  hmacReset
  hmacSetup
  hmacUpdate
+ hmacmd5 data
+ hmacmd5Digest
+ hmacmd5Reset
+ hmacmd5Setup
+ hmacmd5Update
+ hmacsha1 data
+ hmacsha1Digest
+ hmacsha1Reset
+ hmacsha1Setup
+ hmacsha1Update
+ hmacsha256 data
+ hmacsha256Digest
+ hmacsha256Reset
+ hmacsha256Setup
+ hmacsha256Update
+ keyedHashFunctionContextDigest
+ keyedHashFunctionContextDigestMatch
  keyedHashFunctionContextFree
  keyedHashFunctionContextInit
+ keyedHashFunctionContextSetup
+ keyedHashFunctionContextUpdate
+ keyedHashFunctionContextUpdateMC
+ keyedHashFunctionContextUpdateMP32
  keyedHashFunctionCount
  keyedHashFunctionDefault
  keyedHashFunctionFind
@@ -177,7 +211,7 @@ EXPORTS
  mp32addsqrtrc
  mp32mul
  mp32sqr
- mp32gcd
+ mp32gcd_w
  mp32nmodw
  mp32nmod
  mp32ndivmod
@@ -186,53 +220,72 @@ EXPORTS
  mp32bzero
  mp32binit
  mp32bfree
+ mp32bcopy
  mp32bset
- mp32bmu
- mp32brnd
- mp32brndres
- mp32bmodsubone
+ mp32bsethex
+ mp32bsubone
  mp32bneg
- mp32bmod
- mp32baddmod
- ;mp32bsubmod
- mp32bmulmodres
- mp32bsqrmodres
- mp32bmulmod
- mp32bsqrmod
- mp32bpowmod
- mp32btwopowmod
+ mp32bmu_w
+ mp32brnd_w
+ mp32brndinv_w
+ mp32bmod_w
+ mp32baddmod_w
+ ;mp32bsubmod_w
+ mp32bmulmod_w
+ mp32bsqrmod_w
+ mp32bpowmod_w
+ mp32bpowmodsld_w
+ mp32btwopowmod_w
  ;mp32bsm2powmod
  ;mp32bsm3powmod
- mp32binv
- mp32bpprime
- mp32bnmulmodres
- mp32bnsqrmodres
+ mp32binv_w
+ mp32bnrnd
+ mp32bnmulmod
+ mp32bnsqrmod
  mp32bnpowmod
+ mp32bnpowmodsld
  mp32bnsqrmod
  mp32ptrials
- mp32pmilrab
- mp32prnd
- mp32prndsafe
+ mp32pmilrab_w
+ mp32bpprime_w
+ mp32prnd_w
  ;mp32prndcon
- mp32prndconone
+ mp32prndconone_w
+ mp32prndsafe_w
  mp32nzero
  mp32nsize
  mp32ninit
  mp32nfree
+ mp32ncopy
  mp32nset
  mp32nsetw
  mp32nsethex
+ mp32nwipe
  mtprng data
  mtprngCleanup
  mtprngNext
  mtprngSeed
  mtprngSetup
+ pkcs5Pad
+ pkcs5PadInline
+ pkcs5Unpad
+ pkcs5UnpadInline
  randomGeneratorCount
  randomGeneratorGet
  randomGeneratorFind
  randomGeneratorDefault
  randomGeneratorContextInit
  randomGeneratorContextFree
+ rsapri
+ rsapricrt
+ rsavrfy
+ rsakpMake
+ rsakpInit
+ rsakpFree
+ rsakpCopy
+ rsapkInit
+ rsapkFree
+ rsapkCopy
  readByte
  readChar
  readChars
@@ -245,11 +298,11 @@ EXPORTS
  sha1Reset
  sha1Update
  sha1Digest
- sha1hmac data
- sha1hmacDigest
- sha1hmacReset
- sha1hmacSetup
- sha1hmacUpdate
+ sha256 data
+ sha256Process
+ sha256Reset
+ sha256Update
+ sha256Digest
  swap16
  swap32
  swap64

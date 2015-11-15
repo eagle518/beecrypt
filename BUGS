@@ -2,7 +2,11 @@ Legend:
 	- = open bug
 	* = fixed bug
 
+2.0.0:
+	- Chinese Remainder Theorem for RSA private key operation doesn't work; it needs fixing.
+
 1.1.2:
+	* SHA-1 i586 assembler code uses local variables below the current stack frame.
 	
 1.1.1:
 	* discrete logarithm domain parameter generator calculations contains bugs - was detected in this release but present since the first release.

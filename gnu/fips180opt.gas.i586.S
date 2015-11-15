@@ -108,12 +108,12 @@ C_FUNCTION(sha1Process)
 	pushl %edi
 	pushl %esi
 	pushl %ebx
-
 	pushl %ebp
-	leal -20(%esp),%ebp
 
 	movl 20(%esp),%esi
+	subl $20,%esp
 	leal PARAM_DATA(%esi),%edi
+	movl %esp,%ebp
 
 	movl $4,%ecx
 .L0:
@@ -282,6 +282,7 @@ C_FUNCTION(sha1Process)
 	decl %ecx
 	jns .L3
 
+	addl $20,%esp
 	popl %ebp
 	popl %ebx
 	popl %esi
