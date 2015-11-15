@@ -72,9 +72,12 @@ int testVectorExpMod()
 	
 	mp32bnpowmod(&p, &g, &x);
 
+	mp32println(p.size, p.data);
+	
 	mp32nset(&y, p.size, p.data);
 	
 	mp32nsethex(&tmp, dsa_y);
+	mp32println(tmp.size, tmp.data);
 
 	return mp32eqx(y.size, y.data, tmp.size, tmp.data);
 }
@@ -425,7 +428,6 @@ void testDLParams()
 
 int main()
 {
-
 	int i, j;
 
 	printf("the beecrypt library implements:\n");

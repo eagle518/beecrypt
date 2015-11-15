@@ -1,2 +1,10 @@
+Legend:
+	- = open bug
+	* = fixed bug
+
+1.0.1:
+	- The Windows 2000 bug is still around
+
 1.0.0:
 	- On Windows 2000, the entropy system gets error WAVERR_BADFORMAT in waveInOpen; So far I've been unable to determine why the system does this for format WAVE_FORMAT_PCM. Suggestions to fix this problem are more than welcome.
+	* The assembler code for SHA-1 in gnu/fips180opt.gas.i586.s contains bugs.

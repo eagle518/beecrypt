@@ -24,7 +24,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-.if 1
 	.file "fips180opt.gas.i586.s"
 
 	.text
@@ -48,9 +47,9 @@
 	addl $K00,%eax
 	rorl $2,%ebx
 	addl \w(%esi,%edi),%eax
-	xorl %ecx,%edx
+	xorl %edx,%ecx
 	movl %ebx,\b
-	addl %ebx,%eax
+	addl %ecx,%eax
 	movl %eax,\e
 	.endm
 
@@ -81,7 +80,7 @@
 	addl $K40,%eax
 	orl %edx,%ecx
 	addl \w(%esi,%edi),%eax
-	rorl $4,%ebx
+	rorl $2,%ebx
 	addl %ecx,%eax
 	movl %ebx,\b
 	movl %eax,\e
@@ -145,8 +144,8 @@ sha1Process:
 	xorl 32(%edi),%eax
 	xorl 36(%edi),%ebx
 	xorl 8(%edi),%eax
-	xorl 12(%edi),%eax
-	xorl (%edi),%ebx
+	xorl 12(%edi),%ebx
+	xorl (%edi),%eax
 	xorl 4(%edi),%ebx
 	roll $1,%eax
 	roll $1,%ebx
@@ -154,11 +153,11 @@ sha1Process:
 	movl %ebx,68(%edi)
 	movl 60(%edi),%eax
 	movl 64(%edi),%ebx
-	xorl 36(%edi),%eax
-	xorl 40(%edi),%ebx
+	xorl 40(%edi),%eax
+	xorl 44(%edi),%ebx
 	xorl 16(%edi),%eax
-	xorl 20(%edi),%eax
-	xorl 8(%edi),%ebx
+	xorl 20(%edi),%ebx
+	xorl 8(%edi),%eax
 	xorl 12(%edi),%ebx
 	roll $1,%eax
 	roll $1,%ebx
@@ -289,4 +288,3 @@ sha1Process:
 	popl %esi
 	popl %edi
 	ret
-.endif

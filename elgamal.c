@@ -34,8 +34,8 @@
  *   s = inv(k) * (h(m) - x*r) mod (p-1)
  *  Verifying equation:
  *   check 1 <= r <= (p-1)
- *   v1 = y^r * r^s mod p
- *   v2 = g^h(m) mod p
+ *   v1 = g^h(m) mod p
+ *   v2 = y^r * r^s mod p
  *   check v1 == v2
  *  Simultaneous multiple exponentiation verification:
  *   y^r * r^s * g^(p-1-h(m)) mod p = 1 or (the former is probably faster)
@@ -57,11 +57,72 @@
 #define BEECRYPT_DLL_EXPORT
 
 #include "elgamal.h"
+#include "dldp.h"
 #include "mp32.h"
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+
+void elgv1sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)
+{
+	register uint32  size   = p->size;
+	register uint32* kdata  = p->wksp+size*4+4; /* leave enough workspace for a powmod operation */
+	register uint32* u1data = n->wksp+size*4+4; /* leave enough workspace for a mulmod and addmod operation */
+	register uint32* u2data = u1data+size;
+
+	/* get a random odd k */
+	mp32brndoddres(p, kdata, rc);
+
+	/* compute r = g^k mod p */
+	mp32bpowmod(p, g->size, g->data, size, kdata);
+	mp32nset(r, size, p->data);
+
+	/* compute u1 = inv(k) (mod n) */
+	mp32binv(p, size, kdata);
+	mp32copy(size, u1data, p->data);
+	
+	/* to be completed */
+}
+
+int elgv1vrfy(const mp32barrett* p, const mp32barrett* n, const mp32number* g, const mp32number* hm, const mp32number* y, const mp32number* r, const mp32number* s)
+{
+	register uint32  size =   p->size;
+	register uint32* v1data = p->wksp+size*4+4;
+	register uint32* u1data = v1data+size;
+
+	if (mp32z(r->size, r->data))
+		return 0;
+
+	if (mp32gex(r->size, r->data, size, p->modl))
+		return 0;
+
+	if (mp32z(s->size, s->data))
+		return 0;
+
+	if (mp32gex(s->size, s->data, n->size, n->modl))
+		return 0;
+
+	#ifdef COMING_SOON
+	/* here we need the simultaneous multiple exponentiation with three pairs */
+	#endif
+
+	/* compute v1 = g^h(m) mod p */
+	mp32bpowmod(p, g->size, g->data, hm->size, hm->data);
+	mp32copy(size, v1data, p->data);
+
+	/* compute u1 = y^r mod p */
+	mp32bpowmod(p, y->size, y->data, r->size, r->data);
+	mp32copy(size, u1data, p->data);
+
+	/* compute u2 = r^s mod p */
+	mp32bpowmod(p, r->size, r->data, s->size, s->data);
+
+	/* compute v2 = u1*u2 mod p */
+	mp32bmulmod(p, size, p->data, size, u1data);
+
+	return mp32eq(size, v1data, p->data);
+}
 
 void elgv3sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, randomGeneratorContext* rc, const mp32number* hm, const mp32number* x, mp32number* r, mp32number* s)
 {
@@ -71,8 +132,7 @@ void elgv3sign(const mp32barrett* p, const mp32barrett* n, const mp32number* g, 
 	register uint32* u2data = u1data+size;
 
 	/* get a random k */
-	mp32brnd(p, rc);
-	mp32copy(size, kdata, p->data);
+	mp32brndres(p, kdata, rc);
 
 	/* compute r = g^k mod p */
 	mp32bpowmod(p, g->size, g->data, size, kdata);

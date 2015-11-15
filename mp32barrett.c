@@ -37,6 +37,9 @@
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 
 #include <stdio.h>
 
@@ -74,6 +77,28 @@ void mp32brndres(const mp32barrett* b, uint32* result, randomGeneratorContext* r
 
 		while (mp32ge(b->size, result, b->wksp))
 			mp32sub(b->size, result, b->wksp);
+	} while (mp32leone(b->size, result));
+}
+
+void mp32brndoddres(const mp32barrett* b, uint32* result, randomGeneratorContext* rc)
+{
+	uint32 msz = mp32mszcnt(b->size, b->modl);
+
+	mp32copy(b->size, b->wksp, b->modl);
+	mp32subw(b->size, b->wksp, 1);
+
+	do
+	{
+		rc->rng->next(rc->param, result, b->size);
+
+		result[0] &= (0xffffffff >> msz);
+		mp32setlsb(b->size, result);
+
+		while (mp32ge(b->size, result, b->wksp))
+		{
+			mp32sub(b->size, result, b->wksp);
+			mp32setlsb(b->size, result);
+		}
 	} while (mp32leone(b->size, result));
 }
 
@@ -133,6 +158,13 @@ void mp32bmodres(const mp32barrett* b, uint32* result, const uint32* xdata)
 
 void mp32binit(mp32barrett* b, uint32 size)
 {
+	/*
+	 * NOTE: consider having the mp32prime routines allocate their own memory when necessary;
+	 *       this would limit the size to 3*size+2 + 4*size+2 = 7*size+4
+	 * NOTE: sliding window exponentiation will also use its own storage
+	 * NOTE: this memory can be allocated with either alloca (if available) or malloc.
+	 */
+
 	/* data, modulus and mu take 3*size+2 words, wksp needed = 7*size+2; total = 10*size+4 */
 	b->size	= size;
 	b->data	= (uint32*) calloc(size*10+4, sizeof(uint32));
@@ -212,11 +244,25 @@ void mp32bneg(const mp32barrett* b)
 
 void mp32baddmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
 {
+	/* xsize and ysize must be less than or equal to b->size */
 	register uint32  size = b->size;
 	register uint32* opnd = b->wksp+size*2+2;
 
 	mp32setx(2*size, opnd, xsize, xdata);
 	mp32addx(2*size, opnd, ysize, ydata);
+
+	mp32bmodres(b, b->data, opnd);
+}
+
+void mp32bsubmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 ysize, const uint32* ydata)
+{
+	/* xsize and ysize must be less than or equal to b->size */
+	register uint32  size = b->size;
+	register uint32* opnd = b->wksp+size*2+2;
+	
+	mp32setx(2*size, opnd, xsize, xdata);
+	if (mp32subx(2*size, opnd, ysize, ydata)) /* if there's carry, i.e. the result would be negative, add the modulus */
+		mp32addx(2*size, opnd, size, b->modl);
 
 	mp32bmodres(b, b->data, opnd);
 }
@@ -261,6 +307,12 @@ void mp32bsqrmod(const mp32barrett* b, uint32 xsize, const uint32* xdata)
 {
 	mp32bsqrmodres(b, b->data, xsize, xdata);
 }
+
+#if 0
+/*
+ * This algorithm will be phased out in favor of the sliding window method,
+ * which is about 25% more efficient
+ */
 
 void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 psize, const uint32* pdata)
 {
@@ -318,6 +370,165 @@ void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32
 				temp = *(pdata++);
 			}
 		}
+	}
+}
+#endif
+
+/*
+ * Sliding Window Exponentiation technique, slightly altered from the method Applied Cryptography:
+ *
+ * First of all, the table with the powers of g can be reduced by about half; the even powers don't
+ * need to be accessed or stored.
+ *
+ * Get up to K bits starting with a one, if we have that many still available
+ *
+ * Do the number of squarings of A in the first column, the multiply by the value in column two,
+ * and finally do the number of squarings in column three.
+ *
+ * This table can be used for K=2,3,4 and can be extended
+ *  
+ *     0 : - | -       | -
+ *     1 : 1 |  g1 @ 0 | 0
+ *    10 : 1 |  g1 @ 0 | 1
+ *    11 : 2 |  g3 @ 1 | 0
+ *   100 : 1 |  g1 @ 0 | 2
+ *   101 : 3 |  g5 @ 2 | 0
+ *   110 : 2 |  g3 @ 1 | 1
+ *   111 : 3 |  g7 @ 3 | 0
+ *  1000 : 1 |  g1 @ 0 | 3
+ *  1001 : 4 |  g9 @ 4 | 0
+ *  1010 : 3 |  g5 @ 2 | 1
+ *  1011 : 4 | g11 @ 5 | 0
+ *  1100 : 2 |  g3 @ 1 | 2
+ *  1101 : 4 | g13 @ 6 | 0
+ *  1110 : 3 |  g7 @ 3 | 1
+ *  1111 : 4 | g15 @ 7 | 0
+ *
+ */
+
+static byte mp32bslide_presq[16] = 
+{ 0, 1, 1, 2, 1, 3, 2, 3, 1, 4, 3, 4, 2, 4, 3, 4 };
+
+static byte mp32bslide_mulg[16] =
+{ 0, 0, 0, 1, 0, 2, 1, 3, 0, 4, 2, 5, 1, 6, 3, 7 };
+
+static byte mp32bslide_postsq[16] =
+{ 0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0 };
+
+void mp32bpowmod(const mp32barrett* b, uint32 xsize, const uint32* xdata, uint32 psize, const uint32* pdata)
+{
+	/*
+	 * Modular exponention
+	 *
+	 * Uses sliding window exponentiation; needs extra storage: if K=3, needs 8*size, if K=4, needs 16*size
+	 *
+	 */
+
+	/* K == 4 for the first try */
+	
+	uint32  size = b->size;
+	uint32* data = b->data;
+	uint32  temp;
+
+	mp32setw(size, data, 1);
+
+	while (psize)
+	{
+		if ((temp = *(pdata++))) /* break when first non-zero word found */
+			break;
+		psize--;
+	}
+
+	if (temp)
+	{
+		#if HAVE_ALLOCA
+		uint32* xpow = (uint32*) alloca(size*8*sizeof(uint32));
+		#else
+		uint32* xpow = (uint32*) malloc(size*8*sizeof(uint32));
+		#endif
+		uint8 l = 0, n = 0, count = 32;
+	
+		mp32bsqrmodres(b, xpow       , xsize, xdata);                    /* x^2 mod b, temp */
+		mp32bmulmodres(b, xpow+size  , xsize, xdata, size, xpow);        /* x^3 mod b */
+		mp32bmulmodres(b, xpow+2*size,  size,  xpow, size, xpow+size);   /* x^5 mod b */
+		mp32bmulmodres(b, xpow+3*size,  size,  xpow, size, xpow+2*size); /* x^7 mod b */
+		mp32bmulmodres(b, xpow+4*size,  size,  xpow, size, xpow+3*size); /* x^9 mod b */
+		mp32bmulmodres(b, xpow+5*size,  size,  xpow, size, xpow+4*size); /* x^11 mod b */
+		mp32bmulmodres(b, xpow+6*size,  size,  xpow, size, xpow+5*size); /* x^13 mod b */
+		mp32bmulmodres(b, xpow+7*size,  size,  xpow, size, xpow+6*size); /* x^15 mod b */
+		mp32setx(size, xpow, xsize, xdata);                              /* x^1 mod b */
+
+		/* first skip bits until we reach a one */
+		while (count)
+		{
+			if (temp & 0x80000000)
+				break;
+			temp <<= 1;
+			count--;
+		}
+
+		while (psize)
+		{
+			while (count)
+			{
+				uint8 bit = (temp & 0x80000000) != 0;
+
+				n <<= 1;
+				n += bit;
+				
+				if (n)
+				{
+					if (l)
+						l++;
+					else if (bit)
+						l = 1;
+
+					if (l == 4)
+					{
+						uint8 s = mp32bslide_presq[n];
+						
+						while (s--)
+							mp32bnsqrmodres(b, data, (mp32number*) b);
+						
+						mp32bmulmod(b, size, xpow+mp32bslide_mulg[n]*size, b->size, b->data);
+						
+						s = mp32bslide_postsq[n];
+						
+						while (s--)
+							mp32bnsqrmodres(b, data, (mp32number*) b);
+
+						l = n = 0;
+					}
+				}
+				else
+					mp32bnsqrmodres(b, data, (mp32number*) b);
+
+				temp <<= 1;
+				count--;
+			}
+			if (--psize)
+			{
+				count = 32;
+				temp = *(pdata++);
+			}
+		}
+
+		if (n)
+		{
+			uint8 s = mp32bslide_presq[n];
+			while (s--)
+				mp32bnsqrmodres(b, data, (mp32number*) b);
+				
+			mp32bmulmod(b, size, xpow+mp32bslide_mulg[n]*size, b->size, b->data);
+			
+			s = mp32bslide_postsq[n];
+			
+			while (s--)
+				mp32bnsqrmodres(b, data, (mp32number*) b);
+		}
+		#if !HAVE_ALLOCA
+		free(xpow);
+		#endif
 	}
 }
 
@@ -456,21 +667,69 @@ int mp32binv(const mp32barrett* b, uint32 xsize, const uint32* xdata)
 			}
 		}
 	}
-	else
+	else if (mp32odd(xsize, xdata))
 	{
-		/*
-		 * If x is even, then it is not invertible
-		 *
-		 */
-
-		if (mp32even(xsize, xdata))
-			return 0;
-
 		/* use simplified binary extended gcd algorithm */
-		
-		/* INCOMPLETE */
-		return 0;
+
+		register uint32  size = b->size;
+
+		uint32* udata = b->wksp;
+		uint32* vdata = udata+size+1;
+		uint32* bdata = vdata+size+1;
+		uint32* ddata = bdata+size+1;
+
+		mp32setx(size+1, udata, xsize, xdata);
+		mp32setx(size+1, vdata, size, b->modl);
+		mp32zero(size+1, bdata);
+		mp32setw(size+1, ddata, 1);
+
+		while (1)
+		{
+			while (mp32even(size+1, udata))
+			{
+				mp32divtwo(size+1, udata);
+
+				if (mp32odd(size+1, bdata))
+					mp32subx(size+1, bdata, xsize, xdata);
+
+				mp32sdivtwo(size+1, bdata);
+			}
+			while (mp32even(size+1, vdata))
+			{
+				mp32divtwo(size+1, vdata);
+
+				if (mp32odd(size+1, ddata))
+					mp32subx(size+1, ddata, xsize, xdata);
+
+				mp32sdivtwo(size+1, ddata);
+			}
+			if (mp32ge(size+1, udata, vdata))
+			{
+				mp32sub(size+1, udata, vdata);
+				mp32sub(size+1, bdata, ddata);
+			}
+			else
+			{
+				mp32sub(size+1, vdata, udata);
+				mp32sub(size+1, ddata, bdata);
+			}
+
+			if (mp32z(size+1, udata))
+			{
+				if (mp32isone(size+1, vdata))
+				{
+					mp32setx(size, b->data, size+1, ddata);
+					if (*ddata & 0x80000000)
+						mp32addx(size, b->data, xsize, xdata);
+
+					return 1;
+				}
+				return 0;
+			}
+		}
 	}
+
+	return 0;
 }
 
 int mp32bpprime(const mp32barrett* b, randomGeneratorContext* r, int t)

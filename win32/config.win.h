@@ -38,6 +38,7 @@
 #define HAVE_ERRNO_H		1
 #define HAVE_STRING_H		1
 #define HAVE_STDLIB_H		1
+#define HAVE_ALLOCA_H		0
 #define HAVE_CTYPE_H		1
 #define HAVE_UNISTD_H		1
 #define HAVE_FCNTL_H		1
@@ -48,13 +49,16 @@
 #define HAVE_SYS_TIME_H		0
 
 #define HAVE_THREAD_H		0
-#define HAVE_PTHREAD_H		0
 #define HAVE_SYNCH_H		0
+#define HAVE_PTHREAD_H		0
+#define HAVE_SEMAPHORE_H	0
 
 #define HAVE_TERMIO_H			0
 #define HAVE_SYS_AUDIOIO_H		0
 #define HAVE_SYS_IOCTL_H		0
 #define HAVE_SYS_SOUNDCARD_H	0
+
+#define HAVE_ALLOCA			1
 
 #define HAVE_GETTIMEOFDAY	0
 #define HAVE_GETHRTIME		0

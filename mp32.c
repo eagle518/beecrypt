@@ -1067,6 +1067,26 @@ void mp32ndivmod(uint32* result, uint32 xsize, const uint32* xdata, uint32 ysize
 }
 #endif
 
+/*
+#ifndef ASM_MP32UNPACK
+void mp32unpack(uint32 size, uint8* bytes, const uint32* bits)
+{
+	register uint32 temp;
+	register int i;
+	
+	while (size--)
+	{
+		temp = *(bits++);
+
+		for (i = 0; i < 31; i++)
+		{
+			bytes
+		}
+	}
+}
+#endif
+*/
+
 #ifndef ASM_MP32PRINT
 void mp32print(register uint32 xsize, register const uint32* xdata)
 {

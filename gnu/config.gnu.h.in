@@ -53,6 +53,7 @@
 #define HAVE_ERRNO_H		0
 #define HAVE_STRING_H		0
 #define HAVE_STDLIB_H		0
+#define HAVE_ALLOCA_H		0
 #define HAVE_CTYPE_H		0
 #define HAVE_UNISTD_H		0
 #define HAVE_FCNTL_H		0
@@ -71,6 +72,8 @@
 #define HAVE_SYS_AUDIOIO_H		0
 #define HAVE_SYS_IOCTL_H		0
 #define HAVE_SYS_SOUNDCARD_H	0
+
+#define HAVE_ALLOCA			0
 
 #define HAVE_GETTIMEOFDAY	0
 #define HAVE_GETHRTIME		0

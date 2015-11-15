@@ -77,7 +77,7 @@ Planned for the near future are:
     - compliance with and compliance statements for IEEE P1363
 	- DHAES
     - DSA (i.e. the rest of FIPS-186)
-    - more blockciphers (Twofish, Rijndael, ... )
+    - more blockciphers (Twofish, Rijndael, Misty1, ... )
 	- more hash functions (RIPEMD-160, HAVAL, ... )
 	- Elliptic Curves (ECDSA, ... )
 
