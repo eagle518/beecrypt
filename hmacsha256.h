@@ -26,8 +26,8 @@
 #ifndef _HMACSHA256_H
 #define _HMACSHA256_H
 
-#include "hmac.h"
-#include "sha256.h"
+#include "beecrypt/hmac.h"
+#include "beecrypt/sha256.h"
 
 /*!\ingroup HMAC_sha256_m
  */

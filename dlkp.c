@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "dlkp.h"
+#include "beecrypt/dlkp.h"
 
 int dlkp_pPair(dlkp_p* kp, randomGeneratorContext* rgc, const dldp_p* param)
 {

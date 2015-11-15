@@ -29,8 +29,8 @@
 # include "config.h"
 #endif
 
-#include "md5.h"
-#include "endianness.h"
+#include "beecrypt/md5.h"
+#include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_md5_m
  * \{

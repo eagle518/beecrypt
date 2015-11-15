@@ -33,7 +33,7 @@
 # include "config.h"
 #endif
 
-#include "hmacsha1.h"
+#include "beecrypt/hmacsha1.h"
 
 /*!\addtogroup HMAC_sha1_m
  * \{

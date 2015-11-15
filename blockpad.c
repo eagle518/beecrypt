@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "blockpad.h"
+#include "beecrypt/blockpad.h"
 
 memchunk* pkcs5Pad(size_t blockbytes, memchunk* tmp)
 {
@@ -64,7 +64,7 @@ memchunk* pkcs5Unpad(size_t blockbytes, memchunk* tmp)
 		}
 
 		tmp->size -= padvalue;
-/*		tmp->data = (byte*) realloc(tmp->data, tmp->size; */
+/*		tmp->data = (byte*) realloc(tmp->data, tmp->size); */
 	}
 
 	return tmp;

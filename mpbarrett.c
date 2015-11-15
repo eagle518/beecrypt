@@ -33,10 +33,10 @@
 # include "config.h"
 #endif
 
-#include "beecrypt.h"
-#include "mpprime.h"
-#include "mpnumber.h"
-#include "mpbarrett.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/mpprime.h"
+#include "beecrypt/mpnumber.h"
+#include "beecrypt/mpbarrett.h"
 
 /*
  * mpbzero
@@ -150,8 +150,48 @@ void mpbset(mpbarrett* b, size_t size, const mpw *data)
 	}
 }
 
-void mpbsethex(mpbarrett* b, const char* hex)
+int mpbsetbin(mpbarrett* b, const byte* osdata, size_t ossize)
 {
+	int rc = -1;
+	size_t size;
+																				
+	/* skip zero bytes */
+	while (!(*osdata) && ossize)
+	{
+		osdata++;
+		ossize--;
+	}
+																				
+	size = MP_BYTES_TO_WORDS(ossize + MP_WBYTES - 1);
+                                                                                
+	if (b->modl)
+	{
+		if (b->size != size)
+			b->modl = (mpw*) realloc(b->modl, (2*size+1) * sizeof(mpw));
+	}
+	else
+		b->modl = (mpw*) malloc((2*size+1) * sizeof(mpw));
+
+	if (b->modl)
+	{
+		register mpw* temp = (mpw*) malloc((6*size+4) * sizeof(mpw));
+
+		b->size = size;
+		b->mu = b->modl+size;
+
+		rc = os2ip(b->modl, size, osdata, ossize);
+
+		mpbmu_w(b, temp);
+
+		free(temp);
+	}
+
+	return rc;
+}
+
+int mpbsethex(mpbarrett* b, const char* hex)
+{
+	int rc = -1;
 	size_t len = strlen(hex);
 	size_t size = MP_NIBBLES_TO_WORDS(len + MP_WNIBBLES - 1);
 
@@ -170,7 +210,7 @@ void mpbsethex(mpbarrett* b, const char* hex)
 		b->size = size;
 		b->mu = b->modl+size;
 
-		hs2ip(b->modl, size, hex, len);
+		rc = hs2ip(b->modl, size, hex, len);
 
 		mpbmu_w(b, temp);
 
@@ -181,6 +221,8 @@ void mpbsethex(mpbarrett* b, const char* hex)
 		b->size = 0;
 		b->mu = 0;
 	}
+
+	return rc;
 }
 
 /*
@@ -273,7 +315,7 @@ void mpbrndinv_w(const mpbarrett* b, randomGeneratorContext* rc, mpw* result, mp
 		else
 			mpbrnd_w(b, rc, result, wksp);
 
-	} while (mpextgcd_w(size, result, b->modl, inverse, wksp) == 0);
+	} while (mpextgcd_w(size, b->modl, result, inverse, wksp) == 0);
 }
 
 /*
@@ -811,4 +853,9 @@ void mpbnpowmodsld(const mpbarrett* b, const mpw* slide, const mpnumber* pow, mp
 	mpbpowmodsld_w(b, slide, pow->size, pow->data, y->data, temp);
 
 	free(temp);
+}
+
+size_t mpbbits(const mpbarrett* b)
+{
+	return mpbits(b->size, b->modl);
 }

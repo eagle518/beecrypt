@@ -11,8 +11,8 @@
 #define PyObject_HEAD   int _PyObjectHead;
 #endif
 
-#include "mpw-py.h"
-#include "rng-py.h"
+#include "beecrypt/python/mpw-py.h"
+#include "beecrypt/python/rng-py.h"
 
 #ifdef __LCLINT__
 #undef	PyObject_HEAD

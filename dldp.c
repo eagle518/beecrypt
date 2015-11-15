@@ -29,9 +29,9 @@
 # include "config.h"
 #endif
 
-#include "dldp.h"
-#include "mp.h"
-#include "mpprime.h"
+#include "beecrypt/dldp.h"
+#include "beecrypt/mp.h"
+#include "beecrypt/mpprime.h"
 
 /*!\addtogroup DL_m
  * \{
@@ -48,6 +48,19 @@ int dldp_pPrivate(const dldp_p* dp, randomGeneratorContext* rgc, mpnumber* x)
 	 */
 
 	mpbnrnd(&dp->q, rgc, x);
+
+	return 0;
+}
+
+int dldp_pPrivate_s(const dldp_p* dp, randomGeneratorContext* rgc, mpnumber* x, size_t xbits)
+{
+	/*
+	 * Note: the private key is randomly selected smaller than q with xbits < mpbits(q)
+	 *
+	 */
+
+	mpbnrnd(&dp->q, rgc, x);
+	mpntrbits(x, xbits);
 
 	return 0;
 }
@@ -70,6 +83,15 @@ int dldp_pPair(const dldp_p* dp, randomGeneratorContext* rgc, mpnumber* x, mpnum
 	 */
 
 	mpbnrnd(&dp->q, rgc, x);
+	mpbnpowmod(&dp->p, &dp->g, x, y);
+
+	return 0;
+}
+
+int dldp_pPair_s(const dldp_p* dp, randomGeneratorContext* rgc, mpnumber* x, mpnumber* y, size_t xbits)
+{
+	mpbnrnd(&dp->q, rgc, x);
+	mpntrbits(x, xbits);
 	mpbnpowmod(&dp->p, &dp->g, x, y);
 
 	return 0;

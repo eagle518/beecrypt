@@ -33,7 +33,7 @@
 # include "config.h"
 #endif
 
-#include "aes.h"
+#include "beecrypt/aes.h"
 
 #if defined(BYTE_ORDER) && defined(BIG_ENDIAN) && defined(LITTLE_ENDIAN)
 # if (BYTE_ORDER != BIG_ENDIAN) && (BYTE_ORDER != LITTLE_ENDIAN)
@@ -42,9 +42,9 @@
 #endif
 
 #if WORDS_BIGENDIAN
-# include "aes_be.h"
+# include "beecrypt/aes_be.h"
 #else
-#  include "aes_le.h"
+#  include "beecrypt/aes_le.h"
 #endif
 
 #ifdef ASM_AESENCRYPTECB

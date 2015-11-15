@@ -29,8 +29,8 @@
 # include "config.h"
 #endif
 
-#include "sha1.h"
-#include "endianness.h"
+#include "beecrypt/sha1.h"
+#include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_sha1_m
  * \{

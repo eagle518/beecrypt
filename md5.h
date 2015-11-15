@@ -26,7 +26,7 @@
 #ifndef _MD5_H
 #define _MD5_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 /*!\brief Holds all the parameters necessary for the MD5 algorithm.
  * \ingroup HASH_md5_h

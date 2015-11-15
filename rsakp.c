@@ -29,110 +29,104 @@
 # include "config.h"
 #endif
 
-#include "rsakp.h"
-#include "mpprime.h"
+#include "beecrypt/rsakp.h"
+#include "beecrypt/mpprime.h"
 
 /*!\addtogroup IF_rsa_m
  * \{
  */
 
-int rsakpMake(rsakp* kp, randomGeneratorContext* rgc, int nsize)
+int rsakpMake(rsakp* kp, randomGeneratorContext* rgc, size_t bits)
 {
 	/* 
 	 * Generates an RSA Keypair for use with the Chinese Remainder Theorem
 	 */
 
-	register size_t pqsize = (nsize+1) >> 1;
-	register mpw* temp = (mpw*) malloc((16*pqsize+6)*sizeof(mpw));
-	register int newn = 1;
+	size_t pbits = (bits+1) >> 1;
+	size_t qbits = (bits - pbits);
+	size_t nsize = MP_BITS_TO_WORDS(bits+MP_WBITS-1);
+	size_t psize = MP_BITS_TO_WORDS(pbits+MP_WBITS-1);
+	size_t qsize = MP_BITS_TO_WORDS(qbits+MP_WBITS-1);
+	size_t pqsize = psize+qsize;
+	mpw* temp = (mpw*) malloc((16*pqsize+6)*sizeof(mpw));
 
 	if (temp)
 	{
-		mpbarrett r, psubone, qsubone;
-		mpnumber phi;
+		mpbarrett psubone, qsubone;
+		mpnumber phi, min;
+		mpw* divmod = temp;
+		mpw* dividend = divmod+nsize+1;
+		mpw* workspace = dividend+nsize+1;
+		int shift;
 
-		nsize = pqsize << 1;
+		/* set e to default value if e is empty */
+		if (kp->e.size == 0 && !kp->e.data)
+			mpnsetw(&kp->e, 65537U);
 
-		/* set e */
-		mpnsetw(&kp->e, 65535);
+		/* generate a random prime p, so that gcd(p-1,e) = 1 */
+		mpprnd_w(&kp->p, rgc, pbits, mpptrials(pbits), &kp->e, temp);
 
-		/* generate a random prime p and q */
-		mpprnd_w(&kp->p, rgc, pqsize, mpptrials(MP_WORDS_TO_BITS(pqsize)), &kp->e, temp);
-		mpprnd_w(&kp->q, rgc, pqsize, mpptrials(MP_WORDS_TO_BITS(pqsize)), &kp->e, temp);
+		/* find out how big q should be */
+		shift = MP_WORDS_TO_BITS(nsize) - bits;
+		mpzero(nsize, dividend);
+		dividend[0] |= MP_MSBMASK;
+		dividend[nsize-1] |= MP_LSBMASK;
+		mpndivmod(divmod, nsize+1, dividend, psize, kp->p.modl, workspace);
+		mprshift(nsize+1, divmod, shift);
 
-		/* if p <= q, perform a swap to make p larger than q */
-		if (mple(pqsize, kp->p.modl, kp->q.modl))
+		mpnzero(&min);
+		mpnset(&min, nsize+1-psize, divmod);
+
+		/* generate a random prime q, with min/max constraints, so that gcd(q-1,e) = 1 */
+		if (mpprndr_w(&kp->q, rgc, qbits, mpptrials(qbits), &min, (mpnumber*) 0, &kp->e, temp))
 		{
-			memcpy(&r, &kp->q, sizeof(mpbarrett));
-			memcpy(&kp->q, &kp->p, sizeof(mpbarrett));
-			memcpy(&kp->p, &r, sizeof(mpbarrett));
+			/* shouldn't happen */
+			mpnfree(&min);
+			free(temp);
+			return -1;
 		}
 
-		mpbzero(&r);
+		mpnfree(&min);
+
 		mpbzero(&psubone);
 		mpbzero(&qsubone);
 		mpnzero(&phi);
 
-		while (1)
-		{
-			mpmul(temp, pqsize, kp->p.modl, pqsize, kp->q.modl);
-
-			if (newn && mpmsbset(nsize, temp))
-				break;
-
-			/* product of p and q doesn't have the required size (one bit short) */
-
-			mpprnd_w(&r, rgc, pqsize, mpptrials(MP_WORDS_TO_BITS(pqsize)), &kp->e, temp);
-
-			if (mple(pqsize, kp->p.modl, r.modl))
-			{
-				mpbfree(&kp->q);
-				memcpy(&kp->q, &kp->p, sizeof(mpbarrett));
-				memcpy(&kp->p, &r, sizeof(mpbarrett));
-				mpbzero(&r);
-				newn = 1;
-			}
-			else if (mple(pqsize, kp->q.modl, r.modl))
-			{
-				mpbfree(&kp->q);
-				memcpy(&kp->q, &r, sizeof(mpbarrett));
-				mpbzero(&r);
-				newn = 1;
-			}
-			else
-			{
-				mpbfree(&r);
-				newn = 0;
-			}
-		}
-
-		mpbset(&kp->n, nsize, temp);
+		/* set n = p*q, with appropriate size (pqsize may be > nsize) */
+		mpmul(temp, psize, kp->p.modl, qsize, kp->q.modl);
+		mpbset(&kp->n, nsize, temp+pqsize-nsize);
 
 		/* compute p-1 */
 		mpbsubone(&kp->p, temp);
-		mpbset(&psubone, pqsize, temp);
+		mpbset(&psubone, psize, temp);
 
 		/* compute q-1 */
 		mpbsubone(&kp->q, temp);
-		mpbset(&qsubone, pqsize, temp);
+		mpbset(&qsubone, qsize, temp);
 
 		/* compute phi = (p-1)*(q-1) */
-		mpmul(temp, pqsize, psubone.modl, pqsize, qsubone.modl);
+		mpmul(temp, psize, psubone.modl, qsize, qsubone.modl);
 		mpnset(&phi, nsize, temp);
 
-		/* compute d = inv(e) mod phi */
-		mpninv(&kp->d, &kp->e, &phi);
+		/* compute d = inv(e) mod phi; if gcd(e, phi) != 1 then this function will fail
+		 */
+		if (mpninv(&kp->d, &kp->e, &phi) == 0)
+		{
+			/* shouldn't happen, since gcd(p-1,e) = 1 and gcd(q-1,e) = 1 ==> gcd((p-1)(q-1),e) = 1 */
+			free(temp);
+			return -1;
+		}
 
-		/* compute d1 = d mod (p-1) */
-		mpnsize(&kp->d1, pqsize);
-		mpbmod_w(&psubone, kp->d.data, kp->d1.data, temp);
+		/* compute dp = d mod (p-1) */
+		mpnsize(&kp->dp, psize);
+		mpbmod_w(&psubone, kp->d.data, kp->dp.data, temp);
 
-		/* compute d2 = d mod (q-1) */
-		mpnsize(&kp->d2, pqsize);
-		mpbmod_w(&qsubone, kp->d.data, kp->d2.data, temp);
+		/* compute dq = d mod (q-1) */
+		mpnsize(&kp->dq, qsize);
+		mpbmod_w(&qsubone, kp->d.data, kp->dq.data, temp);
 
-		/* compute c = inv(q) mod p */
-		mpninv(&kp->c, (const mpnumber*) &kp->q, (const mpnumber*) &kp->p);
+		/* compute qi = inv(q) mod p */
+		mpninv(&kp->qi, (mpnumber*) &kp->q, (mpnumber*) &kp->p);
 
 		free(temp);
 
@@ -150,9 +144,9 @@ int rsakpInit(rsakp* kp)
 	mpnzero(&kp->d);
 	mpbzero(&kp->p);
 	mpbzero(&kp->q);
-	mpnzero(&kp->d1);
-	mpnzero(&kp->d2);
-	mpnzero(&kp->c);
+	mpnzero(&kp->dp);
+	mpnzero(&kp->dq);
+	mpnzero(&kp->qi);
 	*/
 
 	return 0;
@@ -169,12 +163,12 @@ int rsakpFree(rsakp* kp)
 	mpbfree(&kp->p);
 	mpbwipe(&kp->q);
 	mpbfree(&kp->q);
-	mpnwipe(&kp->d1);
-	mpnfree(&kp->d1);
-	mpnwipe(&kp->d2);
-	mpnfree(&kp->d2);
-	mpnwipe(&kp->c);
-	mpnfree(&kp->c);
+	mpnwipe(&kp->dp);
+	mpnfree(&kp->dp);
+	mpnwipe(&kp->dq);
+	mpnfree(&kp->dq);
+	mpnwipe(&kp->qi);
+	mpnfree(&kp->qi);
 
 	return 0;
 }
@@ -186,9 +180,9 @@ int rsakpCopy(rsakp* dst, const rsakp* src)
 	mpncopy(&dst->d, &src->d);
 	mpbcopy(&dst->p, &src->p);
 	mpbcopy(&dst->q, &src->q);
-	mpncopy(&dst->d1, &src->d1);
-	mpncopy(&dst->d2, &src->d2);
-	mpncopy(&dst->c, &src->c);
+	mpncopy(&dst->dp, &src->dp);
+	mpncopy(&dst->dp, &src->dp);
+	mpncopy(&dst->qi, &src->qi);
 
 	return 0;
 }

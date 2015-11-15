@@ -26,8 +26,8 @@
 #ifndef _AES_H
 #define _AES_H
 
-#include "beecrypt.h"
-#include "aesopt.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/aesopt.h"
 
 /*!\brief Holds all the parameters necessary for the AES cipher.
  * \ingroup BC_aes_m

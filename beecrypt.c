@@ -28,24 +28,24 @@
 # include "config.h"
 #endif
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
-#include "entropy.h"
+#include "beecrypt/entropy.h"
 
-#include "fips186.h"
-#include "mtprng.h"
+#include "beecrypt/fips186.h"
+#include "beecrypt/mtprng.h"
 
-#include "md5.h"
-#include "sha1.h"
-#include "sha256.h"
+#include "beecrypt/md5.h"
+#include "beecrypt/sha1.h"
+#include "beecrypt/sha256.h"
 
-#include "hmacmd5.h"
-#include "hmacsha1.h"
-#include "hmacsha256.h"
+#include "beecrypt/hmacmd5.h"
+#include "beecrypt/hmacsha1.h"
+#include "beecrypt/hmacsha256.h"
 
-#include "aes.h"
-#include "blowfish.h"
-#include "blockmode.h"
+#include "beecrypt/aes.h"
+#include "beecrypt/blowfish.h"
+#include "beecrypt/blockmode.h"
 
 static entropySource entropySourceList[] =
 {
@@ -190,17 +190,22 @@ int randomGeneratorContextInit(randomGeneratorContext* ctxt, const randomGenerat
 		return -1;
 
 	ctxt->rng = rng;
-	ctxt->param = (randomGeneratorParam*) calloc(rng->paramsize, 1);
 
-	if (ctxt->param == (randomGeneratorParam*) 0)
-		return -1;
+	if (rng->paramsize)
+	{
+		ctxt->param = (randomGeneratorParam*) calloc(rng->paramsize, 1);
+		if (ctxt->param == (randomGeneratorParam*) 0)
+			return -1;
+	}
+	else
+		ctxt->param = (randomGeneratorParam*) 0;
 
 	return ctxt->rng->setup(ctxt->param);
 }
 
 int randomGeneratorContextFree(randomGeneratorContext* ctxt)
 {
-	register int rc;
+	register int rc = 0;
 
 	if (ctxt == (randomGeneratorContext*) 0)
 		return -1;
@@ -208,14 +213,17 @@ int randomGeneratorContextFree(randomGeneratorContext* ctxt)
 	if (ctxt->rng == (randomGenerator*) 0)
 		return -1;
 
-	if (ctxt->param == (randomGeneratorParam*) 0)
-		return -1;
+	if (ctxt->rng->paramsize)
+	{
+		if (ctxt->param == (randomGeneratorParam*) 0)
+			return -1;
+	
+		rc = ctxt->rng->cleanup(ctxt->param);
 
-	rc = ctxt->rng->cleanup(ctxt->param);
+		free(ctxt->param);
 
-	free(ctxt->param);
-
-	ctxt->param = (randomGeneratorParam*) 0;
+		ctxt->param = (randomGeneratorParam*) 0;
+	}
 
 	return rc;
 }
@@ -223,6 +231,11 @@ int randomGeneratorContextFree(randomGeneratorContext* ctxt)
 int randomGeneratorContextNext(randomGeneratorContext* ctxt, byte* data, size_t size)
 {
 	return ctxt->rng->next(ctxt->param, data, size);
+}
+
+int randomGeneratorContextSeed(randomGeneratorContext* ctxt, const byte* data, size_t size)
+{
+	return ctxt->rng->seed(ctxt->param, data, size);
 }
 
 static const hashFunction* hashFunctionList[] =
@@ -363,22 +376,25 @@ int hashFunctionContextUpdateMP(hashFunctionContext* ctxt, const mpnumber* n)
 	if (n != (mpnumber*) 0)
 	{
 		int rc;
-		byte* tmp = (byte*) malloc(MP_WORDS_TO_BYTES(n->size) + 1);
+
+		/* get the number of significant bits in the number */
+		size_t sig = mpbits(n->size, n->data);
+
+		/* calculate how many bytes we need for a java-style encoding;
+		 * if the most significant bit of the most significant byte
+		 * is set, then we need to prefix a zero byte.
+		 */
+		size_t req = ((sig+7) >> 3) + (((sig&7) == 0) ? 1 : 0);
+
+		byte* tmp = (byte*) malloc(req);
 
 		if (tmp == (byte*) 0)
 			return -1;
 
-		if (mpmsbset(n->size, n->data))
-		{
-			tmp[0] = 0;
-			i2osp(tmp+1, MP_WORDS_TO_BYTES(n->size), n->data, n->size);
-			rc = ctxt->algo->update(ctxt->param, tmp, MP_WORDS_TO_BYTES(n->size) + 1);
-		}
-		else
-		{
-			i2osp(tmp, MP_WORDS_TO_BYTES(n->size), n->data, n->size);
-			rc = ctxt->algo->update(ctxt->param, tmp, MP_WORDS_TO_BYTES(n->size));
-		}
+		i2osp(tmp, req, n->data, n->size);
+
+		rc = ctxt->algo->update(ctxt->param, tmp, req);
+
 		free(tmp);
 
 		return rc;
@@ -611,21 +627,27 @@ int keyedHashFunctionContextUpdateMP(keyedHashFunctionContext* ctxt, const mpnum
 
 	if (n != (mpnumber*) 0)
 	{
-		register int rc;
-		register byte* temp = (byte*) malloc(MP_WORDS_TO_BYTES(n->size)+1);
+		int rc;
 
-		if (mpmsbset(n->size, n->data))
-		{
-			temp[0] = 0;
-			i2osp(temp+1, MP_WORDS_TO_BYTES(n->size), n->data, n->size);
-			rc = ctxt->algo->update(ctxt->param, temp, MP_WORDS_TO_BYTES(n->size)+1);
-		}
-		else
-		{
-			i2osp(temp, MP_WORDS_TO_BYTES(n->size), n->data, n->size);
-			rc = ctxt->algo->update(ctxt->param, temp, MP_WORDS_TO_BYTES(n->size));
-		}
-		free(temp);
+		/* get the number of significant bits in the number */
+		size_t sig = mpbits(n->size, n->data);
+
+		/* calculate how many bytes we need a java-style encoding; if the
+		 * most significant bit of the most significant byte is set, then
+		 * we need to prefix a zero byte.
+		 */
+		size_t req = ((sig+7) >> 3) + (((sig&7) == 0) ? 1 : 0);
+
+		byte* tmp = (byte*) malloc(req);
+
+		if (tmp == (byte*) 0)
+			return -1;
+
+		i2osp(tmp, req, n->data, n->size);
+
+		rc = ctxt->algo->update(ctxt->param, tmp, req);
+
+		free(tmp);
 
 		return rc;
 	}
@@ -852,9 +874,9 @@ int blockCipherContextCBC(blockCipherContext* ctxt, uint32_t* dst, const uint32_
 
 #if WIN32
 __declspec(dllexport)
-BOOL WINAPI DllMain(HINSTANCE hInst, DWORD wDataSeg, LPVOID lpReserved)
+BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID lpReserved)
 {
-	switch (wDataSeg)
+	switch (fdwReason)
 	{
    	case DLL_PROCESS_ATTACH:
    		entropy_provider_setup(hInst);
@@ -863,6 +885,7 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD wDataSeg, LPVOID lpReserved)
 		entropy_provider_cleanup();
 		break;
    	}
-   	return TRUE;
+
+	return TRUE;
 }
 #endif

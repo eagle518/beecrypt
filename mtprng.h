@@ -26,7 +26,7 @@
 #ifndef _MTPRNG_H
 #define _MTPRNG_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 #ifdef _REENTRANT
 # if WIN32
@@ -44,11 +44,7 @@
 typedef struct
 {
 	#ifdef _REENTRANT
-	# if WIN32
-	HANDLE		lock;
-	# else
-	bc_lock_t	lock;
-	# endif
+	bc_mutex_t	lock;
 	#endif
 	uint32_t	state[N+1];
 	uint32_t	left;

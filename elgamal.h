@@ -38,7 +38,7 @@
 #ifndef _ELGAMAL_H
 #define _ELGAMAL_H
 
-#include "mpbarrett.h"
+#include "beecrypt/mpbarrett.h"
 
 #ifdef __cplusplus
 extern "C" {

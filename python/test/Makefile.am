@@ -2,9 +2,6 @@
 
 AUTOMAKE_OPTIONS = 1.4 foreign
 
-PYVER= 2.2
-
-pylibdir = $(shell python -c 'import sys; print sys.path[1]')
 VALGRIND = # valgrind --verbose --leak-check=yes
 
 EXTRA_DIST = \

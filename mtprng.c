@@ -38,7 +38,7 @@
 # include "config.h"
 #endif
 
-#include "mtprng.h"
+#include "beecrypt/mtprng.h"
 
 #define hiBit(a)		((a) & 0x80000000U)
 #define loBit(a)		((a) & 0x1U)

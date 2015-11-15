@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "blockmode.h"
+#include "beecrypt/blockmode.h"
 
 int blockEncryptECB(const blockCipher* bc, blockCipherParam* bp, uint32_t* dst, const uint32_t* src, unsigned int nblocks)
 {

@@ -28,8 +28,8 @@
 # include "config.h"
 #endif
 
-#include "elgamal.h"
-#include "dldp.h"
+#include "beecrypt/elgamal.h"
+#include "beecrypt/dldp.h"
 
 int elgv1sign(const mpbarrett* p, const mpbarrett* n, const mpnumber* g, randomGeneratorContext* rgc, const mpnumber* hm, const mpnumber* x, mpnumber* r, mpnumber* s)
 {

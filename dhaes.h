@@ -33,8 +33,8 @@
 #ifndef _DHAES_H
 #define _DHAES_H
  
-#include "beecrypt.h"
-#include "dldp.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/dldp.h"
 
 typedef struct
 {

@@ -29,8 +29,8 @@
 # include "config.h"
 #endif
 
-#include "blowfish.h"
-#include "endianness.h"
+#include "beecrypt/blowfish.h"
+#include "beecrypt/endianness.h"
 
 #ifdef ASM_BLOWFISHENCRYPTECB
 extern int blowfishEncryptECB(blowfishparam*, uint32_t*, const uint32_t*, unsigned int);

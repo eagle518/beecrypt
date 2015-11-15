@@ -26,7 +26,7 @@
 #ifndef _DLDP_H
 #define _DLDP_H
 
-#include "mpbarrett.h"
+#include "beecrypt/mpbarrett.h"
 
 /*
  * Discrete Logarithm Domain Parameters - Prime
@@ -50,7 +50,11 @@
  *
  * \ingroup DL_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI dldp_p
+#else
+struct _dldp_p
+#endif
 {
 	/*!\var p
 	 * \brief The prime.
@@ -80,7 +84,16 @@ typedef struct
 	 * \f$n=p-1=qr\f$
 	 */
 	mpbarrett n;
-} dldp_p;
+#ifdef __cplusplus
+	dldp_p();
+	dldp_p(const dldp_p&);
+	~dldp_p();
+#endif
+};
+
+#ifndef __cplusplus
+typedef struct _dldp_p dldp_p;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,11 +115,16 @@ int dldp_pCopy(dldp_p*, const dldp_p*);
  */
 
 BEECRYPTAPI
-int dldp_pPrivate(const dldp_p*, randomGeneratorContext*, mpnumber*);
+int dldp_pPrivate  (const dldp_p*, randomGeneratorContext*, mpnumber*);
 BEECRYPTAPI
-int dldp_pPublic (const dldp_p*, const mpnumber*, mpnumber*);
+int dldp_pPrivate_s(const dldp_p*, randomGeneratorContext*, mpnumber*, size_t);
 BEECRYPTAPI
-int dldp_pPair   (const dldp_p*, randomGeneratorContext*, mpnumber*, mpnumber*);
+int dldp_pPublic   (const dldp_p*, const mpnumber*, mpnumber*);
+BEECRYPTAPI
+int dldp_pPair     (const dldp_p*, randomGeneratorContext*, mpnumber*, mpnumber*);
+BEECRYPTAPI
+int dldp_pPair_s   (const dldp_p*, randomGeneratorContext*, mpnumber*, mpnumber*, size_t);
+
 /*
  * Function for comparing domain parameters
  */

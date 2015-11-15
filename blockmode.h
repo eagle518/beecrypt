@@ -27,7 +27,7 @@
 #ifndef _BLOCKMODE_H
 #define _BLOCKMODE_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 #ifdef __cplusplus
 extern "C" {

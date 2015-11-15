@@ -33,7 +33,7 @@
 # include "config.h"
 #endif
 
-#include "hmacmd5.h"
+#include "beecrypt/hmacmd5.h"
 
 /*!\addtogroup HMAC_md5_m
  * \{

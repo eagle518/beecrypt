@@ -29,8 +29,8 @@
 # include "config.h"
 #endif
 
-#include "mp.h"
-#include "mpopt.h"
+#include "beecrypt/mp.h"
+#include "beecrypt/mpopt.h"
 
 #ifndef ASM_MPZERO
 void mpzero(size_t size, mpw* data)
@@ -1043,10 +1043,6 @@ size_t mprshiftlsz(size_t size, mpw* data)
 	if ((rbits == 0) && (zwords == 0))
 		return 0;
 
-	/* shouldn't happen, but let's test anyway */
-	if (size == 0)
-		return 0;
-
 	/* prepare right-shifting of data */
 	lbits = MP_WBITS - rbits;
 
@@ -1135,14 +1131,14 @@ void mpgcd_w(size_t size, const mpw* xdata, const mpw* ydata, mpw* result, mpw* 
 #ifndef ASM_MPEXTGCD_W
 /* needs workspace of (6*size+6) words */
 /* used to compute the modular inverse */
-int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ndata, mpw* result, mpw* wksp)
+int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ydata, mpw* result, mpw* wksp)
 {
 	/*
-	 * For computing a modular inverse, pass the modulus as ndata and the number
-	 * to be inverted as xdata.
+	 * For computing a modular inverse, pass the modulus as xdata and the number
+	 * to be inverted as ydata.
 	 *
 	 * Fact: if a element of Zn, then a is invertible if and only if gcd(a,n) = 1
-	 * Hence: if ndata is even, then x must be odd, otherwise the gcd(x,n) >= 2
+	 * Hence: if n is even, then a must be odd, otherwise the gcd(a,n) >= 2
 	 *
 	 * The calling routine must guarantee this condition.
 	 */
@@ -1157,8 +1153,8 @@ int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ndata, mpw* result, mpw
 	mpw* cdata = bdata+sizep;
 	mpw* ddata = cdata+sizep;
 
-	mpsetx(sizep, udata, size, ndata);
-	mpsetx(sizep, vdata, size, xdata);
+	mpsetx(sizep, udata, size, xdata);
+	mpsetx(sizep, vdata, size, ydata);
 	mpzero(sizep, bdata);
 	mpsetw(sizep, ddata, 1);
 
@@ -1176,8 +1172,8 @@ int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ndata, mpw* result, mpw
 
 			if (mpodd(sizep, bdata) || (full && mpodd(sizep, adata)))
 			{
-				if (full) mpaddx(sizep, adata, size, xdata);
-				mpsubx(sizep, bdata, size, ndata);
+				if (full) mpaddx(sizep, adata, size, ydata);
+				mpsubx(sizep, bdata, size, xdata);
 			}
 
 			if (full) mpsdivtwo(sizep, adata);
@@ -1189,8 +1185,8 @@ int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ndata, mpw* result, mpw
 
 			if (mpodd(sizep, ddata) || (full && mpodd(sizep, cdata)))
 			{
-				if (full) mpaddx(sizep, cdata, size, xdata);
-				mpsubx(sizep, ddata, size, ndata);
+				if (full) mpaddx(sizep, cdata, size, ydata);
+				mpsubx(sizep, ddata, size, xdata);
 			}
 
 			if (full) mpsdivtwo(sizep, cdata);
@@ -1217,8 +1213,16 @@ int mpextgcd_w(size_t size, const mpw* xdata, const mpw* ndata, mpw* result, mpw
 					if (*ddata & MP_MSBMASK)
 					{
 						/* keep adding the modulus until we get a carry */
-						while (!mpaddx(sizep, ddata, size, ndata));
+						while (!mpaddx(sizep, ddata, size, xdata));
 					} 
+					else
+					{
+						/* in some computations, d ends up > x, hence:
+						 * keep subtracting n from d until d < x
+						 */
+						while (mpgtx(sizep, ddata, size, xdata))
+							mpsubx(sizep, ddata, size, xdata);
+					}
 					mpsetx(size, result, sizep, ddata);
 				}
 				return 1; 
@@ -1400,34 +1404,40 @@ void mpfprintln(FILE* f, size_t size, const mpw* data)
 
 int i2osp(byte *osdata, size_t ossize, const mpw* idata, size_t isize)
 {
-	size_t required = MP_WORDS_TO_BYTES(isize);
+	#if WORDS_BIGENDIAN
+	size_t max_bytes = MP_WORDS_TO_BYTES(isize);
+	#endif
+	size_t significant_bytes = (mpbits(isize, idata) + 7) >> 3;
 
-	/* check if size is large enough */
-	if (ossize >= required)
+	/* verify that ossize is large enough to contain the significant bytes */
+	if (ossize >= significant_bytes)
 	{
-		/* yes, we can proceed */
-		if (ossize > required)
-		{	/* fill initial bytes with zero */
-			memset(osdata, 0, ossize-required);
-			osdata += ossize-required;
+		/* looking good; check if we have more space than significant bytes */
+		if (ossize > significant_bytes)
+		{	/* fill most significant bytes with zero */
+			memset(osdata, 0, ossize - significant_bytes);
+			osdata += ossize - significant_bytes;
 		}
-		if (required)
+		if (significant_bytes)
 		{	/* fill remaining bytes with endian-adjusted data */
 			#if !WORDS_BIGENDIAN
-			while (required)
-			{
-				mpw w = *(idata++);
-				byte shift = MP_WBITS;
+			mpw w = idata[--isize];
+			byte shift = 0;
 
-				while (shift)
+			/* fill right-to-left; much easier than left-to-right */
+			do	
+			{
+				osdata[--significant_bytes] = (byte)(w >> shift);
+				shift += 8;
+				if (shift == MP_WBITS)
 				{
-					shift -= 8;
-					*(osdata++) = (byte)(w >> shift);
+					shift = 0;
+					w = idata[--isize];
 				}
-				required -= MP_WBYTES;
-			}
+			} while (significant_bytes);
 			#else
-			memcpy(osdata, idata, required);
+			/* just copy data past zero bytes */
+			memcpy(osdata, ((byte*) idata) + (max_bytes - significant_bytes), significant_bytes);
 			#endif
 		}
 		return 0;
@@ -1437,36 +1447,49 @@ int i2osp(byte *osdata, size_t ossize, const mpw* idata, size_t isize)
 
 int os2ip(mpw* idata, size_t isize, const byte* osdata, size_t ossize)
 {
-	size_t required = MP_BYTES_TO_WORDS(isize + MP_WBYTES - 1);
+	size_t required;
+
+	/* skip non-significant leading zero bytes */
+	while (!(*osdata) && ossize)
+	{
+		osdata++;
+		ossize--;
+	}
+
+	required = MP_BYTES_TO_WORDS(ossize + MP_WBYTES - 1);
 
 	if (isize >= required)
 	{
-		/* yes, we can proceed */
+		/* yes, we have enough space and can proceed */
+		mpw w = 0;
+		/* adjust counter so that the loop will start by skipping the proper
+		 * amount of leading bytes in the first significant word
+		 */
+		byte b = (ossize % MP_WBYTES);
+
 		if (isize > required)
 		{	/* fill initials words with zero */
 			mpzero(isize-required, idata);
 			idata += isize-required;
 		}
-		if (required)
-		{	/* fill remaining words with endian-adjusted data */
-			#if !WORDS_BIGENDIAN
-			while (required)
-			{
-				mpw w = 0;
-				byte b = MP_WBYTES;
 
-				while (b--)
-				{
-					w <<= 8;
-					w |= *(osdata++);
-				}
+		if (b == 0)
+			b = MP_WBYTES;
+
+		while (ossize--)
+		{
+			w <<= 8;
+			w |= *(osdata++);
+			b--;
+
+			if (b == 0)
+			{
 				*(idata++) = w;
-				required--;
+				w = 0;
+				b = MP_WBYTES;
 			}
-			#else
-			memcpy(idata, osdata, MP_WORDS_TO_BYTES(required));
-			#endif
 		}
+
 		return 0;
 	}
 	return -1;

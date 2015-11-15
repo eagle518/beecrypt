@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "hmacsha256.h"
+#include "beecrypt/hmacsha256.h"
 
 /*!\addtogroup HMAC_sha256_m
  * \{

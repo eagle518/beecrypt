@@ -26,7 +26,7 @@
 #ifndef _HMAC_H
 #define _HMAC_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 /*!\ingroup HMAC_m
  */

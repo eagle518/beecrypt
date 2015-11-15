@@ -26,7 +26,7 @@
 #ifndef _ENTROPY_H
 #define _ENTROPY_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 #if WIN32
 #include <Windows.h>

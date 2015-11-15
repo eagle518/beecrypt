@@ -28,8 +28,8 @@
 # include "config.h"
 #endif
 
-#include "dsa.h"
-#include "dldp.h"
+#include "beecrypt/dsa.h"
+#include "beecrypt/dldp.h"
 
 int dsasign(const mpbarrett* p, const mpbarrett* q, const mpnumber* g, randomGeneratorContext* rgc, const mpnumber* hm, const mpnumber* x, mpnumber* r, mpnumber* s)
 {
@@ -135,7 +135,7 @@ int dsavrfy(const mpbarrett* p, const mpbarrett* q, const mpnumber* g, const mpn
 	mpsetx(qsize, qtemp+qsize, s->size, s->data);
 
 	/* compute w = inv(s) mod q */
-	if (mpextgcd_w(qsize, qtemp+qsize, q->modl, qtemp, qwksp))
+	if (mpextgcd_w(qsize, q->modl, qtemp+qsize, qtemp, qwksp))
 	{
 		/* compute u1 = h(m)*w mod q */
 		mpbmulmod_w(q, hm->size, hm->data, qsize, qtemp, qtemp+qsize, qwksp);
@@ -162,4 +162,17 @@ int dsavrfy(const mpbarrett* p, const mpbarrett* q, const mpnumber* g, const mpn
 	free(ptemp);
 
 	return rc;
+}
+
+int dsaparamMake(dsaparam* dp, randomGeneratorContext* rgc, size_t psize)
+{
+	/* psize must be >= 512 and <= 1024 */
+	if ((psize < 512) || (psize > 1024))
+		return -1;
+
+	/* psize must be a multiple of 64 */
+	if ((psize & 0x3f) != 0)
+		return -1;
+
+	return dldp_pgoqMake(dp, rgc, psize, 160, 1);
 }

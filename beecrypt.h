@@ -30,10 +30,10 @@
 #ifndef _BEECRYPT_H
 #define _BEECRYPT_H
 
-#include "beecrypt.api.h"
+#include "beecrypt/api.h"
 
-#include "memchunk.h"
-#include "mpnumber.h"
+#include "beecrypt/memchunk.h"
+#include "beecrypt/mpnumber.h"
 
 /*
  * Entropy Sources
@@ -49,7 +49,11 @@ typedef int (*entropyNext)(byte*, size_t);
  *  source of entropy.
  * \ingroup ES_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI entropySource
+#else
+struct _entropySource
+#endif
 {
 	/*!\var name
 	 * \brief The entropy source's name.
@@ -59,7 +63,11 @@ typedef struct
 	 * \brief Points to the function which produces the entropy.
 	 */
 	const entropyNext	next;
-} entropySource;
+};
+
+#ifndef __cplusplus
+typedef struct _entropySource entropySource;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -149,7 +157,11 @@ typedef int (*randomGeneratorCleanup)(randomGeneratorParam*);
  *  pseudo-random number generator.
  * \ingroup PRNG_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI randomGenerator
+#else
+struct _randomGenerator
+#endif
 {
 	/*!\var name
 	 * \brief The random generator's name.
@@ -177,7 +189,11 @@ typedef struct
 	 * \brief Points to the cleanup function.
 	 */
 	const randomGeneratorCleanup	cleanup;
-} randomGenerator;
+};
+
+#ifndef __cplusplus
+typedef struct _randomGenerator randomGenerator;
+#endif
 
 /*
  * You can use the following functions to find random generators implemented by
@@ -215,11 +231,25 @@ const randomGenerator*	randomGeneratorDefault(void);
  * part (the randomGenerator), and its parameters.
  */
 
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI randomGeneratorContext
+#else
+struct _randomGeneratorContext
+#endif
 {
 	const randomGenerator* rng;
 	randomGeneratorParam* param;
-} randomGeneratorContext;
+
+	#ifdef __cplusplus
+	randomGeneratorContext();
+	randomGeneratorContext(const randomGenerator*);
+	~randomGeneratorContext();
+	#endif
+};
+
+#ifndef __cplusplus
+typedef struct _randomGeneratorContext randomGeneratorContext;
+#endif
 
 /*
  * The following functions can be used to initialize and free a
@@ -237,6 +267,8 @@ BEECRYPTAPI
 int randomGeneratorContextFree(randomGeneratorContext*);
 BEECRYPTAPI
 int randomGeneratorContextNext(randomGeneratorContext*, byte*, size_t);
+BEECRYPTAPI
+int randomGeneratorContextSeed(randomGeneratorContext*, const byte*, size_t);
 
 #ifdef __cplusplus
 }
@@ -265,8 +297,11 @@ typedef int (*hashFunctionDigest)(hashFunctionParam*, byte*);
  * NOTE: for safety reasons, after calling digest, each specific implementation
  * MUST reset itself so that previous values in the parameters are erased.
  */
-
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI hashFunction
+#else
+struct _hashFunction
+#endif
 {
 	const char*					name;
 	const size_t				paramsize;	/* in bytes */
@@ -275,7 +310,11 @@ typedef struct
 	const hashFunctionReset		reset;
 	const hashFunctionUpdate	update;
 	const hashFunctionDigest	digest;
-} hashFunction;
+};
+
+#ifndef __cplusplus
+typedef struct _hashFunction hashFunction;
+#endif
 
 /*
  * You can use the following functions to find hash functions implemented by
@@ -312,12 +351,25 @@ const hashFunction*	hashFunctionDefault(void);
  * The struct 'hashFunctionContext' is used to contain both the functional
  * part (the hashFunction), and its parameters.
  */
-
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI hashFunctionContext
+#else
+struct _hashFunctionContext
+#endif
 {
 	const hashFunction* algo;
 	hashFunctionParam* param;
-} hashFunctionContext;
+
+	#ifdef __cplusplus
+	hashFunctionContext();
+	hashFunctionContext(const hashFunction*);
+	~hashFunctionContext();
+	#endif
+};
+
+#ifndef __cplusplus
+typedef struct _hashFunctionContext hashFunctionContext;
+#endif
 
 /*
  * The following functions can be used to initialize and free a
@@ -380,8 +432,11 @@ typedef int (*keyedHashFunctionDigest )(keyedHashFunctionParam*, byte*);
  * NOTE: for safety reasons, after calling digest, each specific implementation
  * MUST reset itself so that previous values in the parameters are erased.
  */
-
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI keyedHashFunction
+#else
+struct _keyedHashFunction
+#endif
 {
 	const char*						name;
 	const size_t					paramsize;	/* in bytes */
@@ -394,7 +449,11 @@ typedef struct
 	const keyedHashFunctionReset	reset;
 	const keyedHashFunctionUpdate	update;
 	const keyedHashFunctionDigest	digest;
-} keyedHashFunction;
+};
+
+#ifndef __cplusplus
+typedef struct _keyedHashFunction keyedHashFunction;
+#endif
 
 /*
  * You can use the following functions to find keyed hash functions implemented
@@ -431,12 +490,25 @@ const keyedHashFunction*	keyedHashFunctionDefault(void);
  * The struct 'keyedHashFunctionContext' is used to contain both the functional
  * part (the keyedHashFunction), and its parameters.
  */
-
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI keyedHashFunctionContext
+#else
+struct _keyedHashFunctionContext
+#endif
 {
 	const keyedHashFunction*	algo;
 	keyedHashFunctionParam*		param;
-} keyedHashFunctionContext;
+
+	#ifdef __cplusplus
+	keyedHashFunctionContext();
+	keyedHashFunctionContext(const keyedHashFunction*);
+	~keyedHashFunctionContext();
+	#endif
+};
+
+#ifndef __cplusplus
+typedef struct _keyedHashFunctionContext keyedHashFunctionContext;
+#endif
 
 /*
  * The following functions can be used to initialize and free a
@@ -555,7 +627,11 @@ typedef struct
  *
  * \ingroup BC_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI blockCipher
+#else
+struct _blockCipher
+#endif
 {
 	/*!\var name
 	 * \brief The blockcipher's name.
@@ -603,7 +679,12 @@ typedef struct
 	 * \brief Pointer to the cipher's feedback-returning function.
 	 */
 	const blockCipherFeedback		getfb;
-} blockCipher;
+};
+
+#ifndef __cplusplus
+typedef struct _blockCipher blockCipher;
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -652,7 +733,11 @@ const blockCipher*		blockCipherDefault(void);
  * \warning A context can be used by only one thread at the same time.
  * \ingroup BC_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI blockCipherContext
+#else
+struct _blockCipherContext
+#endif
 {
 	/*!\var algo
 	 * \brief Pointer to a blockCipher.
@@ -665,7 +750,17 @@ typedef struct
 	/*!\var op
 	 */
 	cipherOperation		op;
-} blockCipherContext;
+
+	#ifdef __cplusplus
+	blockCipherContext();
+	blockCipherContext(const blockCipher*);
+	~blockCipherContext();
+	#endif
+};
+
+#ifndef __cplusplus
+typedef struct _blockCipherContext blockCipherContext;
+#endif
 
 /*
  * The following functions can be used to initialize and free a

@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "fips186.h"
+#include "beecrypt/fips186.h"
 
 /*!\addtogroup PRNG_fips186_m
  * \{

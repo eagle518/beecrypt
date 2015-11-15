@@ -33,13 +33,13 @@
 # include "config.h"
 #endif
 
-#include "dlsvdp-dh.h"
+#include "beecrypt/dlsvdp-dh.h"
 
 /*!\addtogroup DL_dh_m
  * \{
  */
 
-/*!\fn dlsvdp_pDHSecret(const dldp_p* dp, const mpnumber* x, const mpnumber* y, mpnumber* s)
+/*!\fn dlsvdp_pDHSecret(const dhparam* dp, const mpnumber* x, const mpnumber* y, mpnumber* s)
  * \brief Computes the shared secret.
  *
  * Equation:
@@ -54,7 +54,7 @@
  * \retval 0 on success.
  * \retval -1 on failure.
  */
-int dlsvdp_pDHSecret(const dldp_p* dp, const mpnumber* x, const mpnumber* y, mpnumber* s)
+int dlsvdp_pDHSecret(const dhparam* dp, const mpnumber* x, const mpnumber* y, mpnumber* s)
 {
 	mpbnpowmod(&dp->p, y, x, s);
 

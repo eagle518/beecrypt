@@ -32,7 +32,7 @@
 #ifndef _DSA_H
 #define _DSA_H
 
-#include "dlkp.h"
+#include "beecrypt/dlkp.h"
 
 typedef dldp_p dsaparam;
 typedef dlpk_p dsapub;
@@ -87,6 +87,21 @@ int dsasign(const mpbarrett* p, const mpbarrett* q, const mpnumber* g, randomGen
  */
 BEECRYPTAPI
 int dsavrfy(const mpbarrett* p, const mpbarrett* q, const mpnumber* g, const mpnumber* hm, const mpnumber* y, const mpnumber* r, const mpnumber* s);
+
+/*!\fn int dsaparamMake(dsaparam* dp, randomGeneratorContext* rgc, size_t psize)
+ * \brief This function generates a set of DSA parameters.
+ *
+ * This function calls dldp_pgoqMake with appropriate parameters, i.e.
+ * qsize  = 160 bits and cofactor = 1.
+ *
+ * \param dp The parameters to be generated.
+ * \param rgc The random generator context.
+ * \param psize The size of prime parameter p; psize must be >= 512 and <= 1024, and be a multiple of 64.
+ * \retval 0 on success.
+ * \retval -1 on failure.
+ */
+BEECRYPTAPI
+int dsaparamMake(dsaparam*, randomGeneratorContext*, size_t);
 
 #ifdef __cplusplus
 }

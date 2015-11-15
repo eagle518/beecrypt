@@ -25,7 +25,7 @@
 #ifndef _BASE64_H
 #define _BASE64_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 /*!\
  * Decode white space character set (default).

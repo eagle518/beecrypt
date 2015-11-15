@@ -35,7 +35,7 @@ struct vector
 	const char* inv_k;
 };
 
-#define NVECTORS	4
+#define NVECTORS	5
 
 struct vector table[NVECTORS] = {
 	{	"c773218c737ec8ee993b4f2ded30f48edace915f",
@@ -49,7 +49,11 @@ struct vector table[NVECTORS] = {
 		"e90aa0a992ebd4c9176f0e20a885101218111a73" },
 	{	"fe95df16069b516859ba036ef0e563a7b6a86409",
 		"759ea04b65f66184af22fcabfe99a1cda3a79236",
-		"2c701a52078afe539a281cba7f35df34a7a125a4" }
+		"2c701a52078afe539a281cba7f35df34a7a125a4" },
+	{	"80277b4855a39cb9a98b2107cc1efb29f1832f727df05931cdd4a64cd78363134bf2abe78723784d2013a26875afe13f04526399c6b0cee659abb60dc8263400",
+		"10001",
+		"6e5f92b24defc7ffafa20024b30ccbcce810d0408f6efda3035f6e8b27e224e66db6e78f54b89bd7f11477fff7bc2f071335d24a92f19c8090226f7d97303001" }
+
 };
 
 int main()

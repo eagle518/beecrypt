@@ -26,8 +26,8 @@
 #ifndef _AESOPT_H
 #define _AESOPT_H
 
-#include "beecrypt.h"
-#include "aes.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/aes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,10 +53,12 @@ extern "C" {
 
 #if defined(__INTEL_COMPILER)
 # if defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686)
+#  if defined(OPTIMIZE_MMX)
 #   define ASM_AESENCRYPT
 #   define ASM_AESENCRYPTECB
 #   define ASM_AESDECRYPT
 #   define ASM_AESDECRYPTECB
+# endif
 # endif
 #endif
 

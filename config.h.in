@@ -3,6 +3,9 @@
 /* Define to 1 if you are using AIX */
 #undef AIX
 
+/* Define to 1 if you want to include the C++ code */
+#undef CPPGLUE
+
 /* Define to 1 if you are using Cygwin */
 #undef CYGWIN
 
@@ -51,7 +54,7 @@
 /* Define to 1 if you have the `gethrtime' function. */
 #undef HAVE_GETHRTIME
 
-/* Define to 1 if you have the `gettimeofday' function. */
+/* . */
 #undef HAVE_GETTIMEOFDAY
 
 /* */
@@ -197,6 +200,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Define to 1 if you want to include the Python code */
+#undef PYTHONGLUE
+
 /* Define to 1 if you are using QNX */
 #undef QNX
 
@@ -247,9 +253,9 @@
 
 
 #ifndef WIN32
-#undef WIN32
+ #undef WIN32
 #endif
-
+    
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -265,9 +271,11 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
-/* Define as `__inline' if that's what the C compiler calls it, or to nothing
-   if it is not supported. */
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
 #undef inline
+#endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t

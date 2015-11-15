@@ -28,8 +28,8 @@
 # include "config.h"
 #endif
 
-#include "base64.h"
-#include "endianness.h"
+#include "beecrypt/base64.h"
+#include "beecrypt/endianness.h"
 
 #if HAVE_CTYPE_H
 # include <ctype.h>

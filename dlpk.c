@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "dlpk.h"
+#include "beecrypt/dlpk.h"
 
 /*!\addtogroup DL_m
  * \{

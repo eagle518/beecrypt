@@ -33,8 +33,8 @@
 # include "config.h"
 #endif
 
-#include "hmac.h"
-#include "endianness.h"
+#include "beecrypt/hmac.h"
+#include "beecrypt/endianness.h"
 
 /*!\addtogroup HMAC_m
  * \{

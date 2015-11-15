@@ -28,7 +28,7 @@
 # include "config.h"
 #endif
 
-#include "timestamp.h"
+#include "beecrypt/timestamp.h"
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>

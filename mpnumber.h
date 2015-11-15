@@ -26,13 +26,47 @@
 #ifndef _MPNUMBER_H
 #define _MPNUMBER_H
 
-#include "mp.h"
+#include "beecrypt/mp.h"
 
-typedef struct
+#ifdef __cplusplus
+# include <iostream>
+#endif
+
+#ifdef __cplusplus
+struct BEECRYPTAPI mpnumber
+#else
+struct _mpnumber
+#endif
 {
 	size_t	size;
 	mpw*	data;
-} mpnumber;
+
+#ifdef __cplusplus
+	mpnumber();
+	mpnumber(unsigned int);
+	mpnumber(const mpnumber&);
+	~mpnumber();
+
+	const mpnumber& operator=(const mpnumber&);
+	bool operator==(const mpnumber&);
+	bool operator!=(const mpnumber&);
+
+	void wipe();
+
+	size_t bitlength() const;
+#endif
+};
+
+#ifndef __cplusplus
+typedef struct _mpnumber mpnumber;
+#else
+BEECRYPTAPI
+std::ostream& operator<<(std::ostream&, const mpnumber&);
+/*
+BEECRYPTAPI
+std::istream& operator>>(std::istream&, mpnumber&);
+*/
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,11 +89,21 @@ BEECRYPTAPI
 void mpnset   (mpnumber*, size_t, const mpw*);
 BEECRYPTAPI
 void mpnsetw  (mpnumber*, mpw);
+
 BEECRYPTAPI
-void mpnsethex(mpnumber*, const char*);
+int mpnsetbin(mpnumber*, const byte*, size_t);
+BEECRYPTAPI
+int mpnsethex(mpnumber*, const char*);
 
 BEECRYPTAPI
 int  mpninv(mpnumber*, const mpnumber*, const mpnumber*);
+
+/*!\brief Truncate the mpnumber to the specified number of (least significant) bits.
+ */
+BEECRYPTAPI
+size_t mpntrbits(mpnumber*, size_t);
+BEECRYPTAPI
+size_t mpnbits(const mpnumber*);
 
 #ifdef __cplusplus
 }

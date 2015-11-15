@@ -26,15 +26,28 @@
 #ifndef _DLPK_H
 #define _DLPK_H
 
-#include "dldp.h"
+#include "beecrypt/dldp.h"
 
 /*!\ingroup DL_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI dlpk_p
+#else
+struct _dlpk_p
+#endif
 {
 	dldp_p param;
 	mpnumber y;
-} dlpk_p;
+#ifdef __cplusplus
+	dlpk_p();
+	dlpk_p(const dlpk_p&);
+	~dlpk_p();
+#endif
+};
+
+#ifndef __cplusplus
+typedef struct _dlpk_p dlpk_p;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

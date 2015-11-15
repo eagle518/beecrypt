@@ -26,15 +26,43 @@
 #ifndef _MPBARRETT_H
 #define _MPBARRETT_H
 
-#include "beecrypt.h"
-#include "mpnumber.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/mpnumber.h"
 
-typedef struct
+#ifdef __cplusplus
+# include <iostream>
+#endif
+
+#ifdef __cplusplus
+struct BEECRYPTAPI mpbarrett
+#else
+struct _mpbarrett
+#endif
 {
 	size_t	size;
 	mpw*	modl;	/* (size) words */
 	mpw*	mu;		/* (size+1) words */
-} mpbarrett;
+
+#ifdef __cplusplus
+	mpbarrett();
+	mpbarrett(const mpbarrett&);
+	~mpbarrett();
+																				
+	const mpbarrett& operator=(const mpbarrett&);
+	bool operator==(const mpbarrett&);
+	bool operator!=(const mpbarrett&);
+																				
+	void wipe();
+	size_t bitlength() const;
+#endif
+};
+
+#ifndef __cplusplus
+typedef struct _mpbarrett mpbarrett;
+#else
+BEECRYPTAPI
+std::ostream& operator<<(std::ostream&, const mpbarrett&);
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,8 +81,11 @@ void mpbwipe(mpbarrett*);
 
 BEECRYPTAPI
 void mpbset(mpbarrett*, size_t, const mpw*);
+
 BEECRYPTAPI
-void mpbsethex(mpbarrett*, const char*);
+int mpbsetbin(mpbarrett*, const byte*, size_t);
+BEECRYPTAPI
+int mpbsethex(mpbarrett*, const char*);
 
 BEECRYPTAPI
 void mpbsubone(const mpbarrett*, mpw*);
@@ -114,6 +145,9 @@ BEECRYPTAPI
 void mpbnpowmod   (const mpbarrett*, const mpnumber*, const mpnumber*, mpnumber*);
 BEECRYPTAPI
 void mpbnpowmodsld(const mpbarrett*, const mpw*, const mpnumber*, mpnumber*);
+
+BEECRYPTAPI
+size_t mpbbits(const mpbarrett*);
 
 #ifdef __cplusplus
 }

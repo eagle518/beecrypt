@@ -41,8 +41,8 @@
 #ifndef _MP_H
 #define _MP_H
 
-#include "beecrypt.api.h"
-#include "mpopt.h"
+#include "beecrypt/api.h"
+#include "beecrypt/mpopt.h"
 
 #define MP_HWBITS	(MP_WBITS >> 1)
 #define MP_WBYTES	(MP_WBITS >> 3)
@@ -407,14 +407,35 @@ void mpclrmsb(size_t size, mpw* data);
 BEECRYPTAPI
 void mpclrlsb(size_t size, mpw* data);
 
+/*!\fn mpand(size_t size, mpw* xdata, const mpw* ydata)
+ * \brief This function computes the bit-wise AND of two multi-precision
+ *  integers. Modifies xdata.
+ * \param size The size of the multi-precision integers.
+ * \param xdata The multi-precision integer data.
+ * \param ydata The multi-precision integer data.
+ */
 BEECRYPTAPI
-void mpand(size_t, mpw*, const mpw*);
+void mpand(size_t size, mpw* xdata, const mpw* ydata);
 
+/*!\fn void mpor(size_t size, mpw* xdata, const mpw* ydata) 
+ * \brief This function computes the bit-wise OR of two multi-precision
+ *  integers. Modifies xdata.
+ * \param size The size of the multi-precision integer.
+ * \param xdata The multi-precision integer data.
+ * \param ydata The multi-precision integer data.
+ */
 BEECRYPTAPI
-void mpor(size_t, mpw*, const mpw*);
+void mpor(size_t size, mpw* xdata, const mpw* ydata);
 
+/*!\fn void mpxor(size_t size, mpw* xdata, const mpw* ydata) 
+ * \brief This function computes the bit-wise XOR of two multi-precision
+ *  integers. Modifies xdata.
+ * \param size The size of the multi-precision integer.
+ * \param xdata The multi-precision integer data.
+ * \param ydata The multi-precision integer data.
+ */
 BEECRYPTAPI
-void mpxor(size_t, mpw*, const mpw*);
+void mpxor(size_t size, mpw* xdata, const mpw* ydata);
 
 /*!\fn mpnot(size_t size, mpw* data)
  * \brief This function flips all bits of a multi-precision integer.
@@ -502,7 +523,7 @@ int mpsubw(size_t size, mpw* xdata, mpw y);
 BEECRYPTAPI
 int mpsub (size_t size, mpw* xdata, const mpw* ydata);
 
-/*!\fn int mpaddx(size_t xsize, mpw* xdata, size_t ysize, const mpw* ydata)
+/*!\fn int mpsubx(size_t xsize, mpw* xdata, size_t ysize, const mpw* ydata)
  * \brief This function subtracts two multi-precision integers of different
  *  size. The performed operation in pseudocode: x -= y.
  * \param xsize The size of the first multi-precision integer.
@@ -517,12 +538,29 @@ int mpsubx(size_t xsize, mpw* xdata, size_t ysize, const mpw* ydata);
 BEECRYPTAPI
 int mpmultwo(size_t size, mpw* data);
 
+/*!\fn void mpneg(size_t size, mpw* data)
+ * \brief This function negates a multi-precision integer.
+ * \param size The size of the multi-precision integer.
+ * \param data The multi-precision integer data.
+ */
 BEECRYPTAPI
 void mpneg(size_t size, mpw* data);
 
+/*!\fn size_t mpsize(size_t size, const mpw* data)
+ * \brief This function returns the true size of a multi-precision
+ *  integer, after stripping leading zero words.
+ * \param size The size of the multi-precision integer.
+ * \param data The multi-precision integer data.
+ */
 BEECRYPTAPI
 size_t mpsize(size_t size, const mpw* data);
 
+/*!\fn size_t mpbits(size_t size, const mpw* data)
+ * \brief This function returns the number of significant bits
+ *  in a multi-precision integer.
+ * \param size The size of the multi-precision integer.
+ * \param data The multi-precision integer data.
+ */
 BEECRYPTAPI
 size_t mpbits(size_t size, const mpw* data);
 
@@ -588,35 +626,34 @@ mpw mpaddmul   (size_t size, mpw* result, const mpw* data, mpw y);
  * squaring.
  */
 BEECRYPTAPI
-void mpaddsqrtrc(size_t, mpw*, const mpw*);
+void mpaddsqrtrc(size_t size, mpw* result, const mpw* data);
 
 /*!\fn void mpmul(mpw* result, size_t xsize, const mpw* xdata, size_t ysize, const mpw* ydata)
  * \brief This function computes a full multi-precision product.
  */
 BEECRYPTAPI
-void mpmul(mpw*, size_t, const mpw*, size_t, const mpw*);
+void mpmul(mpw* result, size_t xsize, const mpw* xdata, size_t ysize, const mpw* ydata);
+
 /*!\fn void mpsqr(mpw* result, size_t size, const mpw* data)
  * \brief This function computes a full multi-precision square.
  */
 BEECRYPTAPI
-void mpsqr(mpw*, size_t, const mpw*);
+void mpsqr(mpw* result, size_t size, const mpw* data);
 
 BEECRYPTAPI
-void mpgcd_w(size_t, const mpw*, const mpw*, mpw*, mpw*);
-BEECRYPTAPI
-int  mpextgcd_w(size_t, const mpw*, const mpw*, mpw*, mpw*);
+void mpgcd_w(size_t size, const mpw* xdata, const mpw* ydata, mpw* result, mpw* wksp);
 
 BEECRYPTAPI
-mpw mppndiv(mpw, mpw, mpw);
+int  mpextgcd_w(size_t size, const mpw* xdata, const mpw* ydata, mpw* result, mpw* wksp);
 
 BEECRYPTAPI
-void mpnmod(mpw*, size_t, const mpw*, size_t, const mpw*, mpw*);
+mpw mppndiv(mpw xhi, mpw xlo, mpw y);
 
 BEECRYPTAPI
-void mpmod (mpw*, size_t, const mpw*, size_t, const mpw*, mpw*);
+void mpmod (mpw* result, size_t xsize, const mpw* xdata, size_t ysize, const mpw*ydata, mpw* wksp);
 
 BEECRYPTAPI
-void mpndivmod(mpw*, size_t, const mpw*, size_t, const mpw*, mpw*);
+void mpndivmod(mpw* result, size_t xsize, const mpw* xdata, size_t ysize, const mpw* ydata, mpw* wksp);
 
 /*
  * Output Routines
@@ -639,13 +676,13 @@ void mpfprintln(FILE* f, size_t size, const mpw* data);
  */
 
 BEECRYPTAPI
-int os2ip(mpw*, size_t, const byte*, size_t);
+int os2ip(mpw* idata, size_t isize, const byte* osdata, size_t ossize);
 
 BEECRYPTAPI
-int i2osp(byte*, size_t, const mpw*, size_t);
+int i2osp(byte* osdata, size_t ossize, const mpw* idata, size_t isize);
 
 BEECRYPTAPI
-int hs2ip(mpw*, size_t, const char*, size_t);
+int hs2ip(mpw* idata, size_t isize, const char* hsdata, size_t hssize);
 
 #ifdef __cplusplus
 }

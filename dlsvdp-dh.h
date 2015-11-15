@@ -26,14 +26,18 @@
 #ifndef _DLSVDP_DH_H
 #define _DLSVDP_DH_H
 
-#include "dldp.h"
+#include "beecrypt/dldp.h"
+#include "beecrypt/dlkp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef dldp_p dhparam;
+typedef dlkp_p dhkp;
+
 BEECRYPTAPI
-int dlsvdp_pDHSecret(const dldp_p*, const mpnumber*, const mpnumber*, mpnumber*);
+int dlsvdp_pDHSecret(const dhparam*, const mpnumber*, const mpnumber*, mpnumber*);
 
 #ifdef __cplusplus
 }

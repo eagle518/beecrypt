@@ -29,7 +29,7 @@
 # include "config.h"
 #endif
 
-#include "rsapk.h"
+#include "beecrypt/rsapk.h"
 
 /*!\addtogroup IF_rsa_m
  * \{

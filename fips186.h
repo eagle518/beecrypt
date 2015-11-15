@@ -26,7 +26,7 @@
 #ifndef _FIPS186_H
 #define _FIPS186_H
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 #ifdef _REENTRANT
 # if WIN32
@@ -51,14 +51,10 @@
 typedef struct
 {
 	#ifdef _REENTRANT
-	# if WIN32
-	HANDLE			lock;
-	# else
-	bc_lock_t		lock;
-	# endif
+	bc_mutex_t		lock;
 	#endif
 	sha1Param		param;
-	mpw				state[FIPS186_STATE_SIZE];
+	mpw			state[FIPS186_STATE_SIZE];
 	byte			digest[20];
 	unsigned char	digestremain;
 } fips186Param;

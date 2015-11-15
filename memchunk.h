@@ -23,7 +23,7 @@
 #ifndef _MEMCHUNK_H
 #define _MEMCHUNK_H
 
-#include "beecrypt.api.h"
+#include "beecrypt/api.h"
 
 typedef struct
 {
@@ -37,6 +37,8 @@ extern "C" {
 
 BEECRYPTAPI
 memchunk*	memchunkAlloc(size_t);
+BEECRYPTAPI
+void		memchunkWipe(memchunk*);
 BEECRYPTAPI
 void		memchunkFree(memchunk*);
 BEECRYPTAPI

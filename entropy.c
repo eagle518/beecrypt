@@ -28,8 +28,8 @@
 # include "config.h"
 #endif
 
-#include "entropy.h"
-#include "endianness.h"
+#include "beecrypt/entropy.h"
+#include "beecrypt/endianness.h"
 
 #if WIN32
 # include <mmsystem.h>

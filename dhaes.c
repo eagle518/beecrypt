@@ -29,10 +29,10 @@
 # include "config.h"
 #endif
 
-#include "dhaes.h"
-#include "dlsvdp-dh.h"
-#include "blockmode.h"
-#include "blockpad.h"
+#include "beecrypt/dhaes.h"
+#include "beecrypt/dlsvdp-dh.h"
+#include "beecrypt/blockmode.h"
+#include "beecrypt/blockpad.h"
 
 /*
  * Good combinations will be:
