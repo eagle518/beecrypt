@@ -27,19 +27,24 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
+
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI SecureRandomSpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI SecureRandomSpi : public beecrypt::lang::Object
 		{
 			friend class SecureRandom;
 
-			protected:
-				virtual void engineGenerateSeed(byte*, size_t) = 0;
-				virtual void engineNextBytes(byte*, size_t) = 0;
-				virtual void engineSetSeed(const byte*, size_t) = 0;
+		protected:
+			virtual void engineGenerateSeed(byte*, size_t) = 0;
+			virtual void engineNextBytes(byte*, size_t) = 0;
+			virtual void engineSetSeed(const byte*, size_t) = 0;
 
-			public:
-				virtual ~SecureRandomSpi() {};
+		public:
+			virtual ~SecureRandomSpi() {};
 		};
 	}
 }

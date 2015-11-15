@@ -1,11 +1,10 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([beecrypt],[4.0.0],[bob.deblier@telenet.be])
+AC_INIT([beecrypt],[4.1.1],[bob.deblier@telenet.be])
 AM_INIT_AUTOMAKE
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR(beecrypt.h)
 AC_CONFIG_HEADERS([config.h])
-AC_LIBTOOL_WIN32_DLL
 
 # Checks for package options
 AC_ARG_ENABLE(debug, [  --enable-debug          creates debugging code [default=no]],[
@@ -108,6 +107,7 @@ AC_PROG_LIBTOOL
 # Predefines for autoheader
 BEECRYPT_OS_DEFS
 
+AH_TEMPLATE([HAVE_ASSERT_H],[.])
 AH_TEMPLATE([HAVE_CTYPE_H],[.])
 AH_TEMPLATE([HAVE_ERRNO_H],[.])
 AH_TEMPLATE([HAVE_FCNTL_H],[.])
@@ -118,10 +118,12 @@ AH_TEMPLATE([HAVE_DLFCN_H],[.])
 
 AH_TEMPLATE([HAVE_SYS_AUDIOIO_H],[.])
 AH_TEMPLATE([HAVE_SYS_IOCTL_H],[.])
+AH_TEMPLATE([HAVE_SYS_MMAN_H],[.])
 AH_TEMPLATE([HAVE_SYS_SOUNDCARD_H],[.])
 AH_TEMPLATE([HAVE_SYS_STAT_H],[.])
 AH_TEMPLATE([HAVE_SYS_TIME_H],[.])
 AH_TEMPLATE([HAVE_SYS_TYPES_H],[.])
+AH_TEMPLATE([HAVE_ASM_BYTEORDER_H],[.])
 
 AH_TEMPLATE([HAVE_AIO_H],[.])
 
@@ -131,27 +133,13 @@ AH_TEMPLATE([HAVE_DEV_RANDOM],[Define to 1 if your system has device /dev/random
 AH_TEMPLATE([HAVE_DEV_URANDOM],[Define to 1 if your system has device /dev/urandom])
 AH_TEMPLATE([HAVE_DEV_TTY],[Define to 1 if your system has device /dev/tty])
 
-AH_BOTTOM([
-#if ENABLE_THREADS
-# ifndef _REENTRANT
-#  define _REENTRANT
-# endif
-# if LINUX
-#  define _LIBC_REENTRANT
-# endif
-#else
-# ifdef _REENTRANT
-#  undef _REENTRANT
-# endif
-#endif
-])
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([time.h sys/time.h])
 AC_HEADER_TIME
-AC_CHECK_HEADERS([stdio.h ctype.h errno.h fcntl.h malloc.h termio.h termios.h])
-AC_CHECK_HEADERS([sys/ioctl.h sys/audioio.h sys/soundcard.h])
+AC_CHECK_HEADERS([assert.h stdio.h ctype.h errno.h fcntl.h malloc.h termio.h termios.h])
+AC_CHECK_HEADERS([sys/ioctl.h sys/mman.h sys/audioio.h sys/soundcard.h])
+AC_CHECK_HEADERS([asm/byteorder.h])
 
 bc_include_stdio_h=
 bc_include_stdlib_h=
@@ -159,6 +147,7 @@ bc_include_malloc_h=
 bc_include_string_h=
 bc_include_unistd_h=
 bc_include_dlfcn_h=
+bc_include_asm_byteorder_h=
 if test "$ac_cv_header_stdio_h" = yes; then
   bc_include_stdio_h="#include <stdio.h>"
 fi
@@ -183,15 +172,20 @@ fi
 if test "$ac_cv_header_dlfcn_h" = yes; then
   bc_include_dlfcn_h="#include <dlfcn.h>"
 fi
+if test "$ac_cv_header_asm_byteorder_h" = yes; then
+  bc_include_asm_byteorder_h="#include <asm/byteorder.h>"
+fi
 AC_SUBST(INCLUDE_STDIO_H,$bc_include_stdio_h)
 AC_SUBST(INCLUDE_STDLIB_H,$bc_include_stdlib_h)
 AC_SUBST(INCLUDE_MALLOC_H,$bc_include_malloc_h)
 AC_SUBST(INCLUDE_STRING_H,$bc_include_string_h)
 AC_SUBST(INCLUDE_UNISTD_H,$bc_include_unistd_h)
 AC_SUBST(INCLUDE_DLFCN_H,$bc_include_dlfcn_h)
+AC_SUBST(INCLUDE_ASM_BYTEORDER_H,$bc_include_asm_byteorder_h)
 
 BEECRYPT_DLFCN
 BEECRYPT_MULTITHREAD
+BEECRYPT_THREAD_LOCAL_STORAGE
 
 # Checks for libraries.
 if test "$ac_enable_aio" = yes; then
@@ -218,6 +212,11 @@ esac
 AC_C_BIGENDIAN
 AC_C_CONST
 AC_C_INLINE
+
+AH_TEMPLATE([HAVE_INLINE],[.])
+if test "$ac_cv_c_inline" != no; then
+  AC_DEFINE([HAVE_INLINE],1)
+fi
 
 # Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
@@ -293,14 +292,15 @@ EOF
           ac_cv_java_include="$ac_cv_java_include -I$gcjpath/include"
         fi
       else
-        AC_MSG_WARN([java headers not found, disabling java glue])
-        ac_cv_java_headers=no
-        ac_cv_java_include=
-        ac_with_java=no
+        # we have a non-working gcj
+        ac_cv_have_gcj=no
       fi
       rm -fr conftest*
     ])
-  else
+  fi
+
+  # gcj may have failed; in this case we want to try for a real java
+  if test "$ac_cv_have_gcj" != yes; then
     AC_CHECK_PROG(ac_cv_have_java, java, yes, no)
     if test "$ac_cv_have_java" = yes; then
       AC_CHECK_PROG(ac_cv_have_javac, javac, yes, no)
@@ -490,6 +490,7 @@ if test "$ac_enable_debug" != yes; then
     ;;
   athlon*)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I386 -DOPTIMIZE_MMX"
+    CFLAGS="$CFLAGS -mmmx"
     ;;
   i386)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I386"
@@ -514,18 +515,22 @@ if test "$ac_enable_debug" != yes; then
     ;;
   pentium-mmx)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I586 -DOPTIMIZE_MMX"
+    CFLAGS="$CFLAGS -mmmx"
     ;;
   pentiumpro)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686"
     ;;
   pentium2)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX"
+    CFLAGS="$CFLAGS -mmmx"
     ;;
   pentium3)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX -DOPTIMIZE_SSE"
+    CFLAGS="$CFLAGS -msse"
     ;;
   pentium4)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX -DOPTIMIZE_SSE -DOPTIMIZE_SSE2"
+    CFLAGS="$CFLAGS -msse2"
     ;;
   powerpc)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_POWERPC"
@@ -572,16 +577,16 @@ BEECRYPT_INT_TYPES
 BEECRYPT_CPU_BITS
 
 MAYBE_SUB=
-MAYBE_LTLIB=
+# MAYBE_LTLIB=
 
 if test "$ac_with_cplusplus" = yes; then
   MAYBE_SUB="$MAYBE_SUB c++"
-  MAYBE_LTLIB="$MAYBE_LTLIB libbeecrypt_cxx.la"
+# MAYBE_LTLIB="$MAYBE_LTLIB libbeecrypt_cxx.la"
 fi
 
 if test "$ac_with_java" = yes; then
   MAYBE_SUB="$MAYBE_SUB java"
-  MAYBE_LTLIB="$MAYBE_LTLIB libbeecrypt_java.la"
+# MAYBE_LTLIB="$MAYBE_LTLIB libbeecrypt_java.la"
 fi
 
 if test "$ac_with_python" = yes; then
@@ -589,14 +594,14 @@ if test "$ac_with_python" = yes; then
 fi
 
 AC_SUBST([MAYBE_SUB])
-AC_SUBST([MAYBE_LTLIB])
+# AC_SUBST([MAYBE_LTLIB])
 
 # Check where to install the libraries
 bc_libalt=
 case $target_os in
 linux*)
   case $bc_target_arch in
-  alpha* | powerpc64 | s390x | x86_64)
+  powerpc64 | s390x | x86_64)
     bc_libalt="64"
     ;;
   esac
@@ -615,6 +620,7 @@ AC_CONFIG_FILES([
     c++/crypto/interfaces/Makefile
     c++/crypto/spec/Makefile
     c++/io/Makefile
+    c++/nio/Makefile
     c++/lang/Makefile
     c++/provider/Makefile
     c++/security/Makefile

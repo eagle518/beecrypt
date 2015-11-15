@@ -25,17 +25,18 @@
 
 using namespace beecrypt::provider;
 
-RSAPrivateKeyImpl::RSAPrivateKeyImpl(const RSAPrivateKey& copy)
+RSAPrivateKeyImpl::RSAPrivateKeyImpl(const RSAPrivateKey& copy) : _n(copy.getModulus()), _d(copy.getPrivateExponent())
 {
-	_n = copy.getModulus();
-	_d = copy.getPrivateExponent();
 	_enc = 0;
 }
 
-RSAPrivateKeyImpl::RSAPrivateKeyImpl(const mpbarrett& n, const mpnumber& d)
+RSAPrivateKeyImpl::RSAPrivateKeyImpl(const RSAPrivateKeyImpl& copy) : _n(copy._n), _d(copy._d)
 {
-	_n = n;
-	_d = d;
+	_enc = 0;
+}
+
+RSAPrivateKeyImpl::RSAPrivateKeyImpl(const mpbarrett& n, const mpnumber& d) : _n(n), _d(d)
+{
 	_enc = 0;
 }
 
@@ -46,9 +47,28 @@ RSAPrivateKeyImpl::~RSAPrivateKeyImpl()
 		delete _enc;
 }
 
-RSAPrivateKey* RSAPrivateKeyImpl::clone() const
+RSAPrivateKeyImpl* RSAPrivateKeyImpl::clone() const throw ()
 {
 	return new RSAPrivateKeyImpl(*this);
+}
+
+bool RSAPrivateKeyImpl::equals(const Object& compare) const throw ()
+{
+	if (this == &compare)
+		return true;
+
+	const RSAPrivateKey* pri = dynamic_cast<const RSAPrivateKey*>(&compare);
+	if (pri)
+	{
+		if (pri->getModulus() != _n)
+			return false;
+
+		if (pri->getPrivateExponent() != _d)
+			return false;
+
+		return true;
+	}
+	return false;
 }
 
 const mpbarrett& RSAPrivateKeyImpl::getModulus() const throw ()

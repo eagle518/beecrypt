@@ -32,14 +32,8 @@ namespace {
 	__declspec(thread) String* result = 0;
 	__declspec(thread) DateFormat* format = 0;
 	#else
-	# if __GNUC__ && __GNUC_PREREQ (3, 3)
 	__thread String* result = 0;
 	__thread DateFormat* format = 0;
-	# else
-	#  warning Date.toString() method routine is not multi-thread safe
-	String* result = 0;
-	DateFormat* format = 0;
-	# endif
 	#endif
 }
 
@@ -61,14 +55,33 @@ const Date& Date::operator=(const Date& set) throw ()
 	return *this;
 }
 
-bool Date::operator==(const Date& cmp) const throw ()
+bool Date::equals(const Object& compare) const throw ()
 {
-	return _time == cmp._time;
+	if (this == &compare)
+		return true;
+
+	const Date* d = dynamic_cast<const Date*>(&compare);
+	if (d)
+	{
+		return _time == d->_time;
+	}
+
+	return false;
 }
 
-bool Date::operator!=(const Date& cmp) const throw ()
+Date* Date::clone() const throw ()
 {
-	return _time != cmp._time;
+	return new Date(_time);
+}
+
+int Date::compareTo(const Date& d) const throw ()
+{
+	if (_time == d._time)
+		return 0;
+	else if (_time < d._time)
+		return -1;
+	else
+		return 1;
 }
 
 bool Date::after(const Date& cmp) const throw ()
@@ -98,6 +111,8 @@ const String& Date::toString() const
 
 	if (!result)
 		result = new String();
+	else
+		result->remove();
 
 	*result = format->format((UDate) _time, *result);
 

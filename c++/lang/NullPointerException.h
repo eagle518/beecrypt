@@ -30,11 +30,15 @@ using beecrypt::lang::RuntimeException;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This class is used to indicate that an application has
+		 *        found a null pointer where an object was required.
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI NullPointerException : public RuntimeException
 		{
-			public:
-				NullPointerException() throw ();
-				NullPointerException(const String&) throw ();
+		public:
+			NullPointerException() throw ();
+			NullPointerException(const String& message) throw ();
 		};
 	}
 }

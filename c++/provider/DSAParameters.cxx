@@ -20,8 +20,9 @@
 # include "config.h"
 #endif
 
-#include "beecrypt/c++/provider/BeeCryptProvider.h"
 #include "beecrypt/c++/provider/DSAParameters.h"
+#include "beecrypt/c++/security/ProviderException.h"
+using beecrypt::security::ProviderException;
 
 using namespace beecrypt::provider;
 
@@ -73,10 +74,10 @@ void DSAParameters::engineInit(const AlgorithmParameterSpec& spec) throw (Invali
 
 void DSAParameters::engineInit(const byte*, size_t)
 {
-	throw "not implemented";
+	throw ProviderException("not implemented");
 }
 
 void DSAParameters::engineInit(const byte*, size_t, const String& format)
 {
-	throw "not implemented";
+	throw ProviderException("not implemented");
 }

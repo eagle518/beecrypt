@@ -33,7 +33,8 @@
 
 #include <iomanip>
 
-#if CPPGLUE
+const mpnumber mpnumber::ZERO;
+const mpnumber mpnumber::ONE(1);
 
 mpnumber::mpnumber()
 {
@@ -63,12 +64,12 @@ const mpnumber& mpnumber::operator=(const mpnumber& copy)
 	return *this;
 }
 
-bool mpnumber::operator==(const mpnumber& cmp)
+bool mpnumber::operator==(const mpnumber& cmp) const throw ()
 {
 	return mpeqx(size, data, cmp.size, cmp.data);
 }
 
-bool mpnumber::operator!=(const mpnumber& cmp)
+bool mpnumber::operator!=(const mpnumber& cmp) const throw ()
 {
 	return mpnex(size, data, cmp.size, cmp.data);
 }
@@ -78,7 +79,7 @@ void mpnumber::wipe()
 	mpnwipe(this);
 }
 
-size_t mpnumber::bitlength() const
+size_t mpnumber::bitlength() const throw ()
 {
 	return mpbits(size, data);
 }
@@ -123,12 +124,12 @@ const mpbarrett& mpbarrett::operator=(const mpbarrett& copy)
 	return *this;
 }
 
-bool mpbarrett::operator==(const mpbarrett& cmp)
+bool mpbarrett::operator==(const mpbarrett& cmp) const throw ()
 {
 	return mpeqx(size, modl, cmp.size, cmp.modl);
 }
 
-bool mpbarrett::operator!=(const mpbarrett& cmp)
+bool mpbarrett::operator!=(const mpbarrett& cmp) const throw ()
 {
 	return mpnex(size, modl, cmp.size, cmp.modl);
 }
@@ -138,7 +139,7 @@ void mpbarrett::wipe()
 	mpbwipe(this);
 }
 
-size_t mpbarrett::bitlength() const
+size_t mpbarrett::bitlength() const throw ()
 {
 	return mpbits(size, modl);
 }
@@ -292,5 +293,3 @@ randomGeneratorContext::~randomGeneratorContext()
 {
 	randomGeneratorContextFree(this);
 }
-
-#endif

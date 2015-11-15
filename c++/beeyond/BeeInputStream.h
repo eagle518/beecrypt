@@ -32,14 +32,16 @@ using beecrypt::io::DataInputStream;
 
 namespace beecrypt {
 	namespace beeyond {
+		/*!\ingroup CXX_BEEYOND_m
+		 */
 		class BEECRYPTCXXAPI BeeInputStream : public DataInputStream
 		{
-			public:
-				BeeInputStream(InputStream& in);
-				virtual ~BeeInputStream();
+		public:
+			BeeInputStream(InputStream& in);
+			virtual ~BeeInputStream();
 
-				void read(mpnumber&) throw (IOException);
-				void read(mpbarrett&) throw (IOException);
+			void read(mpnumber&) throw (IOException);
+			void read(mpbarrett&) throw (IOException);
 		};
 	}
 }

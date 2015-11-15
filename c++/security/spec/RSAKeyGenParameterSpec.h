@@ -27,28 +27,32 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/spec/AlgorithmParameterSpec.h"
 using beecrypt::security::spec::AlgorithmParameterSpec;
 
 namespace beecrypt {
 	namespace security {
 		namespace spec {
-			class BEECRYPTCXXAPI RSAKeyGenParameterSpec : public AlgorithmParameterSpec
+			/*!\ingroup CXX_SECURITY_SPEC_m
+			 */
+			class BEECRYPTCXXAPI RSAKeyGenParameterSpec : public beecrypt::lang::Object, public beecrypt::security::spec::AlgorithmParameterSpec
 			{
-				public:
-					static const mpnumber F0;
-					static const mpnumber F4;
+			public:
+				static const mpnumber F0;
+				static const mpnumber F4;
 
-				private:
-					size_t _keysize;
-					mpnumber _e;
+			private:
+				size_t _keysize;
+				mpnumber _e;
 				
-				public:
-					RSAKeyGenParameterSpec(size_t, const mpnumber&);
-					virtual ~RSAKeyGenParameterSpec();
+			public:
+				RSAKeyGenParameterSpec(size_t, const mpnumber&);
+				virtual ~RSAKeyGenParameterSpec();
 
-					size_t getKeysize() const throw ();
-					const mpnumber& getPublicExponent() const throw ();
+				size_t getKeysize() const throw ();
+				const mpnumber& getPublicExponent() const throw ();
 			};
 		}
 	}

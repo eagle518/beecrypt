@@ -35,50 +35,52 @@ using beecrypt::io::FilterOutputStream;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class BEECRYPTCXXAPI PrintStream : public FilterOutputStream
 		{
-			private:
-				bool _closed;
-				bool _error;
-				bool _flush;
-				UConverter* _loc;
+		private:
+			bool _closed;
+			bool _error;
+			bool _flush;
+			UConverter* _loc;
 
-				void print(const UChar*, size_t) throw ();
+			void print(const UChar*, size_t) throw ();
 
-			protected:
-				void setError() throw ();
+		protected:
+			void setError() throw ();
 
-			public:
-				PrintStream(OutputStream& out, bool autoflush = false, const char* encoding = 0);
-				virtual ~PrintStream();
+		public:
+			PrintStream(OutputStream& out, bool autoflush = false, const char* encoding = 0);
+			virtual ~PrintStream();
 
-				virtual void close() throw ();
-				virtual void flush() throw ();
-				virtual void write(byte) throw ();
-				virtual void write(const byte*, size_t, size_t) throw ();
+			virtual void close() throw ();
+			virtual void flush() throw ();
+			virtual void write(byte b) throw ();
+			virtual void write(const byte* data, size_t offset, size_t length) throw ();
 
-				bool checkError() throw ();
-				void print(bool) throw ();
-				void print(javachar) throw ();
-				void print(javaint) throw ();
-				void print(javalong) throw ();
-				void print(javashort) throw ();
-		//		void print(javafloat) throw ();
-		//		void print(javadouble) throw ();
-		//		void print(const char*) throw ();
-				void print(const array<javachar>&) throw ();
-				void print(const String&) throw ();
-				void println() throw ();
-				void println(bool) throw ();
-				void println(javachar) throw ();
-				void println(javaint) throw ();
-				void println(javalong) throw ();
-				void println(javashort) throw ();
-		//		void println(javafloat) throw ();
-		//		void println(javadouble) throw ();
-		//		void println(const char*) throw ();
-				void println(const array<javachar>&) throw ();
-				void println(const String&) throw ();
+			bool checkError() throw ();
+			void print(bool) throw ();
+			void print(javachar) throw ();
+			void print(javaint) throw ();
+			void print(javalong) throw ();
+			void print(javashort) throw ();
+	//		void print(javafloat) throw ();
+	//		void print(javadouble) throw ();
+	//		void print(const char*) throw ();
+			void print(const array<javachar>&) throw ();
+			void print(const String&) throw ();
+			void println() throw ();
+			void println(bool) throw ();
+			void println(javachar) throw ();
+			void println(javaint) throw ();
+			void println(javalong) throw ();
+			void println(javashort) throw ();
+	//		void println(javafloat) throw ();
+	//		void println(javadouble) throw ();
+	//		void println(const char*) throw ();
+			void println(const array<javachar>&) throw ();
+			void println(const String&) throw ();
 		};
 	}
 }

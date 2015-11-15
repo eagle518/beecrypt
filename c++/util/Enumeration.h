@@ -30,13 +30,13 @@ using beecrypt::util::NoSuchElementException;
 
 namespace beecrypt {
 	namespace util {
+		/*!\ingroup CXX_UTIL_m
+		 */
 		class BEECRYPTCXXAPI Enumeration
 		{
-			public:
-				virtual ~Enumeration() throw () {};
-
-				virtual bool hasMoreElements() throw () = 0;
-				virtual const void* nextElement() throw (NoSuchElementException) = 0;
+		public:
+			virtual bool hasMoreElements() throw () = 0;
+			virtual const void* nextElement() throw (NoSuchElementException) = 0;
 		};
 	}
 }

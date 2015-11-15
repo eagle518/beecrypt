@@ -31,12 +31,14 @@
 namespace beecrypt {
 	namespace crypto {
 		namespace interfaces {
+			/*!\ingroup CXX_CRYPTO_INTERFACES_m
+			 */
 			class DHParams
 			{
-				public:
-					virtual const mpbarrett& getP() const throw () = 0;
-					virtual const mpnumber& getG() const throw () = 0;
-					virtual size_t getL() const throw () = 0;
+			public:
+				virtual const mpbarrett& getP() const throw () = 0;
+				virtual const mpnumber& getG() const throw () = 0;
+				virtual size_t getL() const throw () = 0;
 			};
 		}
 	}

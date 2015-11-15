@@ -17,7 +17,7 @@
  */
 
 /*!\file DHParameterGenerator.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DHPARAMETERGENERATOR_H
@@ -34,7 +34,7 @@ using beecrypt::crypto::spec::DHParameterSpec;
 
 namespace beecrypt {
 	namespace provider {
-		class DHParameterGenerator : public AlgorithmParameterGeneratorSpi
+		class DHParameterGenerator : public beecrypt::security::AlgorithmParameterGeneratorSpi
 		{
 		private:
 			size_t _size;

@@ -17,7 +17,7 @@
  */
 
 /*!\file DHParameters.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DHPARAMETERS_H
@@ -32,7 +32,7 @@ using beecrypt::crypto::spec::DHParameterSpec;
 
 namespace beecrypt {
 	namespace provider {
-		class DHParameters : public AlgorithmParametersSpi
+		class DHParameters : public beecrypt::security::AlgorithmParametersSpi
 		{
 		private:
 			DHParameterSpec* _spec;

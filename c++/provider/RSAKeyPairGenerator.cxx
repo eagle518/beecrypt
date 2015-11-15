@@ -22,10 +22,11 @@
 
 #include "beecrypt/c++/adapter.h"
 using beecrypt::randomGeneratorContextAdapter;
-#include "beecrypt/c++/provider/BeeCryptProvider.h"
 #include "beecrypt/c++/provider/RSAKeyPairGenerator.h"
 #include "beecrypt/c++/provider/RSAPublicKeyImpl.h"
 #include "beecrypt/c++/provider/RSAPrivateCrtKeyImpl.h"
+#include "beecrypt/c++/security/ProviderException.h"
+using beecrypt::security::ProviderException;
 
 #include "beecrypt/rsakp.h"
 
@@ -54,7 +55,7 @@ KeyPair* RSAKeyPairGenerator::genpair(randomGeneratorContext* rngc)
 	rsakp _pair;
 
 	if (rsakpMake(&_pair, rngc, _spec ? _spec->getKeysize() : (_size ? _size : 1024)))
-		throw "unexpected error in rsakpMake";
+		throw ProviderException("unexpected error in rsakpMake");
 
 	return new KeyPair(new RSAPublicKeyImpl(_pair.n, _pair.e), new RSAPrivateCrtKeyImpl(_pair.n, _pair.e, _pair.d, _pair.p, _pair.q, _pair.dp, _pair.dq, _pair.qi));
 }

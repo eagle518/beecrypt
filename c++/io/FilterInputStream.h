@@ -32,27 +32,29 @@ using beecrypt::io::InputStream;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class BEECRYPTCXXAPI FilterInputStream : public InputStream
 		{
-			private:
-				mutex _lock;
+		private:
+			mutex _lock;
 
-			protected:
-				InputStream& in;
+		protected:
+			InputStream& in;
 
-			public:
-				FilterInputStream(InputStream& in);
-				virtual ~FilterInputStream();
+		public:
+			FilterInputStream(InputStream& in);
+			virtual ~FilterInputStream();
 
-				virtual off_t available() throw (IOException);
-				virtual void close() throw (IOException);
-				virtual void mark(off_t) throw ();
-				virtual bool markSupported() throw ();
-				virtual int read() throw (IOException);
-				virtual int read(byte* data, size_t offset, size_t length) throw (IOException);
-				virtual int read(bytearray& b) throw (IOException);
-				virtual void reset() throw (IOException);
-				virtual off_t skip(off_t) throw (IOException);
+			virtual off_t available() throw (IOException);
+			virtual void close() throw (IOException);
+			virtual void mark(off_t) throw ();
+			virtual bool markSupported() throw ();
+			virtual int read() throw (IOException);
+			virtual int read(byte* data, size_t offset, size_t length) throw (IOException);
+			virtual int read(bytearray& b) throw (IOException);
+			virtual void reset() throw (IOException);
+			virtual off_t skip(off_t) throw (IOException);
 		};
 	}
 }

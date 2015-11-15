@@ -572,7 +572,7 @@ typedef void blockCipherParam;
  */
 typedef int (*blockCipherSetup  )(blockCipherParam*, const byte*, size_t, cipherOperation);
 
-/*!\typedef int (*blockCipherSetIV)(blockCipherPatam* bp, const byte* iv)
+/*!\typedef int (*blockCipherSetIV)(blockCipherParam* bp, const byte* iv)
  * \brief Prototype definition for an initialization vector setup function.
  * \param bp The blockcipher's parameters.
  * \param iv The blockciphers' IV value.
@@ -678,13 +678,12 @@ struct _blockCipher
 	/*!\var getfb
 	 * \brief Pointer to the cipher's feedback-returning function.
 	 */
-	const blockCipherFeedback		getfb;
+	const blockCipherFeedback	getfb;
 };
 
 #ifndef __cplusplus
 typedef struct _blockCipher blockCipher;
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -709,7 +708,7 @@ int						blockCipherCount(void);
 BEECRYPTAPI
 const blockCipher*		blockCipherGet(int);
 
-/*!\fn const blockCIiher* blockCipherFind(const char* name)
+/*!\fn const blockCipher* blockCipherFind(const char* name)
  * \brief This function returns the blockcipher specified by the given name.
  * \param name Name of the requested blockcipher.
  * \return A pointer to a blockcipher or null, if the name wasn't found.
@@ -789,6 +788,9 @@ int blockCipherContextECB(blockCipherContext*, uint32_t*, const uint32_t*, int);
 
 BEECRYPTAPI
 int blockCipherContextCBC(blockCipherContext*, uint32_t*, const uint32_t*, int);
+
+BEECRYPTAPI
+int blockCipherContextValidKeylen(blockCipherContext*, size_t);
 
 #ifdef __cplusplus
 }

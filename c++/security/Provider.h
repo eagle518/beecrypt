@@ -38,42 +38,44 @@ using std::map;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI Provider : public Properties
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI Provider : public beecrypt::util::Properties
 		{
 			friend class Security;
 
-			private:
-				String _name;
-				String _info;
-				double _vers;
+		private:
+			String _name;
+			String _info;
+			double _vers;
 
-				mutex _lock;
-				UConverter* _conv;
+			mutex _lock;
+			UConverter* _conv;
 
-				typedef void* (*instantiator)();
-				typedef map<String,instantiator> instantiator_map;
+			typedef Object* (*instantiator)();
+			typedef map<String,instantiator> instantiator_map;
 
-				instantiator_map _imap;
+			instantiator_map _imap;
 
-				instantiator getInstantiator(const String& name) const;
+			instantiator getInstantiator(const String& name) const;
 
-			protected:
-				#if WIN32
-				HANDLE _dlhandle;
-				#else
-				void* _dlhandle;
-				#endif
+		protected:
+			#if WIN32
+			HANDLE _dlhandle;
+			#else
+			void* _dlhandle;
+			#endif
 
-				Provider(const String& name, double version, const String& info);
+			Provider(const String& name, double version, const String& info);
 
-			public:
-				virtual ~Provider();
+		public:
+			virtual ~Provider();
 
-				void put(const String& key, const String& value);
+			void put(const String& key, const String& value);
 
-				const String& getName() const throw ();
-				const String& getInfo() const throw ();
-				double getVersion() const throw ();
+			const String& getName() const throw ();
+			const String& getInfo() const throw ();
+			double getVersion() const throw ();
 		};
 	}
 }

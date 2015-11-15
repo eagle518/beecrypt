@@ -31,11 +31,13 @@ using beecrypt::security::GeneralSecurityException;
 namespace beecrypt {
 	namespace security {
 		namespace cert {
-			class BEECRYPTCXXAPI CertificateException : public GeneralSecurityException
+			/*!\ingroup CXX_SECURITY_CERT_m
+			 */
+			class BEECRYPTCXXAPI CertificateException : public beecrypt::security::GeneralSecurityException
 			{
-				public:
-					CertificateException() throw ();
-					CertificateException(const String&) throw ();
+			public:
+				CertificateException() throw ();
+				CertificateException(const String& message) throw ();
 			};
 		}
 	}

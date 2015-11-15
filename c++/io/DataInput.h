@@ -32,24 +32,26 @@ using beecrypt::io::IOException;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class DataInput
 		{
-			public:
-				virtual bool readBoolean() throw (IOException) = 0;
-				virtual javabyte readByte() throw (IOException) = 0;
-				virtual javachar readChar() throw (IOException) = 0;
-				virtual void readFully(byte*, size_t, size_t) = 0;
-				virtual void readFully(bytearray&) = 0;
-				virtual javaint readInt() throw (IOException) = 0;
-				virtual String* readLine() throw (IOException) = 0;
-				virtual void readLine(String&) throw (IOException) = 0;
-				virtual javalong readLong() throw (IOException) = 0;
-				virtual javashort readShort() throw (IOException) = 0;
-				virtual int readUnsignedByte() throw (IOException) = 0;
-				virtual int readUnsignedShort() throw (IOException) = 0;
-				virtual String* readUTF() throw (IOException) = 0;
-				virtual void readUTF(String&) throw (IOException) = 0;
-				virtual off_t skipBytes(off_t n) throw (IOException) = 0;
+		public:
+			virtual bool readBoolean() throw (IOException) = 0;
+			virtual javabyte readByte() throw (IOException) = 0;
+			virtual javachar readChar() throw (IOException) = 0;
+			virtual void readFully(byte* data, size_t offset, size_t length) = 0;
+			virtual void readFully(bytearray& b) = 0;
+			virtual javaint readInt() throw (IOException) = 0;
+			virtual String* readLine() throw (IOException) = 0;
+			virtual void readLine(String& line) throw (IOException) = 0;
+			virtual javalong readLong() throw (IOException) = 0;
+			virtual javashort readShort() throw (IOException) = 0;
+			virtual int readUnsignedByte() throw (IOException) = 0;
+			virtual int readUnsignedShort() throw (IOException) = 0;
+			virtual String* readUTF() throw (IOException) = 0;
+			virtual void readUTF(String& str) throw (IOException) = 0;
+			virtual off_t skipBytes(off_t n) throw (IOException) = 0;
 		};
 	}
 }

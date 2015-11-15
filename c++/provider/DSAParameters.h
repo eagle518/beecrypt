@@ -17,7 +17,7 @@
  */
 
 /*!\file DSAParameters.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DSAPARAMETERS_H
@@ -32,10 +32,8 @@ using beecrypt::security::spec::DSAParameterSpec;
 
 namespace beecrypt {
 	namespace provider {
-		class DSAParameters : public AlgorithmParametersSpi
+		class DSAParameters : public beecrypt::security::AlgorithmParametersSpi
 		{
-		//	friend class DSAParameterGenerator;
-
 		private:
 			DSAParameterSpec* _spec;
 

@@ -48,7 +48,11 @@
 
 /*!\ingroup PRNG_fips186_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI fips186Param
+#else
+struct _fips186Param
+#endif
 {
 	#ifdef _REENTRANT
 	bc_mutex_t		lock;
@@ -57,7 +61,11 @@ typedef struct
 	mpw			state[FIPS186_STATE_SIZE];
 	byte			digest[20];
 	unsigned char	digestremain;
-} fips186Param;
+};
+
+#ifndef __cplusplus
+typedef struct _fips186Param fips186Param;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

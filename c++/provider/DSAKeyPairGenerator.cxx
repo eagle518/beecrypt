@@ -22,7 +22,6 @@
 
 #include "beecrypt/c++/adapter.h"
 using beecrypt::randomGeneratorContextAdapter;
-#include "beecrypt/c++/provider/BeeCryptProvider.h"
 #include "beecrypt/c++/provider/DSAKeyPairGenerator.h"
 #include "beecrypt/c++/provider/DSAPublicKeyImpl.h"
 #include "beecrypt/c++/provider/DSAPrivateKeyImpl.h"

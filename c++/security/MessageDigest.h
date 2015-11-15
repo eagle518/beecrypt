@@ -27,6 +27,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/MessageDigestSpi.h"
 using beecrypt::security::MessageDigestSpi;
 #include "beecrypt/c++/security/Provider.h"
@@ -38,37 +40,39 @@ using beecrypt::security::NoSuchProviderException;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI MessageDigest
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI MessageDigest : public beecrypt::lang::Object
 		{
-			public:
-				static MessageDigest* getInstance(const String&) throw (NoSuchAlgorithmException);
-				static MessageDigest* getInstance(const String&, const String&) throw (NoSuchAlgorithmException, NoSuchProviderException);
-				static MessageDigest* getInstance(const String&, const Provider&) throw (NoSuchAlgorithmException);
+		public:
+			static MessageDigest* getInstance(const String& algorithm) throw (NoSuchAlgorithmException);
+			static MessageDigest* getInstance(const String& algorithm, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
+			static MessageDigest* getInstance(const String& algorithm, const Provider& provider) throw (NoSuchAlgorithmException);
 
-			private:
-				MessageDigestSpi* _mspi;
-				String            _algo;
-				const Provider*   _prov;
+		private:
+			MessageDigestSpi* _mspi;
+			const Provider*   _prov;
+			String            _algo;
 
-			protected:
-				MessageDigest(MessageDigestSpi*, const String&, const Provider&);
+		protected:
+			MessageDigest(MessageDigestSpi* spi, const Provider* provider, const String& algorithm);
 
-			public:
-				~MessageDigest();
+		public:
+			virtual ~MessageDigest();
 
-				MessageDigest* clone() const;
+			virtual MessageDigest* clone() const throw (CloneNotSupportedException);
 
-				const bytearray& digest();
-				const bytearray& digest(const bytearray&);
-				size_t digest(byte* data, size_t offset, size_t length) throw (ShortBufferException);
-				size_t getDigestLength();
-				void reset();
-				void update(byte);
-				void update(const byte* data, size_t offset, size_t length);
-				void update(const bytearray& b);
+			const bytearray& digest();
+			const bytearray& digest(const bytearray& b);
+			size_t digest(byte* data, size_t offset, size_t length) throw (ShortBufferException);
+			size_t getDigestLength();
+			void reset();
+			void update(byte b);
+			void update(const byte* data, size_t offset, size_t length);
+			void update(const bytearray& b);
 
-				const String& getAlgorithm() const throw ();
-				const Provider& getProvider() const throw ();
+			const String& getAlgorithm() const throw ();
+			const Provider& getProvider() const throw ();
 		};
 	}
 }

@@ -140,8 +140,8 @@ size_t PKCS1RSASignature::engineSign(byte* signature, size_t offset, size_t len)
 	mpnumber c, m;
 	bytearray em(sigsize);
 
-	if (pkcs1_emsa_encode_digest(&_hfc, em.data(), sigsize))
-		throw SignatureException("internal error in emsa_pkcs1_encode_digest");
+	if (pkcs1_emsa_encode_digest(&_hfc, em.data(), em.size()))
+		throw SignatureException("internal error in pkcs1_emsa_encode_digest");
 
 	mpnsetbin(&c, em.data(), sigsize);
 
@@ -187,7 +187,7 @@ bool PKCS1RSASignature::engineVerify(const byte* signature, size_t offset, size_
 	bytearray em(sigsize);
 
 	if (pkcs1_emsa_encode_digest(&_hfc, em.data(), sigsize))
-		throw SignatureException("internal error in emsa_pkcs1_encode_digest");
+		throw SignatureException("internal error in pkcs1_emsa_encode_digest");
 
 	mpnsetbin(&c, em.data(), sigsize);
 	mpnsetbin(&m, signature+offset, sigsize);

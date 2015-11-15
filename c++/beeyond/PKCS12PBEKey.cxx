@@ -28,6 +28,30 @@ PKCS12PBEKey::~PKCS12PBEKey()
 		delete _salt;
 }
 
+bool PKCS12PBEKey::operator==(const Key& compare) const throw ()
+{
+	const PBEKey* tmp = dynamic_cast<const PBEKey*>(&compare);
+	if (tmp)
+	{
+		if (_pswd != tmp->getPassword())
+			return false;
+
+		if (_salt && tmp->getSalt())
+		{
+			if (*_salt != *tmp->getSalt())
+				return false;
+		}
+		else if (_salt || tmp->getSalt())
+			return false;
+				
+		if (_iter != tmp->getIterationCount())
+			return false;
+
+		return true;
+	}
+	return false;
+}
+
 PKCS12PBEKey* PKCS12PBEKey::clone() const
 {
 	return new PKCS12PBEKey(_pswd, _salt, _iter);

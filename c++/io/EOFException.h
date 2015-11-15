@@ -30,11 +30,13 @@ using beecrypt::io::IOException;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class BEECRYPTCXXAPI EOFException : public IOException
 		{
-			public:
-				EOFException() throw ();
-				EOFException(const String&) throw ();
+		public:
+			EOFException() throw ();
+			EOFException(const String& message) throw ();
 		};
 	}
 }

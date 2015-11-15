@@ -17,7 +17,7 @@
  */
 
 /*!\file MD5Digest.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_MD5DIGEST_H
@@ -30,29 +30,30 @@
 
 #include "beecrypt/c++/security/MessageDigestSpi.h"
 using beecrypt::security::MessageDigestSpi;
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
 
 namespace beecrypt {
 	namespace provider {
-		class MD5Digest : public MessageDigestSpi
+		class MD5Digest : public beecrypt::security::MessageDigestSpi, public beecrypt::lang::Cloneable
 		{
-			private:
-				md5Param _param;
-				bytearray _digest;
+		private:
+			md5Param _param;
+			bytearray _digest;
 
-			protected:
-				virtual const bytearray& engineDigest();
-				virtual size_t engineDigest(byte*, size_t, size_t) throw (ShortBufferException);
-				virtual size_t engineGetDigestLength();
-				virtual void engineReset();
-				virtual void engineUpdate(byte);
-				virtual void engineUpdate(const byte*, size_t, size_t);
+		protected:
+			virtual const bytearray& engineDigest();
+			virtual size_t engineDigest(byte*, size_t, size_t) throw (ShortBufferException);
+			virtual size_t engineGetDigestLength();
+			virtual void engineReset();
+			virtual void engineUpdate(byte);
+			virtual void engineUpdate(const byte*, size_t, size_t);
 
-			public:
-				MD5Digest();
-				virtual ~MD5Digest();
+		public:
+			MD5Digest();
+			virtual ~MD5Digest();
 
-				virtual MD5Digest* clone() const;
-
+			virtual MD5Digest* clone() const throw ();
 		};
 	}
 }

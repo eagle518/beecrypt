@@ -23,29 +23,36 @@
 #endif
 
 #include "beecrypt/c++/security/KeyPair.h"
+#include "beecrypt/c++/lang/NullPointerException.h"
+using beecrypt::lang::NullPointerException;
 
 using namespace beecrypt::security;
 
-KeyPair::KeyPair(const PublicKey& pub, const PrivateKey& pri) : pub(pub.clone()), pri(pri.clone())
+KeyPair::KeyPair(PublicKey* pub, PrivateKey* pri)
 {
-}
+	if (pub)
+		_pub = pub;
+	else
+		throw NullPointerException();
 
-KeyPair::KeyPair(PublicKey* pub, PrivateKey* pri) : pub(pub), pri(pri)
-{
+	if (pri)
+		_pri = pri;
+	else
+		throw NullPointerException();
 }
 
 KeyPair::~KeyPair()
 {
-	delete pub;
-	delete pri;
+	delete _pub;
+	delete _pri;
 }
 
 const PublicKey& KeyPair::getPublic() const throw ()
 {
-	return *pub;
+	return *_pub;
 }
 
 const PrivateKey& KeyPair::getPrivate() const throw ()
 {
-	return *pri;
+	return *_pri;
 }

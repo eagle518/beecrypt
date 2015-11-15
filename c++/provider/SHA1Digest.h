@@ -17,7 +17,7 @@
  */
 
 /*!\file SHA1Digest.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_SHA1DIGEST_H
@@ -30,29 +30,30 @@
 
 #include "beecrypt/c++/security/MessageDigestSpi.h"
 using beecrypt::security::MessageDigestSpi;
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
 
 namespace beecrypt {
 	namespace provider {
-		class SHA1Digest : public MessageDigestSpi
+		class SHA1Digest : public beecrypt::security::MessageDigestSpi, public beecrypt::lang::Cloneable
 		{
-			private:
-				sha1Param _param;
-				bytearray _digest;
+		private:
+			sha1Param _param;
+			bytearray _digest;
 
-			protected:
-				virtual const bytearray& engineDigest();
-				virtual size_t engineDigest(byte*, size_t, size_t) throw (ShortBufferException);
-				virtual size_t engineGetDigestLength();
-				virtual void engineReset();
-				virtual void engineUpdate(byte);
-				virtual void engineUpdate(const byte*, size_t, size_t);
+		protected:
+			virtual const bytearray& engineDigest();
+			virtual size_t engineDigest(byte*, size_t, size_t) throw (ShortBufferException);
+			virtual size_t engineGetDigestLength();
+			virtual void engineReset();
+			virtual void engineUpdate(byte);
+			virtual void engineUpdate(const byte*, size_t, size_t);
 
-			public:
-				SHA1Digest();
-				virtual ~SHA1Digest();
+		public:
+			SHA1Digest();
+			virtual ~SHA1Digest();
 
-				virtual SHA1Digest* clone() const;
-
+			virtual SHA1Digest* clone() const throw ();
 		};
 	}
 }

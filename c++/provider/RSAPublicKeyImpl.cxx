@@ -25,17 +25,18 @@
 
 using namespace beecrypt::provider;
 
-RSAPublicKeyImpl::RSAPublicKeyImpl(const RSAPublicKey& copy)
+RSAPublicKeyImpl::RSAPublicKeyImpl(const RSAPublicKey& copy) : _n(copy.getModulus()), _e(copy.getPublicExponent())
 {
-	_n = copy.getModulus();
-	_e = copy.getPublicExponent();
 	_enc = 0;
 }
 
-RSAPublicKeyImpl::RSAPublicKeyImpl(const mpbarrett& n, const mpnumber& e)
+RSAPublicKeyImpl::RSAPublicKeyImpl(const RSAPublicKeyImpl& copy) : _n(copy._n), _e(copy._e)
 {
-	_n = n;
-	_e = e;
+	_enc = 0;
+}
+
+RSAPublicKeyImpl::RSAPublicKeyImpl(const mpbarrett& n, const mpnumber& e) : _n(n), _e(e)
+{
 	_enc = 0;
 }
 
@@ -45,9 +46,28 @@ RSAPublicKeyImpl::~RSAPublicKeyImpl()
 		delete _enc;
 }
 
-RSAPublicKey* RSAPublicKeyImpl::clone() const
+RSAPublicKeyImpl* RSAPublicKeyImpl::clone() const throw ()
 {
 	return new RSAPublicKeyImpl(*this);
+}
+
+bool RSAPublicKeyImpl::equals(const Object& compare) const throw ()
+{
+	if (this == &compare)
+		return true;
+
+	const RSAPublicKey* pub = dynamic_cast<const RSAPublicKey*>(&compare);
+	if (pub)
+	{
+		if (pub->getModulus() != _n)
+			return false;
+
+		if (pub->getPublicExponent() != _e)
+			return false;
+
+		return true;
+	}
+	return false;
 }
 
 const mpbarrett& RSAPublicKeyImpl::getModulus() const throw ()

@@ -32,7 +32,9 @@ using beecrypt::security::SecureRandomSpi;
 
 namespace beecrypt {
 	namespace provider {
-		class BeeSecureRandom : public SecureRandomSpi
+		/*!\ingroup CXX_PROVIDER_m
+		 */
+		class BeeSecureRandom : public beecrypt::security::SecureRandomSpi
 		{
 		private:
 			randomGeneratorContext _rngc;

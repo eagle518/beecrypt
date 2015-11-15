@@ -36,7 +36,7 @@ namespace beecrypt {
 	*/
 	struct BEECRYPTCXXAPI randomGeneratorContextAdapter : randomGeneratorContext
 	{
-		randomGeneratorContextAdapter(SecureRandom*);
+		randomGeneratorContextAdapter(SecureRandom* random);
 	};
 }
 

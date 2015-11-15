@@ -29,6 +29,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/interfaces/DSAParams.h"
 using beecrypt::security::interfaces::DSAParams;
 #include "beecrypt/c++/security/spec/AlgorithmParameterSpec.h"
@@ -37,21 +39,24 @@ using beecrypt::security::spec::AlgorithmParameterSpec;
 namespace beecrypt {
 	namespace security {
 		namespace spec {
-			class BEECRYPTCXXAPI DSAParameterSpec : public AlgorithmParameterSpec, public DSAParams
+			/*!\brief DSA parameter specification
+			 * \ingroup CXX_SECURITY_SPEC_m
+			 */
+			class BEECRYPTCXXAPI DSAParameterSpec : public beecrypt::lang::Object, public beecrypt::security::spec::AlgorithmParameterSpec, public beecrypt::security::interfaces::DSAParams
 			{
-				private:
-					mpbarrett _p;
-					mpbarrett _q;
-					mpnumber _g;
+			private:
+				mpbarrett _p;
+				mpbarrett _q;
+				mpnumber _g;
 
-				public:
-					DSAParameterSpec(const DSAParams&);
-					DSAParameterSpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g);
-					virtual ~DSAParameterSpec();
+			public:
+				DSAParameterSpec(const DSAParams&);
+				DSAParameterSpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g);
+				virtual ~DSAParameterSpec();
 
-					const mpbarrett& getP() const throw ();
-					const mpbarrett& getQ() const throw ();
-					const mpnumber& getG() const throw ();
+				const mpbarrett& getP() const throw ();
+				const mpbarrett& getQ() const throw ();
+				const mpnumber& getG() const throw ();
 			};
 		}
 	}

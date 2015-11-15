@@ -79,14 +79,12 @@ int blockEncryptCBC(const blockCipher* bc, blockCipherParam* bp, uint32_t* dst, 
 
 		bc->raw.encrypt(bp, dst, dst);
 
-		src += blockwords;
-
 		nblocks--;
 
 		while (nblocks > 0)
 		{
 			for (i = 0; i < blockwords; i++)
-				dst[i+blockwords] = src[i] ^ dst[i];
+				dst[i+blockwords] = src[i+blockwords] ^ dst[i];
 
 			dst += blockwords;
 
@@ -96,8 +94,6 @@ int blockEncryptCBC(const blockCipher* bc, blockCipherParam* bp, uint32_t* dst, 
 
 			nblocks--;
 		}
-
-		dst -= blockwords;
 
 		for (i = 0; i < blockwords; i++)
 			fdback[i] = dst[i];

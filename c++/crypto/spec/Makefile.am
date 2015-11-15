@@ -10,10 +10,14 @@ libcxxcryptospec_la_SOURCES =\
 DHParameterSpec.cxx \
 DHPrivateKeySpec.cxx \
 DHPublicKeySpec.cxx \
-PBEKeySpec.cxx
+IvParameterSpec.cxx \
+PBEKeySpec.cxx \
+SecretKeySpec.cxx
 
 cxxcryptospec_HEADERS =\
 DHParameterSpec.h \
 DHPrivateKeySpec.h \
 DHPublicKeySpec.h \
-PBEKeySpec.h
+IvParameterSpec.h \
+PBEKeySpec.h \
+SecretKeySpec.h

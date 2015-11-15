@@ -30,11 +30,13 @@ using beecrypt::security::GeneralSecurityException;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI UnrecoverableKeyException : public GeneralSecurityException
 		{
 		public:
 			UnrecoverableKeyException() throw ();
-			UnrecoverableKeyException(const String&) throw ();
+			UnrecoverableKeyException(const String& message) throw ();
 		};
 	}
 }

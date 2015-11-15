@@ -27,12 +27,20 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
+#include "beecrypt/c++/lang/Comparable.h"
+using beecrypt::lang::Comparable;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/lang/String.h"
 using beecrypt::lang::String;
 
 namespace beecrypt {
 	namespace util {
-		class BEECRYPTCXXAPI Date
+		/*!\ingroup CXX_UTIL_m
+		 */
+		class BEECRYPTCXXAPI Date : public beecrypt::lang::Object, public beecrypt::lang::Cloneable, public beecrypt::lang::Comparable<Date>
 		{
 		private:
 			javalong _time;
@@ -40,10 +48,15 @@ namespace beecrypt {
 		public:
 			Date() throw ();
 			Date(javalong) throw ();
+			virtual ~Date() {};
+
+			virtual bool equals(const Object&) const throw ();
+
+			virtual Date* clone() const throw ();
+
+			virtual int compareTo(const Date& anotherDate) const throw ();
 
 			const Date& operator=(const Date&) throw ();
-			bool operator==(const Date&) const throw ();
-			bool operator!=(const Date&) const throw ();
 
 			bool after(const Date&) const throw ();
 			bool before(const Date&) const throw ();

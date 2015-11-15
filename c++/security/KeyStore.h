@@ -31,10 +31,14 @@
 using beecrypt::io::InputStream;
 #include "beecrypt/c++/io/OutputStream.h"
 using beecrypt::io::OutputStream;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/KeyStoreSpi.h"
 using beecrypt::security::KeyStoreSpi;
 #include "beecrypt/c++/security/KeyStoreException.h"
 using beecrypt::security::KeyStoreException;
+#include "beecrypt/c++/security/PrivateKey.h"
+using beecrypt::security::PrivateKey;
 #include "beecrypt/c++/security/Provider.h"
 using beecrypt::security::Provider;
 #include "beecrypt/c++/security/NoSuchProviderException.h"
@@ -42,37 +46,75 @@ using beecrypt::security::NoSuchProviderException;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI KeyStore
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI KeyStore : public beecrypt::lang::Object
 		{
+		#if FOR_NEXT_VERSION_COMPATIBLE_WITH_JAVA_1_5
 		public:
-			static KeyStore* getInstance(const String&) throw (KeyStoreException);
-			static KeyStore* getInstance(const String&, const String&) throw (KeyStoreException, NoSuchProviderException);
-			static KeyStore* getInstance(const String&, const Provider&) throw (KeyStoreException);
+			class BEECRYPTCXXAPI Entry : public beecrypt::lang::Object
+			{
+			public:
+				virtual ~Entry() {};
+			};
+
+			class BEECRYPTCXXAPI PrivateKeyEntry : public Entry
+			{
+			private:
+				PrivateKey* _pri;
+				vector<Certificate*> _chain;
+
+			public:
+				PrivateKeyEntry(const PrivateKey* privateKey, vector<Certificate*> chain);
+				virtual ~PrivateKeyEntry() {};
+
+				virtual const Certificate* getCertificate() const;
+				virtual const vector<Certificate*>* getCertificateChain() const;
+				virtual const PrivateKey* getPrivateKey() const;
+			};
+
+			class TrustedCertificateEntry : public Entry
+			{
+			private:
+				Certificate* _cert;
+
+			public:
+				TrustedCertificateEntry(const Certificate& cert);
+				virtual ~TrustedCertificateEntry() {};
+
+				virtual const Certificate* getTrustedCertificate() const;
+			};
+		#endif
+
+		public:
+			static KeyStore* getInstance(const String& type) throw (KeyStoreException);
+			static KeyStore* getInstance(const String& type, const String& provider) throw (KeyStoreException, NoSuchProviderException);
+			static KeyStore* getInstance(const String& type, const Provider& provider) throw (KeyStoreException);
 
 			static const String& getDefaultType();
 
 		private:
 			KeyStoreSpi*    _kspi;
-			String          _type;
 			const Provider* _prov;
+			String          _type;
 			bool            _init;
 
 		protected:
-			KeyStore(KeyStoreSpi*, const String&, const Provider&);
+			KeyStore(KeyStoreSpi* spi, const Provider* provider, const String& type);
 
 		public:
-			~KeyStore();
+			virtual ~KeyStore();
 
 			Enumeration* aliases();
-			bool containsAlias(const String&) throw (KeyStoreException);
+			bool containsAlias(const String& alias) throw (KeyStoreException);
 
-			const Certificate* getCertificate(const String&) throw (KeyStoreException);
-			const String& getCertificateAlias(const Certificate&) throw (KeyStoreException);
-			const vector<Certificate*>* getCertificateChain(const String&) throw (KeyStoreException);
+			const Certificate* getCertificate(const String& alias) throw (KeyStoreException);
+			const String& getCertificateAlias(const Certificate& cert) throw (KeyStoreException);
+			const vector<Certificate*>* getCertificateChain(const String& alias) throw (KeyStoreException);
 			bool isCertificateEntry(const String& alias) throw (KeyStoreException);
 			void setCertificateEntry(const String& alias, const Certificate& cert) throw (KeyStoreException);
 				
-			void deleteEntry(const String&) throw (KeyStoreException);
+			void deleteEntry(const String& alias) throw (KeyStoreException);
 				
 			Key* getKey(const String& alias, const array<javachar>& password) throw (KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException);
 			bool isKeyEntry(const String& alias) throw (KeyStoreException);

@@ -36,7 +36,11 @@
 #include "beecrypt/beecrypt.h"
 #include "beecrypt/dldp.h"
 
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI dhaes_pParameters
+#else
+struct _dhaes_pParameters
+#endif
 {
 	const dldp_p*				param;
 	const hashFunction*			hash;
@@ -44,9 +48,17 @@ typedef struct
 	const keyedHashFunction*	mac;
 	size_t						cipherkeybits;
 	size_t						mackeybits;
-} dhaes_pParameters;
+};
 
-typedef struct
+#ifndef __cplusplus
+typedef struct _dhaes_pParameters dhaes_pParameters;
+#endif
+
+#ifdef __cplusplus
+struct BEECRYPTAPI dhaes_pContext
+#else
+struct _dhaes_pContext
+#endif
 {
 	dldp_p						param;
 	mpnumber					pub;
@@ -56,7 +68,11 @@ typedef struct
 	keyedHashFunctionContext	mac;
 	size_t						cipherkeybits;
 	size_t						mackeybits;
-} dhaes_pContext;
+};
+
+#ifndef __cplusplus
+typedef struct _dhaes_pContext dhaes_pContext;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

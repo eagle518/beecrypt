@@ -31,28 +31,33 @@
 
 #include "beecrypt/c++/crypto/interfaces/DHParams.h"
 using beecrypt::crypto::interfaces::DHParams;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/spec/AlgorithmParameterSpec.h"
 using beecrypt::security::spec::AlgorithmParameterSpec;
 
 namespace beecrypt {
 	namespace crypto {
 		namespace spec {
-			class BEECRYPTCXXAPI DHParameterSpec : public AlgorithmParameterSpec, public DHParams
+			/*!\ingroup CXX_CRYPTO_SPEC_m
+			 */
+			class BEECRYPTCXXAPI DHParameterSpec : public beecrypt::lang::Object, public beecrypt::security::spec::AlgorithmParameterSpec, public beecrypt::crypto::interfaces::DHParams
 			{
-				private:
-					mpbarrett _p;
-					mpnumber _g;
-					size_t  _l;
+			private:
+				mpbarrett _p;
+				mpnumber _g;
+				size_t  _l;
 
-				public:
-					DHParameterSpec(const DHParams&);
-					DHParameterSpec(const mpbarrett& p, const mpnumber& g);
-					DHParameterSpec(const mpbarrett& p, const mpnumber& g, size_t l);
-					virtual ~DHParameterSpec();
+			public:
+				DHParameterSpec(const DHParams&);
+				DHParameterSpec(const DHParameterSpec&);
+				DHParameterSpec(const mpbarrett& p, const mpnumber& g);
+				DHParameterSpec(const mpbarrett& p, const mpnumber& g, size_t l);
+				virtual ~DHParameterSpec() {};
 
-					const mpbarrett& getP() const throw ();
-					const mpnumber& getG() const throw ();
-					size_t getL() const throw ();
+				const mpbarrett& getP() const throw ();
+				const mpnumber& getG() const throw ();
+				size_t getL() const throw ();
 			};
 		}
 	}

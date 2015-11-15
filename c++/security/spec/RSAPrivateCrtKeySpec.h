@@ -31,7 +31,9 @@ using beecrypt::security::spec::RSAPrivateKeySpec;
 namespace beecrypt {
 	namespace security {
 		namespace spec {
-			class BEECRYPTCXXAPI RSAPrivateCrtKeySpec : public RSAPrivateKeySpec
+			/*!\ingroup CXX_SECURITY_SPEC_m
+			 */
+			class BEECRYPTCXXAPI RSAPrivateCrtKeySpec : public beecrypt::security::spec::RSAPrivateKeySpec
 			{
 				private:
 					mpnumber _e;

@@ -739,7 +739,7 @@ static void mpprndbits(mpbarrett* p, size_t bits, size_t lsbset, const mpnumber*
 
 	mpsub(size, wksp, wksp+size);
 
-    rc->rng->next(rc->param, (byte*) p->modl, MP_WORDS_TO_BYTES(size));
+	rc->rng->next(rc->param, (byte*) p->modl, MP_WORDS_TO_BYTES(size));
 
 	p->modl[0] &= (MP_ALLMASK >> msbclr);
 

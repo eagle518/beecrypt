@@ -24,8 +24,6 @@
 #ifndef _CLASS_ALGORITHMPARAMETERGENERATOR_H
 #define _CLASS_ALGORITHMPARAMETERGENERATOR_H
 
-// #include "beecrypt/api.h"
-
 #ifdef __cplusplus
 
 #include "beecrypt/c++/security/AlgorithmParameterGeneratorSpi.h"
@@ -39,33 +37,35 @@ using beecrypt::security::NoSuchProviderException;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI AlgorithmParameterGenerator
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI AlgorithmParameterGenerator : public beecrypt::lang::Object
 		{
-			public:
-				static AlgorithmParameterGenerator* getInstance(const String&) throw (NoSuchAlgorithmException);
-				static AlgorithmParameterGenerator* getInstance(const String&, const String&) throw (NoSuchAlgorithmException, NoSuchProviderException);
-				static AlgorithmParameterGenerator* getInstance(const String&, const Provider&) throw (NoSuchAlgorithmException);
+		public:
+			static AlgorithmParameterGenerator* getInstance(const String& algorithm) throw (NoSuchAlgorithmException);
+			static AlgorithmParameterGenerator* getInstance(const String& algorithm, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
+			static AlgorithmParameterGenerator* getInstance(const String& algorithm, const Provider& provider) throw (NoSuchAlgorithmException);
 
-			private:
-				AlgorithmParameterGeneratorSpi* _aspi;
-				String                          _algo;
-				const Provider*                 _prov;
+		private:
+			AlgorithmParameterGeneratorSpi* _aspi;
+			const Provider*                 _prov;
+			String                          _algo;
 
-			protected:
-				AlgorithmParameterGenerator(AlgorithmParameterGeneratorSpi*, const String&, const Provider&);
+		protected:
+			AlgorithmParameterGenerator(AlgorithmParameterGeneratorSpi* spi, const Provider* provider, const String& algorithm);
 
-			public:
-				~AlgorithmParameterGenerator();
+		public:
+			virtual ~AlgorithmParameterGenerator();
 
-				AlgorithmParameters* generateParameters() throw (InvalidAlgorithmParameterException);
+			AlgorithmParameters* generateParameters() throw (InvalidAlgorithmParameterException);
 
-				void init(const AlgorithmParameterSpec&) throw (InvalidAlgorithmParameterException);
-				void init(const AlgorithmParameterSpec&, SecureRandom*) throw (InvalidAlgorithmParameterException);
-				void init(size_t) throw (InvalidParameterException);
-				void init(size_t, SecureRandom*) throw (InvalidParameterException);
+			void init(const AlgorithmParameterSpec& genParamSpec) throw (InvalidAlgorithmParameterException);
+			void init(const AlgorithmParameterSpec&, SecureRandom* random) throw (InvalidAlgorithmParameterException);
+			void init(size_t size) throw (InvalidParameterException);
+			void init(size_t size, SecureRandom* random) throw (InvalidParameterException);
 
-				const String& getAlgorithm() const throw ();
-				const Provider& getProvider() const throw ();
+			const String& getAlgorithm() const throw ();
+			const Provider& getProvider() const throw ();
 		};
 	}
 }

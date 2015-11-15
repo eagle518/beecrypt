@@ -9,17 +9,25 @@ noinst_LTLIBRARIES = libcxxbeeyond.la
 libcxxbeeyond_la_SOURCES = \
 AnyEncodedKeySpec.cxx \
 BeeCertificate.cxx \
+BeeCertPath.cxx \
+BeeCertPathParameters.cxx \
+BeeCertPathValidatorResult.cxx \
 BeeEncodedKeySpec.cxx \
 BeeInputStream.cxx \
 BeeOutputStream.cxx \
+DHAESParameterSpec.cxx \
 PKCS12PBEKey.cxx
 
 noinst_HEADERS = \
 AnyEncodedKeySpec.h \
 BeeCertificate.h \
+BeeCertPath.h \
+BeeCertPathParameters.h \
+BeeCertPathValidatorResult.h \
 BeeEncodedKeySpec.h \
 BeeInputStream.h \
 BeeOutputStream.h \
+DHAESParameterSpec.h \
 PKCS12PBEKey.h
 
 TESTS = testcert

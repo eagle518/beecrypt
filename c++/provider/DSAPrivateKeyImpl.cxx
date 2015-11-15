@@ -20,7 +20,6 @@
 # include "config.h"
 #endif
 
-#include "beecrypt/c++/resource.h"
 #include "beecrypt/c++/provider/DSAPrivateKeyImpl.h"
 #include "beecrypt/c++/provider/BeeKeyFactory.h"
 
@@ -30,6 +29,13 @@ DSAPrivateKeyImpl::DSAPrivateKeyImpl(const DSAPrivateKey& copy)
 {
 	_params = new DSAParameterSpec(copy.getParams());
 	_x = copy.getX();
+	_enc = 0;
+}
+
+DSAPrivateKeyImpl::DSAPrivateKeyImpl(const DSAPrivateKeyImpl& copy)
+{
+	_params = new DSAParameterSpec(*copy._params);
+	_x = copy._x;
 	_enc = 0;
 }
 
@@ -62,9 +68,35 @@ DSAPrivateKeyImpl::~DSAPrivateKeyImpl()
 		delete _enc;
 }
 
-DSAPrivateKey* DSAPrivateKeyImpl::clone() const
+DSAPrivateKeyImpl* DSAPrivateKeyImpl::clone() const throw ()
 {
 	return new DSAPrivateKeyImpl(*this);
+}
+
+bool DSAPrivateKeyImpl::equals(const Object& compare) const throw ()
+{
+	if (this == &compare)
+		return true;
+
+	const DSAPrivateKey* pri = dynamic_cast<const DSAPrivateKey*>(&compare);
+	if (pri)
+	{
+		if (pri->getParams().getP() != _params->getP())
+			return false;
+
+		if (pri->getParams().getQ() != _params->getQ())
+			return false;
+
+		if (pri->getParams().getG() != _params->getG())
+			return false;
+
+		if (pri->getX() != _x)
+			return false;
+
+		return true;
+	}
+
+	return false;
 }
 
 const DSAParams& DSAPrivateKeyImpl::getParams() const throw ()

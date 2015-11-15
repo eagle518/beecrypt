@@ -32,7 +32,11 @@
 /*!\brief Holds all the parameters necessary for the SHA-1 algorithm.
  * \ingroup HASH_sha1_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI sha1Param
+#else
+struct _sha1Param
+#endif
 {
 	/*!\var h
 	 */
@@ -56,7 +60,11 @@ typedef struct
 	 *  copied before it is processed.
 	 */
 	uint32_t offset;
-} sha1Param;
+};
+
+#ifndef __cplusplus
+typedef struct _sha1Param sha1Param;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

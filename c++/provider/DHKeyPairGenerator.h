@@ -17,7 +17,7 @@
  */
 
 /*!\file DHKeyPairGenerator.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DHKEYPAIRGENERATOR_H
@@ -32,7 +32,7 @@ using beecrypt::security::KeyPairGeneratorSpi;
 
 namespace beecrypt {
 	namespace provider {
-		class DHKeyPairGenerator : public KeyPairGeneratorSpi
+		class DHKeyPairGenerator : public beecrypt::security::KeyPairGeneratorSpi
 		{
 		private:
 			size_t _size;

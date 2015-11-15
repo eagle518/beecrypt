@@ -36,13 +36,13 @@ using beecrypt::crypto::interfaces::DHKey;
 namespace beecrypt {
 	namespace crypto {
 		namespace interfaces {
-			/*!\brief Diffie-Hellman PrivateKey interface
-			* \ingroup CXX_IF_m
-			*/
+			/*!\brief Diffie-Hellman private key interface
+			 * \ingroup CXX_CRYPTO_INTERFACES_m
+			 */
 			class DHPrivateKey : public PrivateKey, public DHKey
 			{
-				public:
-					virtual const mpnumber& getX() const throw () = 0;
+			public:
+				virtual const mpnumber& getX() const throw () = 0;
 			};
 		}
 	}

@@ -18,3 +18,8 @@ dnl  You should have received a copy of the GNU Lesser General Public
 dnl  License along with this library; if not, write to the Free Software
 dnl  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+dnl  ABI specifies for integer/pointer parameters:
+dnl	 param 1: %rdi
+dnl  param 2: %rsi
+dnl  param 3: %rdx
+dnl  param 4: %rcx

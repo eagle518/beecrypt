@@ -22,8 +22,8 @@
 # include "config.h"
 #endif
 
-#include "c++/io/FileOutputStream.h"
-using beecrypt::io::FileOutputStream;
+#include "c++/lang/System.h"
+using beecrypt::lang::System;
 #include "c++/util/Properties.h"
 using beecrypt::util::Properties;
 
@@ -53,6 +53,5 @@ int main(int argc, char* argv[])
 
 	delete e;
 
-	FileOutputStream fso(stdout);
-	p.store(fso, "properties test");
+	p.store(System::out, "properties test");
 }

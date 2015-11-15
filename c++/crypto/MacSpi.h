@@ -31,6 +31,8 @@
 using beecrypt::array;
 #include "beecrypt/c++/lang/IllegalStateException.h"
 using beecrypt::lang::IllegalStateException;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/InvalidAlgorithmParameterException.h"
 using beecrypt::security::InvalidAlgorithmParameterException;
 #include "beecrypt/c++/security/InvalidKeyException.h"
@@ -44,23 +46,25 @@ using beecrypt::security::spec::AlgorithmParameterSpec;
 
 namespace beecrypt {
 	namespace crypto {
-		class BEECRYPTCXXAPI MacSpi
+		/*!\ingroup CXX_CRYPTO_m
+		 */
+		class BEECRYPTCXXAPI MacSpi : public beecrypt::lang::Object
 		{
 			friend class Mac;
 
-			protected:
-				virtual const bytearray& engineDoFinal() = 0;
-				virtual size_t engineDoFinal(byte*, size_t, size_t) throw (ShortBufferException) = 0;
-				virtual size_t engineGetMacLength() = 0;
-				virtual void engineInit(const Key&, const AlgorithmParameterSpec*) throw (InvalidKeyException, InvalidAlgorithmParameterException) = 0; 
-				virtual void engineReset() = 0;
-				virtual void engineUpdate(byte) = 0;
-				virtual void engineUpdate(const byte*, size_t, size_t) = 0;
+		protected:
+			virtual const bytearray& engineDoFinal() = 0;
+			virtual size_t engineDoFinal(byte*, size_t, size_t) throw (ShortBufferException) = 0;
+			virtual size_t engineGetMacLength() = 0;
+			virtual void engineInit(const Key&, const AlgorithmParameterSpec*) throw (InvalidKeyException, InvalidAlgorithmParameterException) = 0; 
+			virtual void engineReset() = 0;
+			virtual void engineUpdate(byte) = 0;
+			virtual void engineUpdate(const byte*, size_t, size_t) = 0;
 
-			public:
-				virtual ~MacSpi() {};
+		public:
+			virtual ~MacSpi() {};
 
-				virtual MacSpi* clone() const = 0;
+			virtual MacSpi* clone() const throw () = 0;
 		};
 	}
 }

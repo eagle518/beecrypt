@@ -22,16 +22,20 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/KeyPairGenerator.h"
 #include "beecrypt/c++/security/Security.h"
 
 using namespace beecrypt::security;
 
-KeyPairGenerator::KeyPairGenerator(KeyPairGeneratorSpi* spi, const String& algorithm, const Provider& provider)
+KeyPairGenerator::KeyPairGenerator(KeyPairGeneratorSpi* spi, const Provider* provider, const String& algorithm)
 {
 	_kspi = spi;
+	_prov = provider;
 	_algo = algorithm;
-	_prov = &provider;
 }
 
 KeyPairGenerator::~KeyPairGenerator()
@@ -43,7 +47,13 @@ KeyPairGenerator* KeyPairGenerator::getInstance(const String& algorithm) throw (
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyPairGenerator");
 
-	KeyPairGenerator* result = new KeyPairGenerator((KeyPairGeneratorSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if 0 // HAVE_ASSERT_H
+	std::cout << "cspi is of typeid " << typeid(*tmp->cspi).name() << std::endl;
+
+	assert(dynamic_cast<KeyPairGeneratorSpi*>(tmp->cspi));
+	#endif
+
+	KeyPairGenerator* result = new KeyPairGenerator(reinterpret_cast<KeyPairGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -54,7 +64,11 @@ KeyPairGenerator* KeyPairGenerator::getInstance(const String& algorithm, const S
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyPairGenerator", provider);
 
-	KeyPairGenerator* result = new KeyPairGenerator((KeyPairGeneratorSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<KeyPairGeneratorSpi*>(tmp->cspi));
+	#endif
+
+	KeyPairGenerator* result = new KeyPairGenerator(reinterpret_cast<KeyPairGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -65,7 +79,11 @@ KeyPairGenerator* KeyPairGenerator::getInstance(const String& algorithm, const P
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyPairGenerator", provider);
 
-	KeyPairGenerator* result = new KeyPairGenerator((KeyPairGeneratorSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<KeyPairGeneratorSpi*>(tmp->cspi));
+	#endif
+
+	KeyPairGenerator* result = new KeyPairGenerator(reinterpret_cast<KeyPairGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 

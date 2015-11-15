@@ -30,11 +30,13 @@ using beecrypt::security::GeneralSecurityException;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI NoSuchProviderException : public GeneralSecurityException
 		{
-			public:
-				NoSuchProviderException() throw ();
-				NoSuchProviderException(const String&) throw ();
+		public:
+			NoSuchProviderException() throw ();
+			NoSuchProviderException(const String& message) throw ();
 		};
 	}
 }

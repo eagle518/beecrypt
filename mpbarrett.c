@@ -427,7 +427,7 @@ void mpbsubmod_w(const mpbarrett* b, size_t xsize, const mpw* xdata, size_t ysiz
 	
 	mpsetx(2*size, temp, xsize, xdata);
 	if (mpsubx(2*size, temp, ysize, ydata)) /* if there's carry, i.e. the result would be negative, add the modulus */
-		mpaddx(2*size, temp, size, b->modl);
+		while (!mpaddx(2*size, temp, size, b->modl)); /* keep adding the modulus until we get a carry */
 
 	mpbmod_w(b, temp, result, wksp);
 }

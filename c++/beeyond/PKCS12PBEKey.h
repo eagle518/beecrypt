@@ -33,31 +33,35 @@ using beecrypt::crypto::interfaces::PBEKey;
 
 namespace beecrypt {
 	namespace beeyond {
+		/*!\ingroup CXX_BEEYOND_m
+		 */
 		class BEECRYPTCXXAPI PKCS12PBEKey : public PBEKey
 		{
-			private:
-				array<javachar>    _pswd;
-				bytearray*         _salt;
-				size_t             _iter;
-				mutable bytearray* _enc;
+		private:
+			array<javachar>    _pswd;
+			bytearray*         _salt;
+			size_t             _iter;
+			mutable bytearray* _enc;
 
-			public:
-				static bytearray* encode(const array<javachar>&, const bytearray*, size_t);
+		public:
+			static bytearray* encode(const array<javachar>&, const bytearray*, size_t);
 
-			public:
-				PKCS12PBEKey(const array<javachar>&, const bytearray*, size_t);
-				virtual ~PKCS12PBEKey();
+		public:
+			PKCS12PBEKey(const array<javachar>&, const bytearray*, size_t);
+			virtual ~PKCS12PBEKey();
 
-				virtual PKCS12PBEKey* clone() const;
+			virtual bool operator==(const Key& compare) const throw ();
 
-				virtual size_t getIterationCount() const throw ();
-				virtual const array<javachar>& getPassword() const throw ();
-				virtual const bytearray* getSalt() const throw ();
+			virtual PKCS12PBEKey* clone() const;
 
-				virtual const bytearray* getEncoded() const;
+			virtual size_t getIterationCount() const throw ();
+			virtual const array<javachar>& getPassword() const throw ();
+			virtual const bytearray* getSalt() const throw ();
 
-				virtual const String& getAlgorithm() const throw();
-				virtual const String* getFormat() const throw ();
+			virtual const bytearray* getEncoded() const;
+
+			virtual const String& getAlgorithm() const throw();
+			virtual const String* getFormat() const throw ();
 		};
 	}
 }

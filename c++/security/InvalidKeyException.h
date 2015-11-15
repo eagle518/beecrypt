@@ -30,11 +30,13 @@ using beecrypt::security::KeyException;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI InvalidKeyException : public KeyException
 		{
-			public:
-				InvalidKeyException() throw ();
-				InvalidKeyException(const String&) throw ();
+		public:
+			InvalidKeyException() throw ();
+			InvalidKeyException(const String& message) throw ();
 		};
 	}
 }

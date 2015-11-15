@@ -31,6 +31,8 @@
 using beecrypt::io::InputStream;
 #include "beecrypt/c++/io/OutputStream.h"
 using beecrypt::io::OutputStream;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/cert/Certificate.h"
 using beecrypt::security::cert::Certificate;
 
@@ -40,16 +42,18 @@ using std::vector;
 namespace beecrypt {
 	namespace security {
 		namespace cert {
-			class BEECRYPTCXXAPI CertificateFactorySpi
+			/*!\ingroup CXX_SECURITY_CERT_m
+			 */
+			class BEECRYPTCXXAPI CertificateFactorySpi : public beecrypt::lang::Object
 			{
 				friend class CertificateFactory;
 
-				protected:
-					virtual Certificate* engineGenerateCertificate(InputStream& in) throw (CertificateException) = 0;
-					virtual vector<Certificate*>* engineGenerateCertificates(InputStream& in) throw (CertificateException) = 0;
+			protected:
+				virtual Certificate* engineGenerateCertificate(InputStream& in) throw (CertificateException) = 0;
+				virtual vector<Certificate*>* engineGenerateCertificates(InputStream& in) throw (CertificateException) = 0;
 
-				public:
-					virtual ~CertificateFactorySpi() {};
+			public:
+				virtual ~CertificateFactorySpi() {};
 			};
 		}
 	}

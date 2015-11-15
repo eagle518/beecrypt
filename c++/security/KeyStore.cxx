@@ -22,16 +22,20 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/KeyStore.h"
 #include "beecrypt/c++/security/Security.h"
 
 using namespace beecrypt::security;
 
-KeyStore::KeyStore(KeyStoreSpi* spi, const String& type, const Provider& provider)
+KeyStore::KeyStore(KeyStoreSpi* spi, const Provider* provider, const String& type)
 {
 	_kspi = spi;
+	_prov = provider;
 	_type = type;
-	_prov = &provider;
 	_init = false;
 }
 
@@ -46,7 +50,11 @@ KeyStore* KeyStore::getInstance(const String& type) throw (KeyStoreException)
 	{
 		Security::spi* tmp = Security::getSpi(type, "KeyStore");
 
-		KeyStore* result = new KeyStore((KeyStoreSpi*) tmp->cspi, tmp->name, tmp->prov);
+		#if HAVE_ASSERT_H
+		assert(dynamic_cast<KeyStoreSpi*>(tmp->cspi));
+		#endif
+
+		KeyStore* result = new KeyStore(reinterpret_cast<KeyStoreSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 		delete tmp;
 
@@ -64,7 +72,11 @@ KeyStore* KeyStore::getInstance(const String& type, const String& provider) thro
 	{
 		Security::spi* tmp = Security::getSpi(type, "KeyStore", provider);
 
-		KeyStore* result = new KeyStore((KeyStoreSpi*) tmp->cspi, tmp->name, tmp->prov);
+		#if HAVE_ASSERT_H
+		assert(dynamic_cast<KeyStoreSpi*>(tmp->cspi));
+		#endif
+
+		KeyStore* result = new KeyStore(reinterpret_cast<KeyStoreSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 		delete tmp;
 
@@ -82,7 +94,11 @@ KeyStore* KeyStore::getInstance(const String& type, const Provider& provider) th
 	{
 		Security::spi* tmp = Security::getSpi(type, "KeyStore", provider);
 
-		KeyStore* result = new KeyStore((KeyStoreSpi*) tmp->cspi, tmp->name, tmp->prov);
+		#if HAVE_ASSERT_H
+		assert(dynamic_cast<KeyStoreSpi*>(tmp->cspi));
+		#endif
+
+		KeyStore* result = new KeyStore(reinterpret_cast<KeyStoreSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 		delete tmp;
 
@@ -138,6 +154,22 @@ const Certificate* KeyStore::getCertificate(const String& alias) throw (KeyStore
 	return _kspi->engineGetCertificate(alias);
 }
 
+const vector<Certificate*>* KeyStore::getCertificateChain(const String& alias) throw (KeyStoreException)
+{
+	if (!_init)
+		throw KeyStoreException("Uninitialized keystore");
+
+	return _kspi->engineGetCertificateChain(alias);
+}
+
+void KeyStore::setCertificateEntry(const String& alias, const Certificate& cert) throw (KeyStoreException)
+{
+	if (!_init)
+		throw KeyStoreException("Uninitialized keystore");
+
+	_kspi->engineSetCertificateEntry(alias, cert);
+}
+
 bool KeyStore::isCertificateEntry(const String& alias) throw (KeyStoreException)
 {
 	if (!_init)
@@ -169,7 +201,7 @@ size_t KeyStore::size() const throw (KeyStoreException)
 	return _kspi->engineSize();
 }
 
-void KeyStore::store(OutputStream& out, const array<javachar>* password) throw (IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException)
+void KeyStore::store(OutputStream& out, const array<javachar>* password) throw (KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException)
 {
 	if (!_init)
 		throw KeyStoreException("Uninitialized keystore");

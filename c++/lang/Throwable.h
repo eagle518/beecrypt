@@ -32,19 +32,22 @@ using beecrypt::lang::String;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This class is the superclass of all errors and exceptions
+		 *        used by the BeeCrypt C++ API
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI Throwable
 		{
-			private:
-				String _msg;
+		private:
+			String _msg;
 
-			public:
-				Throwable() throw ();
-				Throwable(const String&) throw ();
-				Throwable(const Throwable&) throw ();
+		public:
+			Throwable() throw ();
+			Throwable(const String& message) throw ();
+			Throwable(const Throwable& cause) throw ();
+			virtual ~Throwable() throw () {};
 
-				virtual ~Throwable() throw () {};
-
-				const String& getMessage() const throw ();
+			const String& getMessage() const throw ();
 		};
 	}
 }

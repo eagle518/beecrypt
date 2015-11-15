@@ -42,18 +42,21 @@ struct _mpnumber
 	mpw*	data;
 
 #ifdef __cplusplus
+	static const mpnumber ZERO;
+	static const mpnumber ONE;
+
 	mpnumber();
 	mpnumber(unsigned int);
 	mpnumber(const mpnumber&);
 	~mpnumber();
 
 	const mpnumber& operator=(const mpnumber&);
-	bool operator==(const mpnumber&);
-	bool operator!=(const mpnumber&);
+	bool operator==(const mpnumber&) const throw ();
+	bool operator!=(const mpnumber&) const throw ();
 
 	void wipe();
 
-	size_t bitlength() const;
+	size_t bitlength() const throw ();
 #endif
 };
 

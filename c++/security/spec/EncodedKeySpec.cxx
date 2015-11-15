@@ -34,10 +34,6 @@ EncodedKeySpec::EncodedKeySpec(const bytearray& copy) : _encoded(copy)
 {
 }
 
-EncodedKeySpec::~EncodedKeySpec()
-{
-}
-
 const bytearray& EncodedKeySpec::getEncoded() const throw ()
 {
 	return _encoded;

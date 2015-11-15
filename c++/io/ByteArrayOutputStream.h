@@ -32,31 +32,34 @@ using beecrypt::io::OutputStream;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class BEECRYPTCXXAPI ByteArrayOutputStream : public OutputStream
 		{
-			private:
-				mutex _lock;
+		private:
+			mutex _lock;
 
-			protected:
-				bytearray _buf;
-				size_t    _count;
+		protected:
+			bytearray buf;
+			size_t    count;
 
-			public:
-				ByteArrayOutputStream();
-				ByteArrayOutputStream(size_t);
-				virtual ~ByteArrayOutputStream();
+		public:
+			ByteArrayOutputStream();
+			ByteArrayOutputStream(size_t size);
+			virtual ~ByteArrayOutputStream();
 
-				void reset() throw ();
-				size_t size() throw ();
-				bytearray* toByteArray();
-				void toByteArray(bytearray&);
-				void writeTo(OutputStream& out) throw (IOException);
+			void reset() throw ();
+			size_t size() throw ();
+			bytearray* toByteArray();
+			void toByteArray(bytearray& b);
+			void toByteArray(byte* data, size_t offset, size_t length);
+			void writeTo(OutputStream& out) throw (IOException);
 
-				virtual void close() throw (IOException);
-				virtual void flush() throw (IOException);
-				virtual void write(byte b) throw (IOException);
-				virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
-				virtual void write(const bytearray& b) throw (IOException);
+			virtual void close() throw (IOException);
+			virtual void flush() throw (IOException);
+			virtual void write(byte b) throw (IOException);
+			virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
+			virtual void write(const bytearray& b) throw (IOException);
 		};
 	}
 }

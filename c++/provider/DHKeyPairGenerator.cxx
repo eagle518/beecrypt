@@ -25,7 +25,6 @@
 #include "beecrypt/c++/provider/DHKeyPairGenerator.h"
 #include "beecrypt/c++/provider/DHPublicKeyImpl.h"
 #include "beecrypt/c++/provider/DHPrivateKeyImpl.h"
-#include "beecrypt/c++/provider/BeeCryptProvider.h"
 #include "beecrypt/c++/security/KeyPair.h"
 
 #include "beecrypt/dldp.h"
@@ -69,7 +68,8 @@ KeyPair* DHKeyPairGenerator::genpair(randomGeneratorContext* rngc)
 
 	if (_spec)
 	{
-		param.p = _spec->getP();
+		// we need q in dldp_pPair
+		param.p = param.q = _spec->getP();
 		param.g = _spec->getG();
 		l = _spec->getL();
 	}
@@ -140,7 +140,11 @@ void DHKeyPairGenerator::engineInitialize(const AlgorithmParameterSpec& spec, Se
 	if (dhspec)
 	{
 		if (_spec)
+		{
+
 			delete _spec;
+			_spec = 0;
+		}
 
 		_spec = new DHParameterSpec(*dhspec);
 		_srng = random;

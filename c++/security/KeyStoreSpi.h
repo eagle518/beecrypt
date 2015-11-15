@@ -27,6 +27,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/io/InputStream.h"
 using beecrypt::io::InputStream;
 #include "beecrypt/c++/io/OutputStream.h"
@@ -55,35 +57,37 @@ using std::vector;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI KeyStoreSpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI KeyStoreSpi : public beecrypt::lang::Object
 		{
 			friend class KeyStore;
 
-			protected:
-				virtual Enumeration* engineAliases() = 0;
-				virtual bool engineContainsAlias(const String&) = 0;
+		protected:
+			virtual Enumeration* engineAliases() = 0;
+			virtual bool engineContainsAlias(const String& alias) = 0;
 				
-				virtual void engineDeleteEntry(const String&) throw (KeyStoreException) = 0;
-				virtual const Date* engineGetCreationDate(const String&) = 0;
+			virtual void engineDeleteEntry(const String& alias) throw (KeyStoreException) = 0;
+			virtual const Date* engineGetCreationDate(const String& alias) = 0;
 
-				virtual const Certificate* engineGetCertificate(const String&) = 0;
-				virtual const String* engineGetCertificateAlias(const Certificate&) = 0;
-				virtual const vector<Certificate*>* engineGetCertificateChain(const String&) = 0;
-				virtual bool engineIsCertificateEntry(const String& alias) = 0;
-				virtual void engineSetCertificateEntry(const String& alias, const Certificate& cert) throw (KeyStoreException) = 0;
+			virtual const Certificate* engineGetCertificate(const String& alias) = 0;
+			virtual const String* engineGetCertificateAlias(const Certificate& cert) = 0;
+			virtual const vector<Certificate*>* engineGetCertificateChain(const String& alias) = 0;
+			virtual bool engineIsCertificateEntry(const String& alias) = 0;
+			virtual void engineSetCertificateEntry(const String& alias, const Certificate& cert) throw (KeyStoreException) = 0;
 				
-				virtual Key* engineGetKey(const String& alias, const array<javachar>& password) throw (NoSuchAlgorithmException, UnrecoverableKeyException) = 0;
-				virtual bool engineIsKeyEntry(const String& alias) = 0;
-				virtual void engineSetKeyEntry(const String& alias, const bytearray& key, const vector<Certificate*>&) throw (KeyStoreException) = 0;
-				virtual void engineSetKeyEntry(const String& alias, const Key& key, const array<javachar>& password, const vector<Certificate*>&) throw (KeyStoreException) = 0;
+			virtual Key* engineGetKey(const String& alias, const array<javachar>& password) throw (NoSuchAlgorithmException, UnrecoverableKeyException) = 0;
+			virtual bool engineIsKeyEntry(const String& alias) = 0;
+			virtual void engineSetKeyEntry(const String& alias, const bytearray& key, const vector<Certificate*>&) throw (KeyStoreException) = 0;
+			virtual void engineSetKeyEntry(const String& alias, const Key& key, const array<javachar>& password, const vector<Certificate*>&) throw (KeyStoreException) = 0;
 
-				virtual size_t engineSize() const = 0;
+			virtual size_t engineSize() const = 0;
 
-				virtual void engineLoad(InputStream* in, const array<javachar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException) = 0;
-				virtual void engineStore(OutputStream& out, const array<javachar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException) = 0;
+			virtual void engineLoad(InputStream* in, const array<javachar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException) = 0;
+			virtual void engineStore(OutputStream& out, const array<javachar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException) = 0;
 
-			public:
-				virtual ~KeyStoreSpi() {};
+		public:
+			virtual ~KeyStoreSpi() {};
 		};
 	}
 }

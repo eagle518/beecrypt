@@ -18,11 +18,20 @@
 /* Define to 1 if you want to enable multithread support */
 #undef ENABLE_THREADS
 
+/* Define to 1 if you want to enable thread-local-storage support */
+#undef ENABLE_THREAD_LOCAL_STORAGE
+
 /* Define to 1 if you are using FreeBSD */
 #undef FREEBSD
 
 /* Define to 1 if you have the <aio.h> header file. */
 #undef HAVE_AIO_H
+
+/* Define to 1 if you have the <asm/byteorder.h> header file. */
+#undef HAVE_ASM_BYTEORDER_H
+
+/* Define to 1 if you have the <assert.h> header file. */
+#undef HAVE_ASSERT_H
 
 /* Define to 1 if you have the <ctype.h> header file. */
 #undef HAVE_CTYPE_H
@@ -57,6 +66,9 @@
 /* . */
 #undef HAVE_GETTIMEOFDAY
 
+/* . */
+#undef HAVE_INLINE
+
 /* */
 #undef HAVE_INT64_T
 
@@ -68,6 +80,9 @@
 
 /* Define to 1 if you have the `winmm' library (-lwinmm). */
 #undef HAVE_LIBWINMM
+
+/* */
+#undef HAVE_LONG_LONG
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
@@ -130,6 +145,9 @@
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #undef HAVE_SYS_IOCTL_H
 
+/* Define to 1 if you have the <sys/mman.h> header file. */
+#undef HAVE_SYS_MMAN_H
+
 /* Define to 1 if you have the <sys/soundcard.h> header file. */
 #undef HAVE_SYS_SOUNDCARD_H
 
@@ -159,6 +177,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* */
+#undef HAVE_UNSIGNED_LONG_LONG
 
 /* Define to 1 if you are using HPUX */
 #undef HPUX
@@ -292,5 +313,11 @@
 # ifdef _REENTRANT
 #  undef _REENTRANT
 # endif
+#endif
+
+
+
+#if !ENABLE_THREAD_LOCAL_STORAGE
+# define __thread
 #endif
 

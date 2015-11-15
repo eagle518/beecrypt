@@ -31,11 +31,13 @@ using beecrypt::security::cert::CertificateException;
 namespace beecrypt {
 	namespace security {
 		namespace cert {
+			/*!\ingroup CXX_SECURITY_CERT_m
+			 */
 			class BEECRYPTCXXAPI CertificateNotYetValidException : public CertificateException
 			{
-				public:
-					CertificateNotYetValidException() throw ();
-					CertificateNotYetValidException(const String&) throw ();
+			public:
+				CertificateNotYetValidException() throw ();
+				CertificateNotYetValidException(const String& message) throw ();
 			};
 		}
 	}

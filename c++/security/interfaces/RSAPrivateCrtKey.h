@@ -32,17 +32,17 @@ namespace beecrypt {
 	namespace security {
 		namespace interfaces {
 			/*!\brief The interface to an RSA private key, as defined in the PKCS#1 standard, using the Chinese Remainder Theorem (CRT) information values.
-			* \ingroup CXX_IF_m
-			*/
+			 * \ingroup CXX_SECURITY_INTERFACES_m
+			 */
 			class RSAPrivateCrtKey : public RSAPrivateKey
 			{
-				public:
-					virtual const mpnumber& getPublicExponent() const throw () = 0;
-					virtual const mpbarrett& getPrimeP() const throw () = 0;
-					virtual const mpbarrett& getPrimeQ() const throw () = 0;
-					virtual const mpnumber& getPrimeExponentP() const throw () = 0;
-					virtual const mpnumber& getPrimeExponentQ() const throw () = 0;
-					virtual const mpnumber& getCrtCoefficient() const throw () = 0;
+			public:
+				virtual const mpnumber& getPublicExponent() const throw () = 0;
+				virtual const mpbarrett& getPrimeP() const throw () = 0;
+				virtual const mpbarrett& getPrimeQ() const throw () = 0;
+				virtual const mpnumber& getPrimeExponentP() const throw () = 0;
+				virtual const mpnumber& getPrimeExponentQ() const throw () = 0;
+				virtual const mpnumber& getCrtCoefficient() const throw () = 0;
 			};
 		}
 	}

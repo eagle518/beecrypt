@@ -23,12 +23,12 @@
 #ifndef _CLASS_SECRETKEYFACTORY_H
 #define _CLASS_SECRETKEYFACTORY_H
 
-// #include "beecrypt/beecrypt.api.h"
-
 #ifdef __cplusplus
 
 #include "beecrypt/c++/crypto/SecretKeyFactorySpi.h"
 using beecrypt::crypto::SecretKeyFactorySpi;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/Provider.h"
 using beecrypt::security::Provider;
 #include "beecrypt/c++/security/NoSuchAlgorithmException.h"
@@ -41,32 +41,34 @@ using std::type_info;
 
 namespace beecrypt {
 	namespace crypto {
-		class BEECRYPTCXXAPI SecretKeyFactory
+		/*!\ingroup CXX_CRYPTO_m
+		 */
+		class BEECRYPTCXXAPI SecretKeyFactory : public beecrypt::lang::Object
 		{
-			public:
-				static SecretKeyFactory* getInstance(const String&) throw (NoSuchAlgorithmException);
-				static SecretKeyFactory* getInstance(const String&, const String&) throw (NoSuchAlgorithmException, NoSuchProviderException);
-				static SecretKeyFactory* getInstance(const String&, const Provider&) throw (NoSuchAlgorithmException);
+		public:
+			static SecretKeyFactory* getInstance(const String& algorithm) throw (NoSuchAlgorithmException);
+			static SecretKeyFactory* getInstance(const String& algorithm, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
+			static SecretKeyFactory* getInstance(const String& algorithm, const Provider& provider) throw (NoSuchAlgorithmException);
 
-			private:
-				SecretKeyFactorySpi* _kspi;
-				String               _algo;
-				const Provider*      _prov;
+		private:
+			SecretKeyFactorySpi* _kspi;
+			const Provider*      _prov;
+			String               _algo;
 
-			protected:
-				SecretKeyFactory(SecretKeyFactorySpi*, const String&, const Provider&);
+		protected:
+			SecretKeyFactory(SecretKeyFactorySpi* spi, const Provider* provider, const String& algorithm);
 
-			public:
-				~SecretKeyFactory();
+		public:
+			virtual ~SecretKeyFactory();
 
-				SecretKey* generateSecret(const KeySpec&) throw (InvalidKeySpecException);
+			SecretKey* generateSecret(const KeySpec&) throw (InvalidKeySpecException);
 
-				KeySpec* getKeySpec(const SecretKey& key, const type_info&) throw (InvalidKeySpecException);
+			KeySpec* getKeySpec(const SecretKey& key, const type_info&) throw (InvalidKeySpecException);
 
-				SecretKey* translateKey(const SecretKey&) throw (InvalidKeyException);
+			SecretKey* translateKey(const SecretKey&) throw (InvalidKeyException);
 
-				const String& getAlgorithm() const throw ();
-				const Provider& getProvider() const throw ();
+			const String& getAlgorithm() const throw ();
+			const Provider& getProvider() const throw ();
 		};
 	}
 }

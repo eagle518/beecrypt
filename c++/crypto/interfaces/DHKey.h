@@ -31,13 +31,13 @@ using beecrypt::crypto::interfaces::DHParams;
 namespace beecrypt {
 	namespace crypto {
 		namespace interfaces {
-			/*!\brief Diffie-Hellman key interface.
-			* \ingroup CXX_IF_m
-			*/
+			/*!\brief Diffie-Hellman key interface
+			 * \ingroup CXX_CRYPTO_INTERFACES_m
+			 */
 			class DHKey
 			{
-				public:
-					virtual const DHParams& getParams() const throw () = 0;
+			public:
+				virtual const DHParams& getParams() const throw () = 0;
 			};
 		}
 	}

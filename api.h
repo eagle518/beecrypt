@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2001, 2002, 2004 Beeyond Software Holding BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,9 @@
 #endif
 #ifndef ROTR32
 # define ROTR32(x, s) (((x) >> (s)) | ((x) << (32 - (s))))
+#endif
+#ifndef ROTR64
+# define ROTR64(x, s) (((x) >> (s)) | ((x) << (64 - (s))))
 #endif
 
 typedef uint8_t		byte;

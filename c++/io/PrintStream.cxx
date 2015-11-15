@@ -206,6 +206,64 @@ void PrintStream::print(javachar ch) throw ()
 	}
 }
 
+void PrintStream::print(javashort x) throw ()
+{
+	if (!_closed)
+	{
+		char tmp[7];
+		int rc;
+
+		#if SIZEOF_int == 4
+		rc = sprintf(tmp, "%hd", x);
+		#else
+		rc = sprintf(tmp, "%d", x);	
+		#endif
+
+		if (rc < 0)
+			write((const byte*) tmp, 0, (size_t) rc);
+	}
+}
+
+void PrintStream::print(javaint x) throw ()
+{
+	if (!_closed)
+	{
+		char tmp[11];
+		int rc;
+
+		#if SIZEOF_INT == 4
+		rc = sprintf(tmp, "%d", x);
+		#else
+		rc = sprintf(tmp, "%ld", x);
+		#endif
+
+		if (rc > 0)
+			write((const byte*) tmp, 0, (size_t) rc);
+	}
+}
+
+void PrintStream::print(javalong x) throw ()
+{
+	if (!_closed)
+	{
+		char tmp[21];
+		int rc;
+
+		#if WIN32
+		rc = sprintf(tmp, "%I64d", x);
+		#elif SIZEOF_LONG == 8
+		rc = sprintf(tmp, "%ld", x);
+		#elif HAVE_LONG_LONG
+		rc = sprintf(tmp, "%lld", x);
+		#else
+		# error
+		#endif
+
+		if (rc > 0)
+			write((const byte*) tmp, 0, (size_t) rc);
+	}
+}
+
 void PrintStream::print(const array<javachar>& chars) throw ()
 {
 	print(chars.data(), chars.size());
@@ -234,6 +292,33 @@ void PrintStream::println(bool b) throw ()
 	if (!_closed)
 	{
 		print(b);
+		println();
+	}
+}
+
+void PrintStream::println(javashort x) throw ()
+{
+	if (!_closed)
+	{
+		print(x);
+		println();
+	}
+}
+
+void PrintStream::println(javaint x) throw ()
+{
+	if (!_closed)
+	{
+		print(x);
+		println();
+	}
+}
+
+void PrintStream::println(javalong x) throw ()
+{
+	if (!_closed)
+	{
+		print(x);
 		println();
 	}
 }

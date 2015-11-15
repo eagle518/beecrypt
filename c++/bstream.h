@@ -38,7 +38,7 @@ using beecrypt::security::PublicKey;
 
 namespace beecrypt {
 	BEECRYPTCXXAPI
-	ostream& operator<<(ostream& stream, const PublicKey&);
+	ostream& operator<<(ostream& stream, const PublicKey& key);
 }
 
 #endif

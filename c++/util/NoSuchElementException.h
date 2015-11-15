@@ -26,15 +26,16 @@
 #ifdef __cplusplus
 
 #include "beecrypt/c++/lang/RuntimeException.h"
-using beecrypt::lang::RuntimeException;
 
 namespace beecrypt {
 	namespace util {
-		class BEECRYPTCXXAPI NoSuchElementException : public RuntimeException
+		/*!\ingroup CXX_UTIL_m
+		 */
+		class BEECRYPTCXXAPI NoSuchElementException : public beecrypt::lang::RuntimeException
 		{
-			public:
-				NoSuchElementException() throw ();
-				NoSuchElementException(const String&) throw ();
+		public:
+			NoSuchElementException() throw ();
+			NoSuchElementException(const String&) throw ();
 		};
 	}
 }

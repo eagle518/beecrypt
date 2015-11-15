@@ -29,6 +29,10 @@
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This typedef defines our String class as IBM's ICU
+		 *        UnicodeString
+		 * \ingroup CXX_LANG_m
+		 */
 		typedef UnicodeString String;
 	}
 }

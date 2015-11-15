@@ -22,6 +22,10 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/AlgorithmParameters.h"
 #include "beecrypt/c++/security/AlgorithmParametersSpi.h"
 #include "beecrypt/c++/security/Provider.h"
@@ -31,11 +35,11 @@ using beecrypt::security::spec::AlgorithmParameterSpec;
 
 using namespace beecrypt::security;
 
-AlgorithmParameters::AlgorithmParameters(AlgorithmParametersSpi* spi, const String& algorithm, const Provider& provider)
+AlgorithmParameters::AlgorithmParameters(AlgorithmParametersSpi* spi, const Provider* provider, const String& algorithm)
 {
 	_aspi = spi;
+	_prov = provider;
 	_algo = algorithm;
-	_prov = &provider;
 }
 
 AlgorithmParameters::~AlgorithmParameters()
@@ -47,7 +51,11 @@ AlgorithmParameters* AlgorithmParameters::getInstance(const String& algorithm) t
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameters");
 
-	AlgorithmParameters* result = new AlgorithmParameters((AlgorithmParametersSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<AlgorithmParametersSpi*>(tmp->cspi));
+	#endif
+
+	AlgorithmParameters* result = new AlgorithmParameters(reinterpret_cast<AlgorithmParametersSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -58,7 +66,11 @@ AlgorithmParameters* AlgorithmParameters::getInstance(const String& algorithm, c
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameters", provider);
 
-	AlgorithmParameters* result = new AlgorithmParameters((AlgorithmParametersSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<AlgorithmParametersSpi*>(tmp->cspi));
+	#endif
+
+	AlgorithmParameters* result = new AlgorithmParameters(reinterpret_cast<AlgorithmParametersSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -69,7 +81,11 @@ AlgorithmParameters* AlgorithmParameters::getInstance(const String& algorithm, c
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameters", provider);
 
-	AlgorithmParameters* result = new AlgorithmParameters((AlgorithmParametersSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<AlgorithmParametersSpi*>(tmp->cspi));
+	#endif
+
+	AlgorithmParameters* result = new AlgorithmParameters(reinterpret_cast<AlgorithmParametersSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 

@@ -36,31 +36,34 @@ using beecrypt::io::FilterOutputStream;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI DataOutputStream : public FilterOutputStream, public DataOutput
 		{
-			private:
-				mutex _lock;
-				UConverter* _utf;
+		private:
+			mutex _lock;
+			UConverter* _utf;
 
-			protected:
-				size_t written;
+		protected:
+			size_t written;
 
-			public:
-				DataOutputStream(OutputStream& out);
-				virtual ~DataOutputStream();
+		public:
+			DataOutputStream(OutputStream& out);
+			virtual ~DataOutputStream();
 
-				size_t size() const throw ();
+			size_t size() const throw ();
 
-				virtual void write(byte) throw (IOException);
-				virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
-				virtual void write(const bytearray&) throw (IOException);
-				virtual void writeBoolean(bool) throw (IOException);
-				virtual void writeByte(byte) throw (IOException);
-				virtual void writeChars(const String&) throw (IOException);
-				virtual void writeInt(javaint) throw (IOException);
-				virtual void writeLong(javalong) throw (IOException);
-				virtual void writeShort(javashort) throw (IOException);
-				virtual void writeUTF(const String&) throw (IOException);
+			virtual void write(byte b) throw (IOException);
+			virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
+			virtual void write(const bytearray& b) throw (IOException);
+			virtual void writeBoolean(bool v) throw (IOException);
+			virtual void writeByte(byte v) throw (IOException);
+			virtual void writeChar(javaint v) throw (IOException);
+			virtual void writeChars(const String& s) throw (IOException);
+			virtual void writeInt(javaint v) throw (IOException);
+			virtual void writeLong(javalong v) throw (IOException);
+			virtual void writeShort(javashort v) throw (IOException);
+			virtual void writeUTF(const String& str) throw (IOException);
 		};
 	}
 }

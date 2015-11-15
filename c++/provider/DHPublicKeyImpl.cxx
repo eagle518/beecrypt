@@ -25,31 +25,33 @@
 
 using namespace beecrypt::provider;
 
-DHPublicKeyImpl::DHPublicKeyImpl(const DHPublicKey& copy)
+DHPublicKeyImpl::DHPublicKeyImpl(const DHPublicKey& copy) : _y(copy.getY())
 {
 	_params = new DHParameterSpec(copy.getParams());
-	_y = copy.getY();
 	_enc = 0;
 }
 
-DHPublicKeyImpl::DHPublicKeyImpl(const DHParams& params, const mpnumber& y)
+DHPublicKeyImpl::DHPublicKeyImpl(const DHPublicKeyImpl& copy) : _y(copy._y)
+{
+	_params = new DHParameterSpec(*copy._params);
+	_enc = 0;
+}
+
+DHPublicKeyImpl::DHPublicKeyImpl(const DHParams& params, const mpnumber& y) : _y(y)
 {
 	_params = new DHParameterSpec(params.getP(), params.getG(), params.getL());
-	_y = y;
 	_enc = 0;
 }
 
-DHPublicKeyImpl::DHPublicKeyImpl(const dhparam& params, const mpnumber& y)
+DHPublicKeyImpl::DHPublicKeyImpl(const dhparam& params, const mpnumber& y) : _y(y)
 {
 	_params = new DHParameterSpec(params.p, params.g);
-	_y = y;
 	_enc = 0;
 }
 
-DHPublicKeyImpl::DHPublicKeyImpl(const mpbarrett& p, const mpnumber& g, const mpnumber& y)
+DHPublicKeyImpl::DHPublicKeyImpl(const mpbarrett& p, const mpnumber& g, const mpnumber& y) : _y(y)
 {
 	_params = new DHParameterSpec(p, g);
-	_y = y;
 	_enc = 0;
 }
 
@@ -60,9 +62,32 @@ DHPublicKeyImpl::~DHPublicKeyImpl()
 		delete _enc;
 }
 
-DHPublicKey* DHPublicKeyImpl::clone() const
+DHPublicKeyImpl* DHPublicKeyImpl::clone() const throw ()
 {
 	return new DHPublicKeyImpl(*this);
+}
+
+bool DHPublicKeyImpl::equals(const Object& compare) const throw ()
+{
+	if (this == &compare)
+		return true;
+
+	const DHPublicKey* pub = dynamic_cast<const DHPublicKey*>(&compare);
+	if (pub)
+	{
+		if (pub->getParams().getP() != _params->getP())
+			return false;
+
+		if (pub->getParams().getG() != _params->getG())
+			return false;
+
+		if (pub->getY() != _y)
+			return false;
+
+		return true;
+	}
+
+	return false;
 }
 
 const DHParams& DHPublicKeyImpl::getParams() const throw ()

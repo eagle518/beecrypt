@@ -30,15 +30,17 @@ using beecrypt::security::spec::EncodedKeySpec;
 
 namespace beecrypt {
 	namespace beeyond {
+		/*!\ingroup CXX_BEEYOND_m
+		 */
 		class BEECRYPTCXXAPI BeeEncodedKeySpec : public EncodedKeySpec
 		{
-			public:
-				BeeEncodedKeySpec(const byte*, size_t);
-				BeeEncodedKeySpec(const bytearray&);
+		public:
+			BeeEncodedKeySpec(const byte*, size_t);
+			BeeEncodedKeySpec(const bytearray&);
 
-				virtual ~BeeEncodedKeySpec();
+			virtual ~BeeEncodedKeySpec();
 
-				virtual const String& getFormat() const throw ();
+			virtual const String& getFormat() const throw ();
 		};
 	}
 }

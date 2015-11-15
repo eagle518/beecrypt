@@ -31,6 +31,8 @@ using beecrypt::array;
 using beecrypt::io::DataInputStream;
 #include "beecrypt/c++/io/DataOutputStream.h"
 using beecrypt::io::DataOutputStream;
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
 #include "beecrypt/c++/provider/BeeCertificateFactory.h"
 using beecrypt::provider::BeeCertificateFactory;
 #include "beecrypt/c++/security/PublicKey.h"
@@ -55,128 +57,138 @@ namespace beecrypt {
 		* Issuer is informational
 		* Subject is used to identify the type of certificate
 		*/
-		class BEECRYPTCXXAPI BeeCertificate : public Certificate
+		/*!\ingroup CXX_BEEYOND_m
+		 */
+		class BEECRYPTCXXAPI BeeCertificate : public beecrypt::security::cert::Certificate, public beecrypt::lang::Cloneable
 		{
 			friend class BeeCertificateFactory;
 
-			public:
-				static const Date FOREVER;
+		public:
+			static const Date FOREVER;
 
-			protected:
-				struct Field
-				{
-					javaint type;
+			static Certificate* cloneCertificate(const Certificate& cert) throw (CloneNotSupportedException);
+			static PublicKey* clonePublicKey(const PublicKey& pub) throw (CloneNotSupportedException);
 
-					virtual ~Field();
+		protected:
+			struct Field
+			{
+				javaint type;
 
-					virtual Field* clone() const = 0;
+				virtual ~Field() throw ();
 
-					virtual void decode(DataInputStream&) throw (IOException) = 0;
-					virtual void encode(DataOutputStream&) const throw (IOException) = 0;
-				};
+				virtual Field* clone() const throw (CloneNotSupportedException) = 0;
 
-				struct UnknownField : public Field
-				{
-					bytearray encoding;
+				virtual void decode(DataInputStream&) throw (IOException) = 0;
+				virtual void encode(DataOutputStream&) const throw (IOException) = 0;
+			};
 
-					UnknownField();
-					UnknownField(const UnknownField&);
-					virtual ~UnknownField();
+			struct UnknownField : public Field
+			{
+				bytearray encoding;
+
+				UnknownField() throw ();
+				UnknownField(const UnknownField&) throw ();
+				virtual ~UnknownField() throw ();
 					
-					virtual Field* clone() const;
+				virtual Field* clone() const throw ();
 
-					virtual void decode(DataInputStream&) throw (IOException);
-					virtual void encode(DataOutputStream&) const throw (IOException);
-				};
+				virtual void decode(DataInputStream&) throw (IOException);
+				virtual void encode(DataOutputStream&) const throw (IOException);
+			};
 
-				struct PublicKeyField : public Field
-				{
-					static const javaint FIELD_TYPE;
+			struct PublicKeyField : public Field
+			{
+				static const javaint FIELD_TYPE;
 
-					PublicKey* pub;
+				PublicKey* pub;
 
-					PublicKeyField();
-					PublicKeyField(const PublicKey& key);
-					virtual ~PublicKeyField();
+				PublicKeyField() throw ();
+				PublicKeyField(PublicKey* key) throw ();
+				PublicKeyField(const PublicKey& key) throw (CloneNotSupportedException);
+				virtual ~PublicKeyField() throw ();
 
-					virtual Field* clone() const;
+				virtual Field* clone() const throw (CloneNotSupportedException);
 
-					virtual void decode(DataInputStream&) throw (IOException);
-					virtual void encode(DataOutputStream&) const throw (IOException);
-				};
+				virtual void decode(DataInputStream&) throw (IOException);
+				virtual void encode(DataOutputStream&) const throw (IOException);
+			};
 
-				struct ParentCertificateField : public Field
-				{
-					static const javaint FIELD_TYPE;
+			struct ParentCertificateField : public Field
+			{
+				static const javaint FIELD_TYPE;
 
-					Certificate* parent;
+				Certificate* parent;
 
-					ParentCertificateField();
-					ParentCertificateField(const Certificate&);
-					virtual ~ParentCertificateField();
+				ParentCertificateField() throw ();
+				ParentCertificateField(Certificate*) throw ();
+				ParentCertificateField(const Certificate&) throw (CloneNotSupportedException);
+				virtual ~ParentCertificateField() throw ();
 
-					virtual Field* clone() const;
+				virtual Field* clone() const throw (CloneNotSupportedException);
 
-					virtual void decode(DataInputStream&) throw (IOException);
-					virtual void encode(DataOutputStream&) const throw (IOException);
-				};
+				virtual void decode(DataInputStream&) throw (IOException);
+				virtual void encode(DataOutputStream&) const throw (IOException);
+			};
 
-				virtual Field* instantiateField(javaint type);
+			virtual Field* instantiateField(javaint type);
 
-			public:
-				typedef vector<Field*> fields_vector;
-				typedef vector<Field*>::iterator fields_iterator;
-				typedef vector<Field*>::const_iterator fields_const_iterator;
+		public:
+			typedef vector<Field*> fields_vector;
+			typedef vector<Field*>::iterator fields_iterator;
+			typedef vector<Field*>::const_iterator fields_const_iterator;
 
-			protected:
-				String        issuer;
-				String        subject;
-				Date          created;
-				Date          expires;
-				fields_vector fields;
-				String        signature_algorithm;
-				bytearray     signature;
+		protected:
+			String        issuer;
+			String        subject;
+			Date          created;
+			Date          expires;
+			fields_vector fields;
+			String        signature_algorithm;
+			bytearray     signature;
 
-				mutable bytearray* enc;
-				mutable String* str;
+			mutable bytearray* enc;
+			mutable String* str;
 
-				BeeCertificate();
-				BeeCertificate(InputStream& in) throw (IOException);
+			BeeCertificate();
+			BeeCertificate(InputStream& in) throw (IOException);
 
-				bytearray* encodeTBS() const;
+			bytearray* encodeTBS() const;
 
-			public:
-				BeeCertificate(const BeeCertificate&);
-				virtual ~BeeCertificate();
+		public:
+			BeeCertificate(const BeeCertificate&);
+			virtual ~BeeCertificate();
 
-				virtual BeeCertificate* clone() const;
+			virtual BeeCertificate* clone() const throw ();
 
-				virtual const bytearray& getEncoded() const;
-				virtual const PublicKey& getPublicKey() const;
+			virtual const bytearray& getEncoded() const;
+			virtual const PublicKey& getPublicKey() const;
 
-				virtual void verify(const PublicKey&) throw (CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException);
-				virtual void verify(const PublicKey&, const String&) throw (CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException);
-				virtual const String& toString() const throw ();
+			virtual void verify(const PublicKey&) const throw (CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException);
+			virtual void verify(const PublicKey&, const String&) const throw (CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException);
+			virtual const String& toString() const throw ();
 
-				void checkValidity() const throw (CertificateExpiredException, CertificateNotYetValidException);
-				void checkValidity(const Date&) const throw (CertificateExpiredException, CertificateNotYetValidException);
+			void checkValidity() const throw (CertificateExpiredException, CertificateNotYetValidException);
+			void checkValidity(const Date&) const throw (CertificateExpiredException, CertificateNotYetValidException);
 
-				const String& getIssuer() const throw ();
-				const String& getSubject() const throw ();
+			const String& getIssuer() const throw ();
+			const String& getSubject() const throw ();
 
-				const Date& getNotAfter() const throw ();
-				const Date& getNotBefore() const throw ();
+			const Date& getNotAfter() const throw ();
+			const Date& getNotBefore() const throw ();
 
-				const bytearray& getSignature() const throw ();
-				const String& getSigAlgName() const throw ();
+			const bytearray& getSignature() const throw ();
+			const String& getSigAlgName() const throw ();
 
-				bool hasPublicKey() const;
-				bool hasParentCertificate() const;
+			bool hasPublicKey() const;
+			bool hasParentCertificate() const;
 
-				const Certificate& getParentCertificate() const;
+			bool isSelfSignedCertificate() const;
 
-			public:
-				static BeeCertificate* self(const PublicKey&, const PrivateKey&, const String& sigAlgName) throw (InvalidKeyException, NoSuchAlgorithmException);
+			const Certificate& getParentCertificate() const;
+
+		public:
+			static BeeCertificate* self(const PublicKey& pub, const PrivateKey& pri, const String& signatureAlgorithm) throw (InvalidKeyException, NoSuchAlgorithmException);
+			static BeeCertificate* make(const PublicKey& pub, const PrivateKey& pri, const String& signatureAlgorithm, const Certificate& parent) throw (InvalidKeyException, NoSuchAlgorithmException);
 		};
 	}
 }

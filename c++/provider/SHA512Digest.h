@@ -16,29 +16,44 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/*!\file BeeCryptProvider.h
- * \ingroup CXX_PROV_m
+/*!\file SHA512Digest.h
+ * \ingroup CXX_PROVIDER_m
  */
 
-#ifndef _CLASS_BEECRYPTPROVIDER_H
-#define _CLASS_BEECRYPTPROVIDER_H
+#ifndef _CLASS_SHA512DIGEST_H
+#define _CLASS_SHA512DIGEST_H
+
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/sha512.h"
 
 #ifdef __cplusplus
 
-#include "beecrypt/c++/security/Provider.h"
-using beecrypt::security::Provider;
+#include "beecrypt/c++/security/MessageDigestSpi.h"
+using beecrypt::security::MessageDigestSpi;
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
 
 namespace beecrypt {
 	namespace provider {
-		class BeeCryptProvider : public Provider
+		class SHA512Digest : public beecrypt::security::MessageDigestSpi, public beecrypt::lang::Cloneable
 		{
 		private:
-			void putall();
+			sha512Param _param;
+			bytearray _digest;
+
+		protected:
+			virtual const bytearray& engineDigest();
+			virtual size_t engineDigest(byte*, size_t, size_t) throw (ShortBufferException);
+			virtual size_t engineGetDigestLength();
+			virtual void engineReset();
+			virtual void engineUpdate(byte);
+			virtual void engineUpdate(const byte*, size_t, size_t);
 
 		public:
-			BeeCryptProvider();
-			BeeCryptProvider(void*);
-			virtual ~BeeCryptProvider();
+			SHA512Digest();
+			virtual ~SHA512Digest();
+
+			virtual SHA512Digest* clone() const throw ();
 		};
 	}
 }

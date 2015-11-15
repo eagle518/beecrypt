@@ -25,6 +25,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/lang/String.h"
 using beecrypt::lang::String;
 #include "beecrypt/c++/security/Provider.h"
@@ -42,29 +44,31 @@ using std::vector;
 namespace beecrypt {
 	namespace security {
 		namespace cert {
-			class BEECRYPTCXXAPI CertificateFactory
+			/*!\ingroup CXX_SECURITY_CERT_m
+			 */
+			class BEECRYPTCXXAPI CertificateFactory : public beecrypt::lang::Object
 			{
-				public:
-					static CertificateFactory* getInstance(const String&) throw (NoSuchAlgorithmException);
-					static CertificateFactory* getInstance(const String&, const String&) throw (NoSuchAlgorithmException, NoSuchProviderException);
-					static CertificateFactory* getInstance(const String&, const Provider&) throw (NoSuchAlgorithmException);
+			public:
+				static CertificateFactory* getInstance(const String& type) throw (NoSuchAlgorithmException);
+				static CertificateFactory* getInstance(const String& type, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
+				static CertificateFactory* getInstance(const String& type, const Provider& provider) throw (NoSuchAlgorithmException);
 
-				private:
-					CertificateFactorySpi* _cspi;
-					String                 _type;
-					const Provider*        _prov;
+			private:
+				CertificateFactorySpi* _cspi;
+				const Provider*        _prov;
+				String                 _type;
 
-				protected:
-					CertificateFactory(CertificateFactorySpi*, const String&, const Provider&);
+			protected:
+				CertificateFactory(CertificateFactorySpi* spi, const Provider* provider, const String& type);
 
-				public:
-					~CertificateFactory();
+			public:
+				virtual ~CertificateFactory();
 
-					Certificate* generateCertificate(InputStream& in) throw (CertificateException);
-					vector<Certificate*>* generateCertificates(InputStream& in) throw (CertificateException);
+				Certificate* generateCertificate(InputStream& in) throw (CertificateException);
+				vector<Certificate*>* generateCertificates(InputStream& in) throw (CertificateException);
 
-					const String& getType() const throw ();
-					const Provider& getProvider() const throw ();
+				const String& getType() const throw ();
+				const Provider& getProvider() const throw ();
 			};
 		}
 	}

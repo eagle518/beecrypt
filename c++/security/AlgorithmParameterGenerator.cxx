@@ -22,6 +22,10 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/AlgorithmParameterGenerator.h"
 #include "beecrypt/c++/security/AlgorithmParameterGeneratorSpi.h"
 #include "beecrypt/c++/security/AlgorithmParameters.h"
@@ -31,11 +35,11 @@
 
 using namespace beecrypt::security;
 
-AlgorithmParameterGenerator::AlgorithmParameterGenerator(AlgorithmParameterGeneratorSpi* spi, const String& algorithm, const Provider& provider)
+AlgorithmParameterGenerator::AlgorithmParameterGenerator(AlgorithmParameterGeneratorSpi* spi, const Provider* provider, const String& algorithm)
 {
 	_aspi = spi;
+	_prov = provider;
 	_algo = algorithm;
-	_prov = &provider;
 }
 
 AlgorithmParameterGenerator::~AlgorithmParameterGenerator()
@@ -47,7 +51,11 @@ AlgorithmParameterGenerator* AlgorithmParameterGenerator::getInstance(const Stri
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameterGenerator");
 
-    AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator((AlgorithmParameterGeneratorSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi));
+	#endif
+
+    AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator(reinterpret_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
     delete tmp;
                                                                                 
@@ -58,7 +66,11 @@ AlgorithmParameterGenerator* AlgorithmParameterGenerator::getInstance(const Stri
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameterGenerator", provider);
 
-    AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator((AlgorithmParameterGeneratorSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi));
+	#endif
+
+    AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator(reinterpret_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
     delete tmp;
                                                                                 
@@ -69,7 +81,11 @@ AlgorithmParameterGenerator* AlgorithmParameterGenerator::getInstance(const Stri
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameterGenerator", provider);
 
-    AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator((AlgorithmParameterGeneratorSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi));
+	#endif
+
+    AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator(reinterpret_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
     delete tmp;
                                                                                 

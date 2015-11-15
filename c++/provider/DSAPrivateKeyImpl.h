@@ -17,7 +17,7 @@
  */
 
 /*!\file DSAPrivateKeyImpl.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DSAPRIVATEKEYIMPL_H
@@ -25,6 +25,10 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/interfaces/DSAPrivateKey.h"
 using beecrypt::security::interfaces::DSAPrivateKey;
 #include "beecrypt/c++/security/spec/DSAParameterSpec.h"
@@ -32,29 +36,31 @@ using beecrypt::security::spec::DSAParameterSpec;
 
 namespace beecrypt {
 	namespace provider {
-		class DSAPrivateKeyImpl : public DSAPrivateKey
+		class DSAPrivateKeyImpl : public beecrypt::lang::Object, public beecrypt::security::interfaces::DSAPrivateKey, public beecrypt::lang::Cloneable
 		{
-			private:
-				DSAParameterSpec* _params;
-				mpnumber _x;
-				mutable bytearray* _enc;
+		private:
+			DSAParameterSpec* _params;
+			mpnumber _x;
+			mutable bytearray* _enc;
 
-			public:
-				DSAPrivateKeyImpl(const DSAPrivateKey&);
-				DSAPrivateKeyImpl(const DSAParams&, const mpnumber&);
-				DSAPrivateKeyImpl(const dsaparam&, const mpnumber&);
-				DSAPrivateKeyImpl(const mpbarrett&, const mpbarrett&, const mpnumber&, const mpnumber&);
+		public:
+			DSAPrivateKeyImpl(const DSAPrivateKey&);
+			DSAPrivateKeyImpl(const DSAPrivateKeyImpl&);
+			DSAPrivateKeyImpl(const DSAParams&, const mpnumber&);
+			DSAPrivateKeyImpl(const dsaparam&, const mpnumber&);
+			DSAPrivateKeyImpl(const mpbarrett&, const mpbarrett&, const mpnumber&, const mpnumber&);
+			virtual ~DSAPrivateKeyImpl();
 
-				virtual ~DSAPrivateKeyImpl();
+			virtual DSAPrivateKeyImpl* clone() const throw ();
 
-				virtual DSAPrivateKey* clone() const;
+			virtual bool equals(const Object& compare) const throw ();
 
-				virtual const DSAParams& getParams() const throw ();
-				virtual const mpnumber& getX() const throw ();
+			virtual const DSAParams& getParams() const throw ();
+			virtual const mpnumber& getX() const throw ();
 
-				virtual const bytearray* getEncoded() const;
-				virtual const String& getAlgorithm() const throw ();
-				virtual const String* getFormat() const throw ();
+			virtual const bytearray* getEncoded() const;
+			virtual const String& getAlgorithm() const throw ();
+			virtual const String* getFormat() const throw ();
 		};
 	}
 }

@@ -30,24 +30,28 @@
 
 #include "beecrypt/c++/security/spec/KeySpec.h"
 using beecrypt::security::spec::KeySpec;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 
 namespace beecrypt {
 	namespace crypto {
 		namespace spec {
-			class BEECRYPTCXXAPI DHPrivateKeySpec : public KeySpec
+			/*!\ingroup CXX_CRYPTO_SPEC_m
+			 */
+			class BEECRYPTCXXAPI DHPrivateKeySpec : public beecrypt::lang::Object, public beecrypt::security::spec::KeySpec
 			{
-				private:
-					mpbarrett _p;
-					mpnumber _g;
-					mpnumber _x;
+			private:
+				mpbarrett _p;
+				mpnumber _g;
+				mpnumber _x;
 
-				public:
-					DHPrivateKeySpec(const mpbarrett& p, const mpnumber& g, const mpnumber& x);
-					virtual ~DHPrivateKeySpec();
+			public:
+				DHPrivateKeySpec(const mpbarrett& p, const mpnumber& g, const mpnumber& x);
+				virtual ~DHPrivateKeySpec();
 
-					const mpbarrett& getP() const throw ();
-					const mpnumber& getG() const throw ();
-					const mpnumber& getX() const throw ();
+				const mpbarrett& getP() const throw ();
+				const mpnumber& getG() const throw ();
+				const mpnumber& getX() const throw ();
 			};
 		}
 	}

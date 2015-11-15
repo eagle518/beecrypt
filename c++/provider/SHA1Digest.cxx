@@ -22,20 +22,23 @@
 
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
+#include "beecrypt/c++/security/ProviderException.h"
+using beecrypt::security::ProviderException;
 #include "beecrypt/c++/provider/SHA1Digest.h"
 
 using namespace beecrypt::provider;
 
 SHA1Digest::SHA1Digest() : _digest(20)
 {
-	sha1Reset(&_param);
+	if (sha1Reset(&_param))
+		throw ProviderException("BeeCrypt internal error in sha1Reset");
 }
 
 SHA1Digest::~SHA1Digest()
 {
 }
 
-SHA1Digest* SHA1Digest::clone() const
+SHA1Digest* SHA1Digest::clone() const throw ()
 {
 	SHA1Digest* result = new SHA1Digest();
 
@@ -46,7 +49,8 @@ SHA1Digest* SHA1Digest::clone() const
 
 const bytearray& SHA1Digest::engineDigest()
 {
-	sha1Digest(&_param, _digest.data());
+	if (sha1Digest(&_param, _digest.data()))
+		throw ProviderException("BeeCrypt internal error in sha1Digest");
 
 	return _digest;
 }
@@ -59,7 +63,8 @@ size_t SHA1Digest::engineDigest(byte* data, size_t offset, size_t length) throw 
 	if (length < 20)
 		throw ShortBufferException();
 
-	sha1Digest(&_param, data);
+	if (sha1Digest(&_param, data))
+		throw ProviderException("BeeCrypt internal error in sha1Digest");
 
 	return 20;
 }
@@ -71,15 +76,18 @@ size_t SHA1Digest::engineGetDigestLength()
 
 void SHA1Digest::engineReset()
 {
-	sha1Reset(&_param);
+	if (sha1Reset(&_param))
+		throw ProviderException("BeeCrypt internal error in sha1Reset");
 }
 
 void SHA1Digest::engineUpdate(byte b)
 {
-	sha1Update(&_param, &b, 1);
+	if (sha1Update(&_param, &b, 1))
+		throw ProviderException("BeeCrypt internal error in sha1Update");
 }
 
 void SHA1Digest::engineUpdate(const byte* data, size_t offset, size_t length)
 {
-	sha1Update(&_param, data+offset, length);
+	if (sha1Update(&_param, data+offset, length))
+		throw ProviderException("BeeCrypt internal error in sha1Update");
 }

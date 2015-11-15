@@ -17,7 +17,7 @@
  */
 
 /*!\file RSAKeyFactory.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_RSAKEYFACTORY_H
@@ -38,21 +38,21 @@ using beecrypt::security::spec::KeySpec;
 
 namespace beecrypt {
 	namespace provider {
-		class RSAKeyFactory : public KeyFactorySpi
+		class RSAKeyFactory : public beecrypt::security::KeyFactorySpi
 		{
 			friend class BeeCryptProvider;
 
-			protected:
-				virtual PrivateKey* engineGeneratePrivate(const KeySpec&) throw (InvalidKeySpecException);
-				virtual PublicKey* engineGeneratePublic(const KeySpec&) throw (InvalidKeySpecException);
+		protected:
+			virtual PrivateKey* engineGeneratePrivate(const KeySpec&) throw (InvalidKeySpecException);
+			virtual PublicKey* engineGeneratePublic(const KeySpec&) throw (InvalidKeySpecException);
 
-				virtual KeySpec* engineGetKeySpec(const Key&, const type_info&) throw (InvalidKeySpecException);
+			virtual KeySpec* engineGetKeySpec(const Key&, const type_info&) throw (InvalidKeySpecException);
 
-				virtual Key* engineTranslateKey(const Key&) throw (InvalidKeyException);
+			virtual Key* engineTranslateKey(const Key&) throw (InvalidKeyException);
 
-			public:
-				RSAKeyFactory();
-				virtual ~RSAKeyFactory();
+		public:
+			RSAKeyFactory();
+			virtual ~RSAKeyFactory();
 		};
 	}
 }

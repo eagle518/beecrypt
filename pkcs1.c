@@ -2,6 +2,11 @@
 
 #include "beecrypt/pkcs1.h"
 
+const byte EMSA_MD2_DIGESTINFO[18] = {
+	0x30,0x20,0x30,0x0c,0x06,0x08,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x02,0x02,0x05,0x00,
+	0x04,0x10
+};
+
 const byte EMSA_MD5_DIGESTINFO[18] = {
 	0x30,0x20,0x30,0x0c,0x06,0x08,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x02,0x05,0x05,0x00,
 	0x04,0x10
@@ -14,6 +19,16 @@ const byte EMSA_SHA1_DIGESTINFO[15] = {
 const byte EMSA_SHA256_DIGESTINFO[19] = {
 	0x30,0x31,0x30,0x0d,0x06,0x09,0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x02,0x01,0x05,
 	0x00,0x04,0x20
+};
+
+const byte EMSA_SHA384_DIGESTINFO[19] = {
+	0x30,0x41,0x30,0x0d,0x06,0x09,0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x02,0x03,0x05,
+	0x00,0x04,0x30
+};
+
+const byte EMSA_SHA512_DIGESTINFO[19] = {
+	0x30,0x51,0x30,0x0d,0x06,0x09,0x60,0x86,0x48,0x01,0x65,0x03,0x04,0x02,0x03,0x05,
+	0x00,0x04,0x40
 };
 
 int pkcs1_emsa_encode_digest(hashFunctionContext* ctxt, byte* emdata, size_t emlen)
@@ -30,14 +45,26 @@ int pkcs1_emsa_encode_digest(hashFunctionContext* ctxt, byte* emdata, size_t eml
 	}
 	else if (strcmp(ctxt->algo->name, "SHA-1") == 0)
 	{
-		/* tlen is 15 bytes for EMSA_SHA1_DIGESTINFO plus 20 bytes digest */
+		/* tlen is 15 bytes for EMSA_SHA1_DIGESTINFO plus digestsize */
 		tinfo = EMSA_SHA1_DIGESTINFO;
 		tlen = 15;
 	}
 	else if (strcmp(ctxt->algo->name, "SHA-256") == 0)
 	{
-		/* tlen is 19 bytes for EMSA_SHA256_DIGESTINFO plus 32 bytes digest */
+		/* tlen is 19 bytes for EMSA_SHA256_DIGESTINFO plus digestsize */
 		tinfo = EMSA_SHA256_DIGESTINFO;
+		tlen = 19;
+	}
+	else if (strcmp(ctxt->algo->name, "SHA-384") == 0)
+	{
+		/* tlen is 19 bytes for EMSA_SHA384_DIGESTINFO plus digestsize */
+		tinfo = EMSA_SHA384_DIGESTINFO;
+		tlen = 19;
+	}
+	else if (strcmp(ctxt->algo->name, "SHA-512") == 0)
+	{
+		/* tlen is 19 bytes for EMSA_SHA512_DIGESTINFO plus digestsize */
+		tinfo = EMSA_SHA512_DIGESTINFO;
 		tlen = 19;
 	}
 	else

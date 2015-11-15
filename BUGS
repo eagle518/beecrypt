@@ -2,6 +2,11 @@ Legend:
 	- = open bug
 	* = fixed bug
 
+4.1.0:
+	- SuSE 9.2 (x86) compiler is buggy: the MMX-optimized version fails all
+	  test vectors. Since all other Linux distro's handle this perfectly it's
+	  up to them to fix this bug.
+
 3.1.0:
 	* Error in final result computation of mpextgcd_w in certain circumstances.
 	* PowerPC 64-bit assembler symbols aren't defined according to LSB 1.3.

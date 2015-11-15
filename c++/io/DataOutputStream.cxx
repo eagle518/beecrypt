@@ -24,6 +24,9 @@
 
 #include "beecrypt/c++/io/DataOutputStream.h"
 
+#include <iostream>
+#include <unicode/ustream.h>
+
 using namespace beecrypt::io;
 
 DataOutputStream::DataOutputStream(OutputStream& out) : FilterOutputStream(out)
@@ -53,12 +56,15 @@ void DataOutputStream::write(byte b) throw (IOException)
 	_lock.unlock();
 }
 
-void DataOutputStream::write(const byte* data, size_t offset, size_t len) throw (IOException)
+void DataOutputStream::write(const byte* data, size_t offset, size_t length) throw (IOException)
 {
-	_lock.lock();
-	out.write(data, offset, len);
-	written += len;
-	_lock.unlock();
+	if (length)
+	{
+		_lock.lock();
+		out.write(data, offset, length);
+		written += length;
+		_lock.unlock();
+	}
 }
 
 void DataOutputStream::write(const bytearray& b) throw (IOException)
@@ -117,6 +123,15 @@ void DataOutputStream::writeLong(javalong l) throw (IOException)
 	_lock.unlock();
 }
 
+void DataOutputStream::writeChar(javaint v) throw (IOException)
+{
+	_lock.lock();
+	out.write((v >> 8) && 0xff);
+	out.write((v     ) && 0xff);
+	written += 2;
+	_lock.unlock();
+}
+
 void DataOutputStream::writeChars(const String& str) throw (IOException)
 {
 	const UChar* buffer = str.getBuffer();
@@ -148,7 +163,11 @@ void DataOutputStream::writeUTF(const String& str) throw (IOException)
 	size_t need = ucnv_fromUChars(_utf, 0, 0, str.getBuffer(), str.length(), &status);
 	if (U_FAILURE(status))
 		if (status != U_BUFFER_OVERFLOW_ERROR)
+		{
+			std::cout << "Error converting [" << str << "]" << std::endl;
+
 			throw IOException("unexpected error in ucnv_fromUChars");
+		}
 
 	if (need > 0xffff)
 		throw IOException("String length >= 64K");

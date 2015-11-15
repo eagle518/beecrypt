@@ -30,20 +30,22 @@ using beecrypt::io::OutputStream;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class BEECRYPTCXXAPI FilterOutputStream : public OutputStream
 		{
-			protected:
-				OutputStream& out;
+		protected:
+			OutputStream& out;
 
-			public:
-				FilterOutputStream(OutputStream& out);
-				virtual ~FilterOutputStream();
+		public:
+			FilterOutputStream(OutputStream& out);
+			virtual ~FilterOutputStream();
 
-				virtual void close() throw (IOException);
-				virtual void flush() throw (IOException);
-				virtual void write(byte b) throw (IOException);
-				virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
-				virtual void write(const bytearray&) throw (IOException);
+			virtual void close() throw (IOException);
+			virtual void flush() throw (IOException);
+			virtual void write(byte b) throw (IOException);
+			virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
+			virtual void write(const bytearray& b) throw (IOException);
 		};
 	}
 }

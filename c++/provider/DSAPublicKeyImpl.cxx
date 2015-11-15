@@ -20,7 +20,6 @@
 # include "config.h"
 #endif
 
-#include "beecrypt/c++/resource.h"
 #include "beecrypt/c++/provider/DSAPublicKeyImpl.h"
 #include "beecrypt/c++/provider/BeeKeyFactory.h"
 
@@ -30,6 +29,13 @@ DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAPublicKey& copy)
 {
 	_params = new DSAParameterSpec(copy.getParams());
 	_y = copy.getY();
+	_enc = 0;
+}
+
+DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAPublicKeyImpl& copy)
+{
+	_params = new DSAParameterSpec(*copy._params);
+	_y = copy._y;
 	_enc = 0;
 }
 
@@ -61,9 +67,35 @@ DSAPublicKeyImpl::~DSAPublicKeyImpl()
 		delete _enc;
 }
 
-DSAPublicKey* DSAPublicKeyImpl::clone() const
+DSAPublicKeyImpl* DSAPublicKeyImpl::clone() const throw ()
 {
 	return new DSAPublicKeyImpl(*this);
+}
+
+bool DSAPublicKeyImpl::equals(const Object& compare) const throw ()
+{
+	if (this == &compare)
+		return true;
+
+	const DSAPublicKey* pub = dynamic_cast<const DSAPublicKey*>(&compare);
+	if (pub)
+	{
+		if (pub->getParams().getP() != _params->getP())
+			return false;
+
+		if (pub->getParams().getQ() != _params->getQ())
+			return false;
+
+		if (pub->getParams().getG() != _params->getG())
+			return false;
+
+		if (pub->getY() != _y)
+			return false;
+
+		return true;
+	}
+
+	return false;
 }
 
 const DSAParams& DSAPublicKeyImpl::getParams() const throw ()

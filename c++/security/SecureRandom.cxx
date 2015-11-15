@@ -22,6 +22,10 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/SecureRandom.h"
 #include "beecrypt/c++/security/SecureRandomSpi.h"
 #include "beecrypt/c++/security/Security.h"
@@ -32,7 +36,11 @@ SecureRandom* SecureRandom::getInstance(const String& algorithm) throw (NoSuchAl
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "SecureRandom");
 
-	SecureRandom* result = new SecureRandom((SecureRandomSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<SecureRandomSpi*>(tmp->cspi));
+	#endif
+
+	SecureRandom* result = new SecureRandom(reinterpret_cast<SecureRandomSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -43,7 +51,11 @@ SecureRandom* SecureRandom::getInstance(const String& type, const String& provid
 {
 	Security::spi* tmp = Security::getSpi(type, "SecureRandom", provider);
 
-	SecureRandom* result = new SecureRandom((SecureRandomSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<SecureRandomSpi*>(tmp->cspi));
+	#endif
+
+	SecureRandom* result = new SecureRandom(reinterpret_cast<SecureRandomSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -54,7 +66,11 @@ SecureRandom* SecureRandom::getInstance(const String& type, const Provider& prov
 {
 	Security::spi* tmp = Security::getSpi(type, "SecureRandom", provider);
 
-	SecureRandom* result = new SecureRandom((SecureRandomSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<SecureRandomSpi*>(tmp->cspi));
+	#endif
+
+	SecureRandom* result = new SecureRandom(reinterpret_cast<SecureRandomSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -70,18 +86,22 @@ SecureRandom::SecureRandom()
 {
 	Security::spi* tmp = Security::getFirstSpi("SecureRandom");
 
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<SecureRandomSpi*>((SecureRandomSpi*) tmp->cspi));
+	#endif
+
 	_rspi = (SecureRandomSpi*) tmp->cspi;
 	_type = tmp->name;
-	_prov = &tmp->prov;
+	_prov = tmp->prov;
 
 	delete tmp;
 }
 
-SecureRandom::SecureRandom(SecureRandomSpi* rspi, const String& type, const Provider& provider) : _prov(&provider)
+SecureRandom::SecureRandom(SecureRandomSpi* rspi, const Provider* provider, const String& type)
 {
 	_rspi = rspi;
+	_prov = provider;
 	_type = type;
-	_prov = &provider;
 }
 
 SecureRandom::~SecureRandom()

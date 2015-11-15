@@ -41,7 +41,11 @@
 
 /*
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI mtprngParam
+#else
+struct _mtprngParam
+#endif
 {
 	#ifdef _REENTRANT
 	bc_mutex_t	lock;
@@ -49,7 +53,11 @@ typedef struct
 	uint32_t	state[N+1];
 	uint32_t	left;
 	uint32_t*	nextw;
-} mtprngParam;
+};
+
+#ifndef __cplusplus
+typedef struct _mtprngParam mtprngParam;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

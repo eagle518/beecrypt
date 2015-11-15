@@ -28,7 +28,7 @@
 
 #include "beecrypt/beecrypt.h"
 
-#if HAVE_LONG_LONG
+#if HAVE_LONG_LONG && !defined(__cplusplus) /* C++ doesn't like LL constants */
 # define ONE_SECOND	1000LL
 # define ONE_MINUTE	60000LL
 # define ONE_HOUR	3600000LL

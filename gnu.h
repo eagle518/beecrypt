@@ -31,6 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dlfcn.h>
+#include <asm/byteorder.h>
 
 typedef pthread_cond_t bc_cond_t;
 typedef pthread_mutex_t bc_mutex_t;
@@ -47,6 +48,15 @@ typedef pthread_t bc_thread_t;
 
 
 
+
+#if defined(__GNUC__)
+# if !defined(__GNUC_PREREQ__)
+#  define __GNUC_PREREQ__(maj, min) (__GNUC__ > (maj) || __GNUC__ == (maj) && __GNUC_MINOR__ >= (min))
+# endif
+#else
+# define __GNUC__ 0
+# define __GNUC_PREREQ__(maj, min) 0
+#endif
 
 /* WARNING: overriding this value is dangerous; some assembler routines
  * make assumptions about the size set by the configure script

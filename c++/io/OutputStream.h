@@ -29,19 +29,22 @@
 using beecrypt::bytearray;
 #include "beecrypt/c++/io/IOException.h"
 using beecrypt::io::IOException;
+#include "beecrypt/c++/lang/Object.h"
 
 namespace beecrypt {
 	namespace io {
-		class BEECRYPTCXXAPI OutputStream
+		/*!\ingroup CXX_IO_m
+		 */
+		class BEECRYPTCXXAPI OutputStream : public beecrypt::lang::Object
 		{
-			public:
-				virtual ~OutputStream() {};
+		public:
+			virtual ~OutputStream() {};
 
-				virtual void close() throw (IOException);
-				virtual void flush() throw (IOException);
-				virtual void write(byte b) throw (IOException) = 0;
-				virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
-				virtual void write(const bytearray& b) throw (IOException);
+			virtual void close() throw (IOException);
+			virtual void flush() throw (IOException);
+			virtual void write(byte b) throw (IOException) = 0;
+			virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
+			virtual void write(const bytearray& b) throw (IOException);
 		};
 	}
 }

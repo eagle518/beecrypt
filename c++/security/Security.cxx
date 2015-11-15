@@ -27,8 +27,8 @@
 #include "beecrypt/c++/io/FileInputStream.h"
 using beecrypt::io::FileInputStream;
 
-#include <iostream>
-#include <unicode/ustream.h>
+// #include <iostream>
+// #include <unicode/ustream.h>
 
 using namespace beecrypt::security;
 
@@ -153,7 +153,7 @@ void Security::initialize()
 	}
 }
 
-Security::spi::spi(void* cspi, const String& name, const Provider& prov) : cspi(cspi), name(name), prov(prov)
+Security::spi::spi(Object* cspi, const Provider* prov, const String& name) : cspi(cspi), name(name), prov(prov)
 {
 }
 
@@ -186,9 +186,13 @@ Security::spi* Security::getSpi(const String& name, const String& type) throw (N
 
 		if (inst)
 		{
-			register spi* result = new spi(inst(), name, *p);
+			/* MUST unlock before instantiating:
+			 * if (ctor) of spi calls another getSpi this would cause a deadlock
+			 * it is safe to do so as we no longer need the array of providers
+			 */
 			_lock.unlock();
-			return result;
+
+			return new spi(inst(), p, name);
 		}
 	}
 
@@ -225,14 +229,20 @@ Security::spi* Security::getSpi(const String& name, const String& type, const St
 				const String* alias_of = p->getProperty(alias);
 
 				if (alias_of)
+				{
 					inst = p->getInstantiator(*alias_of);
+				}
 			}
 
 			if (inst)
 			{
-				register spi* result = new spi(inst(), name, *p);
+				/* MUST unlock before instantiating:
+				 * if (ctor) of spi calls another getSpi this would cause a deadlock
+				 * it is safe to do so as we no longer need the array of providers
+				 */
 				_lock.unlock();
-				return result;
+
+				return new spi(inst(), p, name);
 			}
 
 			_lock.unlock();
@@ -269,7 +279,7 @@ Security::spi* Security::getSpi(const String& name, const String& type, const Pr
 	}
 
 	if (inst)
-		return new spi(inst(), name, provider);
+		return new spi(inst(), &provider, name);
 
 	throw NoSuchAlgorithmException(name + " " + type + " not available");
 }
@@ -281,6 +291,7 @@ Security::spi* Security::getFirstSpi(const String& type)
 
 	String afind = type + ".";
 
+	_lock.lock();
 	for (size_t i = 0; i < _providers.size(); i++)
 	{
 		const Provider* p = _providers[i];
@@ -301,15 +312,24 @@ Security::spi* Security::getFirstSpi(const String& type)
 
 				if (inst)
 				{
+					/* MUST unlock before instantiating:
+					 * if (ctor) of spi calls another getSpi this would cause a deadlock
+					 * it is safe to do so as we no longer need the array of providers
+					 */
+					_lock.unlock();
+
 					delete e;
 
-					return new spi(inst(), name, *p);
+					return new spi(inst(), p, name);
 				}
 			}
 		}
 
 		delete e;
 	}
+
+	_lock.unlock();
+
 	return 0;
 }
 
@@ -401,4 +421,9 @@ const Provider* Security::getProvider(const String& name)
 	}
 
 	return 0;
+}
+
+const String* Security::getProperty(const String& key) throw ()
+{
+	return _props.getProperty(key);
 }

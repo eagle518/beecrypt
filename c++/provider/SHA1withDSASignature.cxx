@@ -270,7 +270,6 @@ void SHA1withDSASignature::engineSetParameter(const AlgorithmParameterSpec& spec
 void SHA1withDSASignature::engineInitSign(const PrivateKey& key, SecureRandom* random) throw (InvalidKeyException)
 {
 	const DSAPrivateKey* dsa = dynamic_cast<const DSAPrivateKey*>(&key);
-
 	if (dsa)
 	{
 		/* copy key information */
@@ -291,7 +290,6 @@ void SHA1withDSASignature::engineInitSign(const PrivateKey& key, SecureRandom* r
 void SHA1withDSASignature::engineInitVerify(const PublicKey& key) throw (InvalidKeyException)
 {
 	const DSAPublicKey* dsa = dynamic_cast<const DSAPublicKey*>(&key);
-
 	if (dsa)
 	{
 		/* copy key information */

@@ -33,13 +33,13 @@ using beecrypt::security::interfaces::DSAKey;
 namespace beecrypt {
 	namespace security {
 		namespace interfaces {
-			/*!\brief DSA PriveKey interface
-			* \ingroup CXX_IF_m
-			*/
+			/*!\brief DSA private key interface
+			 * \ingroup CXX_SECURITY_INTERFACES_m
+			 */
 			class DSAPrivateKey : public PrivateKey, public DSAKey
 			{
-				public:
-					virtual const mpnumber& getX() const throw () = 0;
+			public:
+				virtual const mpnumber& getX() const throw () = 0;
 			};
 		}
 	}

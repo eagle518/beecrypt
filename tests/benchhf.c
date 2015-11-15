@@ -22,8 +22,8 @@
  * \author Bob Deblier <bob.deblier@pandora.be>
  */
 
-#include "beecrypt.h"
-#include "timestamp.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/timestamp.h"
 
 #include <stdio.h>
 

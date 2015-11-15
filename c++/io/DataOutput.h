@@ -32,19 +32,21 @@ using beecrypt::io::IOException;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class DataOutput
 		{
-			public:
-				virtual void write(const bytearray&) throw (IOException) = 0;
-				virtual void write(const byte*, size_t, size_t) throw (IOException) = 0;
-				virtual void write(byte) throw (IOException) = 0;
-				virtual void writeBoolean(bool) throw (IOException) = 0;
-				virtual void writeByte(byte) throw (IOException) = 0;
-				virtual void writeChars(const String&) throw (IOException) = 0;
-				virtual void writeInt(javaint) throw (IOException) = 0;
-				virtual void writeLong(javalong) throw (IOException) = 0;
-				virtual void writeShort(javashort) throw (IOException) = 0;
-				virtual void writeUTF(const String&) throw (IOException) = 0;
+		public:
+			virtual void write(const bytearray& b) throw (IOException) = 0;
+			virtual void write(const byte* data, size_t offset, size_t length) throw (IOException) = 0;
+			virtual void write(byte v) throw (IOException) = 0;
+			virtual void writeBoolean(bool v) throw (IOException) = 0;
+			virtual void writeByte(byte v) throw (IOException) = 0;
+			virtual void writeChars(const String& s) throw (IOException) = 0;
+			virtual void writeInt(javaint v) throw (IOException) = 0;
+			virtual void writeLong(javalong v) throw (IOException) = 0;
+			virtual void writeShort(javashort v) throw (IOException) = 0;
+			virtual void writeUTF(const String& str) throw (IOException) = 0;
 		};
 	}
 }

@@ -32,18 +32,20 @@ using beecrypt::security::spec::EncodedKeySpec;
 
 namespace beecrypt {
 	namespace beeyond {
+		/*!\ingroup CXX_BEEYOND_m
+		 */
 		class BEECRYPTCXXAPI AnyEncodedKeySpec : public EncodedKeySpec
 		{
-			private:
-				String _format;
+		private:
+			String _format;
 
-			public:
-				AnyEncodedKeySpec(const String& format, const byte*, size_t);
-				AnyEncodedKeySpec(const String& format, const bytearray&);
+		public:
+			AnyEncodedKeySpec(const String& format, const byte*, size_t);
+			AnyEncodedKeySpec(const String& format, const bytearray&);
 
-				virtual ~AnyEncodedKeySpec();
+			virtual ~AnyEncodedKeySpec();
 
-				virtual const String& getFormat() const throw ();
+			virtual const String& getFormat() const throw ();
 		};
 	}
 }

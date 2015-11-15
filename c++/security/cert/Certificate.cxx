@@ -24,6 +24,8 @@
 
 #include "beecrypt/c++/security/cert/Certificate.h"
 
+#include <iostream>
+
 using namespace beecrypt::security::cert;
 
 Certificate::Certificate(const String& type)
@@ -35,18 +37,23 @@ Certificate::~Certificate()
 {
 }
 
-bool Certificate::operator==(const Certificate& cmp) const
+bool Certificate::equals(const Object& compare) const throw ()
 {
-	if (this == &cmp)
+	if (this == &compare)
 		return true;
 
-	if (_type != cmp._type)
-		return false;
+	const Certificate* c = dynamic_cast<const Certificate*>(&compare);
+	if (c)
+	{
+		if (_type != c->_type)
+			return false;
 
-	if (getEncoded() != cmp.getEncoded())
-		return false;
+		if (getEncoded() != c->getEncoded())
+			return false;
 
-	return true;
+		return true;
+	}
+	return false;
 }
 
 const String& Certificate::getType() const throw ()

@@ -28,24 +28,28 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/spec/KeySpec.h"
 using beecrypt::security::spec::KeySpec;
 
 namespace beecrypt {
 	namespace security {
 		namespace spec {
-			class BEECRYPTCXXAPI RSAPublicKeySpec : public KeySpec
+			/*!\ingroup CXX_SECURITY_SPEC_m
+			 */
+			class BEECRYPTCXXAPI RSAPublicKeySpec : public beecrypt::lang::Object, public beecrypt::security::spec::KeySpec
 			{
-				private:
-					mpbarrett _n;
-					mpnumber _e;
+			private:
+				mpbarrett _n;
+				mpnumber _e;
 
-				public:
-					RSAPublicKeySpec(const mpbarrett& modulus, const mpnumber& publicExponent);
-					virtual ~RSAPublicKeySpec();
+			public:
+				RSAPublicKeySpec(const mpbarrett& modulus, const mpnumber& publicExponent);
+				virtual ~RSAPublicKeySpec();
 
-					const mpbarrett& getModulus() const throw ();
-					const mpnumber& getPublicExponent() const throw ();
+				const mpbarrett& getModulus() const throw ();
+				const mpnumber& getPublicExponent() const throw ();
 			};
 		}
 	}

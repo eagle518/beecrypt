@@ -36,7 +36,7 @@ namespace beecrypt {
 	template <typename T>
 		class array
 		{
-		private:
+		protected:
 			T* _data;
 			size_t _size;
 
@@ -71,17 +71,30 @@ namespace beecrypt {
 
 			array(const array& _copy) throw (std::bad_alloc)
 			{
-				_data = (T*) malloc(_copy._size * sizeof(T));
-				if (_data == 0)
-					throw std::bad_alloc();
-				_size = _copy._size;
-				memcpy(_data, _copy._data, _size * sizeof(T));
+				if (_copy._size)
+				{
+					_data = (T*) malloc(_copy._size * sizeof(T));
+					if (_data == 0)
+						throw std::bad_alloc();
+					_size = _copy._size;
+					memcpy(_data, _copy._data, _size * sizeof(T));
+				}
+				else
+				{
+					_data = 0;
+					_size = 0;
+				}
 			}
 
 			~array() throw ()
 			{
 				if (_data)
 					free(_data);
+			}
+
+			array* clone() const throw (std::bad_alloc)
+			{
+				return new array(*this);
 			}
 
 			const array& operator=(const array& _set) throw (std::bad_alloc)
@@ -95,7 +108,7 @@ namespace beecrypt {
 
 			bool operator==(const array& _cmp) const throw ()
 			{
-				if (_size != _cmp.size)
+				if (_size != _cmp._size)
 					return false;
 
 				if (_size == 0 && _cmp._size == 0)
@@ -130,13 +143,37 @@ namespace beecrypt {
 				return _size;
 			}
 
+			void replace(T* data, size_t size) throw ()
+			{
+				if (_data)
+					free(_data);
+
+				_data = data;
+				_size = size;
+			}
+
+			void swap(array& _swp) throw ()
+			{
+				T* tmp_data = _swp._data;
+				size_t tmp_size = _swp._size;
+
+				_swp._data = _data;
+				_swp._size = _size;
+
+				_data = tmp_data;
+				_size = tmp_size;
+			}
+
 			void resize(size_t _newsize) throw (std::bad_alloc)
 			{
 				if (_newsize)
 				{
-					_data = (T*) (_data ? realloc(_data, _newsize * sizeof(T)) : malloc(_newsize * sizeof(T)));
-					if (_data == 0)
-						throw std::bad_alloc();
+					if (_newsize != _size)
+					{
+						_data = (T*) (_data ? realloc(_data, _newsize * sizeof(T)) : malloc(_newsize * sizeof(T)));
+						if (_data == 0)
+							throw std::bad_alloc();
+					}
 				}
 				else
 				{

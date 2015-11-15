@@ -17,7 +17,7 @@
  */
 
 /*!\file MD5withRSASignature.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_MD5WITHRSASIGNATURE_H
@@ -31,9 +31,9 @@ namespace beecrypt {
 	namespace provider {
 		class MD5withRSASignature : public PKCS1RSASignature
 		{
-			public:
-				MD5withRSASignature();
-				~MD5withRSASignature();
+		public:
+			MD5withRSASignature();
+			~MD5withRSASignature();
 		};
 	}
 }

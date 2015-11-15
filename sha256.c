@@ -97,7 +97,7 @@ void sha256Process(register sha256Param* sp)
 	t = 16;
 	while (t--)
 	{
-		register uint32_t temp = swapu32(*w);
+		temp = swapu32(*w);
 		*(w++) = temp;
 	}
 	#endif
@@ -105,7 +105,7 @@ void sha256Process(register sha256Param* sp)
 	t = 48;
 	while (t--)
 	{
-		register uint32_t temp = sig1(w[-2]) + w[-7] + sig0(w[-15]) + w[-16];
+		temp = sig1(w[-2]) + w[-7] + sig0(w[-15]) + w[-16];
 		*(w++) = temp;
 	}
 

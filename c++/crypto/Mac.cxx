@@ -22,6 +22,10 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/crypto/Mac.h"
 #include "beecrypt/c++/lang/IllegalArgumentException.h"
 using beecrypt::lang::IllegalArgumentException;
@@ -30,11 +34,11 @@ using beecrypt::security::Security;
 
 using namespace beecrypt::crypto;
 
-Mac::Mac(MacSpi* spi, const String& algorithm, const Provider& provider)
+Mac::Mac(MacSpi* spi, const Provider* provider, const String& algorithm)
 {
 	_mspi = spi;
 	_algo = algorithm;
-	_prov = &provider;
+	_prov = provider;
 	_init = false;
 }
 
@@ -47,7 +51,11 @@ Mac* Mac::getInstance(const String& algorithm) throw (NoSuchAlgorithmException)
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Mac");
 
-	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<MacSpi*>((MacSpi*) tmp->cspi));
+	#endif
+
+	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -58,7 +66,11 @@ Mac* Mac::getInstance(const String& algorithm, const String& provider) throw (No
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Mac", provider);
 
-	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<MacSpi*>((MacSpi*) tmp->cspi));
+	#endif
+
+	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -69,26 +81,25 @@ Mac* Mac::getInstance(const String& algorithm, const Provider& provider) throw (
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Mac", provider);
 
-	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<MacSpi*>((MacSpi*) tmp->cspi));
+	#endif
+
+	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->prov, tmp->name);
 
 	delete tmp;
 
 	return result;
 }
 
-Mac* Mac::clone() const
+Mac* Mac::clone() const throw ()
 {
-	MacSpi* _mspc = _mspi->clone();
+	// don't forget to also clone the _init state!
+	Mac* result = new Mac(_mspi->clone(), _prov, _algo);
 
-	if (_mspc)
-	{
-		// don't forget to also clone the _init state!
-		Mac* result = new Mac(_mspc, _algo, *_prov);
-		result->_init = _init;
-		return result;
-	}
-	else
-		return 0;
+	result->_init = _init;
+
+	return result;
 }
 
 const bytearray& Mac::doFinal() throw (IllegalStateException)

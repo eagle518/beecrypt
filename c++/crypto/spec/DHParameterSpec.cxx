@@ -29,6 +29,13 @@ DHParameterSpec::DHParameterSpec(const DHParams& copy)
 	_l = copy.getL();
 }
 
+DHParameterSpec::DHParameterSpec(const DHParameterSpec& copy)
+{
+	_p = copy._p;
+	_g = copy._g;
+	_l = copy._l;
+}
+
 DHParameterSpec::DHParameterSpec(const mpbarrett& p, const mpnumber& g)
 {
 	_p = p;
@@ -41,10 +48,6 @@ DHParameterSpec::DHParameterSpec(const mpbarrett& p, const mpnumber& g, size_t l
 	_p = p;
 	_g = g;
 	_l = l;
-}
-
-DHParameterSpec::~DHParameterSpec()
-{
 }
 
 const mpbarrett& DHParameterSpec::getP() const throw ()

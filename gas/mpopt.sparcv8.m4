@@ -65,27 +65,27 @@ C_FUNCTION_END(mpaddmul)
 
 
 C_FUNCTION_BEGIN(mpaddsqrtrc)
-        sll %o0,2,%g1
-        add %o1,%g1,%o1
-		dec 4,%o2
-        add %o1,%g1,%o1
-		dec 8,%o1
-        clr %o0
+	sll %o0,2,%g1
+	add %o1,%g1,%o1
+	dec 4,%o2
+	add %o1,%g1,%o1
+	dec 8,%o1
+	clr %o0
 LOCAL(mpaddsqrtrc_loop):
-        ld [%o2+%g1],%g2
-        ldd [%o1],%o4
-        umul %g2,%g2,%g3
-        rd %y,%g2
-        addcc %o5,%g3,%o5
-        addxcc %o4,%g2,%o4
-        addx %g0,%g0,%o3
-        addcc %o5,%o0,%o5
-        addxcc %o4,%g0,%o4
-        addx %o3,%g0,%o0
-        std %o4,[%o1]
-        deccc 4,%g1
-        bnz LOCAL(mpaddsqrtrc_loop)
-        sub %o1,8,%o1
-        retl
-        nop
+	ld [%o2+%g1],%g2
+	ldd [%o1],%o4
+	umul %g2,%g2,%g3
+	rd %y,%g2
+	addcc %o5,%g3,%o5
+	addxcc %o4,%g2,%o4
+	addx %g0,%g0,%o3
+	addcc %o5,%o0,%o5
+	addxcc %o4,%g0,%o4
+	addx %o3,%g0,%o0
+	std %o4,[%o1]
+	deccc 4,%g1
+	bnz LOCAL(mpaddsqrtrc_loop)
+	sub %o1,8,%o1
+	retl
+	nop
 C_FUNCTION_END(mpaddsqrtrc)

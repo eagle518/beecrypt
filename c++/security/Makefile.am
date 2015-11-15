@@ -27,6 +27,7 @@ MessageDigest.cxx \
 NoSuchAlgorithmException.cxx \
 NoSuchProviderException.cxx \
 Provider.cxx \
+ProviderException.cxx \
 SecureRandom.cxx \
 Security.cxx \
 ShortBufferException.cxx \
@@ -62,6 +63,7 @@ NoSuchAlgorithmException.h \
 NoSuchProviderException.h \
 PrivateKey.h \
 Provider.h \
+ProviderException.h \
 PublicKey.h \
 SecureRandom.h \
 SecureRandomSpi.h \

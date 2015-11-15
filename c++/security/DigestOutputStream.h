@@ -32,25 +32,27 @@ using beecrypt::security::MessageDigest;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI DigestOutputStream : public FilterOutputStream
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI DigestOutputStream : public beecrypt::io::FilterOutputStream
 		{
-			private:
-				bool _on;
+		private:
+			bool _on;
 
-			protected:
-				MessageDigest& digest;
+		protected:
+			MessageDigest& digest;
 
-			public:
-				DigestOutputStream(OutputStream&, MessageDigest&);
-				virtual ~DigestOutputStream();
+		public:
+			DigestOutputStream(OutputStream& out, MessageDigest& m);
+			virtual ~DigestOutputStream();
 
-				virtual void write(byte) throw (IOException);
-				virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
+			virtual void write(byte b) throw (IOException);
+			virtual void write(const byte* data, size_t offset, size_t length) throw (IOException);
 
-				void on(bool);
+			void on(bool on);
 
-				MessageDigest& getMessageDigest();
-				void setMessageDigest(MessageDigest&);
+			MessageDigest& getMessageDigest();
+			void setMessageDigest(MessageDigest& m);
 		};
 	}
 }

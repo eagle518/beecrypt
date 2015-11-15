@@ -17,7 +17,7 @@
  */
 
 /*!\file PKCS12KeyFactory.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_PKCS12KEYFACTORY_H
@@ -30,16 +30,16 @@ using beecrypt::crypto::SecretKeyFactorySpi;
 
 namespace beecrypt {
 	namespace provider {
-		class PKCS12KeyFactory : public SecretKeyFactorySpi
+		class PKCS12KeyFactory : public beecrypt::crypto::SecretKeyFactorySpi
 		{
-			protected:
-				virtual SecretKey* engineGenerateSecret(const KeySpec&) throw (InvalidKeySpecException);
-				virtual KeySpec* engineGetKeySpec(const SecretKey&, const type_info&) throw (InvalidKeySpecException);
-				virtual SecretKey* engineTranslateKey(const SecretKey&) throw (InvalidKeyException);
+		protected:
+			virtual SecretKey* engineGenerateSecret(const KeySpec&) throw (InvalidKeySpecException);
+			virtual KeySpec* engineGetKeySpec(const SecretKey&, const type_info&) throw (InvalidKeySpecException);
+			virtual SecretKey* engineTranslateKey(const SecretKey&) throw (InvalidKeyException);
 
-			public:
-				PKCS12KeyFactory();
-				virtual ~PKCS12KeyFactory();
+		public:
+			PKCS12KeyFactory();
+			virtual ~PKCS12KeyFactory();
 		};
 	}
 }

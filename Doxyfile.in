@@ -154,7 +154,7 @@ ALIASES                =
 # For instance, some of the names that are used will be different. The list 
 # of all members will be omitted, etc.
 
-OPTIMIZE_OUTPUT_FOR_C  = YES
+OPTIMIZE_OUTPUT_FOR_C  = NO
 
 # Set the OPTIMIZE_OUTPUT_JAVA tag to YES if your project consists of Java sources 
 # only. Doxygen will then generate output that is more tailored for Java. 
@@ -369,7 +369,7 @@ INPUT                  = @top_srcdir@/Doxyheader \
                          @top_srcdir@/c++/crypto/spec \
                          @top_srcdir@/c++/io \
                          @top_srcdir@/c++/lang \
-                         @top_srcdir@/c++/provider \
+                         @top_srcdir@/c++/nio \
                          @top_srcdir@/c++/security \
                          @top_srcdir@/c++/security/cert \
                          @top_srcdir@/c++/security/interfaces \

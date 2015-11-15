@@ -31,7 +31,11 @@
 /*!\brief Holds all the parameters necessary for the SHA-256 algorithm.
  * \ingroup HASH_sha256_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI sha256Param
+#else
+struct _sha256Param
+#endif
 {
 	/*!\var h
 	 */
@@ -55,7 +59,11 @@ typedef struct
 	 *  copied before it is processed.
 	 */
 	uint32_t offset;
-} sha256Param;
+};
+
+#ifndef __cplusplus
+typedef struct _sha256Param sha256Param;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

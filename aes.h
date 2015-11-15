@@ -32,7 +32,11 @@
 /*!\brief Holds all the parameters necessary for the AES cipher.
  * \ingroup BC_aes_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI aesParam
+#else
+struct _aesParam
+#endif
 {
 	/*!\var k
 	 * \brief Holds the key expansion.
@@ -46,7 +50,11 @@ typedef struct
 	 * \brief Buffer to be used by block chaining or feedback modes.
 	 */
 	uint32_t fdback[4];
-} aesParam;
+};
+
+#ifndef __cplusplus
+typedef struct _aesParam aesParam;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

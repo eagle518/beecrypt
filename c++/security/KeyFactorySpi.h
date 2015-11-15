@@ -27,6 +27,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/PrivateKey.h"
 using beecrypt::security::PrivateKey;
 #include "beecrypt/c++/security/PublicKey.h"
@@ -42,20 +44,22 @@ using std::type_info;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI KeyFactorySpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI KeyFactorySpi : public beecrypt::lang::Object
 		{
 			friend class KeyFactory;
 
-			protected:
-				virtual PrivateKey* engineGeneratePrivate(const KeySpec&) throw (InvalidKeySpecException) = 0;
-				virtual PublicKey* engineGeneratePublic(const KeySpec&) throw (InvalidKeySpecException) = 0;
+		protected:
+			virtual PrivateKey* engineGeneratePrivate(const KeySpec& spec) throw (InvalidKeySpecException) = 0;
+			virtual PublicKey* engineGeneratePublic(const KeySpec& spec) throw (InvalidKeySpecException) = 0;
 
-				virtual KeySpec* engineGetKeySpec(const Key&, const type_info&) throw (InvalidKeySpecException) = 0;
+			virtual KeySpec* engineGetKeySpec(const Key& key, const type_info& info) throw (InvalidKeySpecException) = 0;
 
-				virtual Key* engineTranslateKey(const Key&) throw (InvalidKeyException) = 0;
+			virtual Key* engineTranslateKey(const Key& key) throw (InvalidKeyException) = 0;
 
-			public:
-				virtual ~KeyFactorySpi() {};
+		public:
+			virtual ~KeyFactorySpi() {};
 		};
 	}
 }

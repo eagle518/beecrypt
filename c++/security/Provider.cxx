@@ -42,8 +42,10 @@ Provider::Provider(const String& name, double version, const String& info)
 
 	#if WIN32
 	_dlhandle = NULL;
-	#else
+	#elif defined(RTLD_DEFAULT)
 	_dlhandle = RTLD_DEFAULT;
+	#else
+	_dlhandle = (void*) 0;
 	#endif
 }
 

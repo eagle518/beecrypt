@@ -33,12 +33,13 @@ using beecrypt::security::interfaces::RSAKey;
 namespace beecrypt {
 	namespace security {
 		namespace interfaces {
-			/*!\ingroup CXX_IF_m
-			*/
+			/*!\brief RSA public key interface
+			 * \ingroup CXX_SECURITY_INTERFACES_m
+			 */
 			class RSAPublicKey : public PublicKey, public RSAKey
 			{
-				public:
-					virtual const mpnumber& getPublicExponent() const throw () = 0;
+			public:
+				virtual const mpnumber& getPublicExponent() const throw () = 0;
 			};
 		}
 	}

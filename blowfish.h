@@ -43,7 +43,11 @@
 /*!\brief Holds all the parameters necessary for the Blowfish cipher.
  * \ingroup BC_blowfish_m
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI blowfishParam
+#else
+struct _blowfishParam
+#endif
 {
 	/*!\var p
 	 * \brief Holds the key expansion.
@@ -57,7 +61,11 @@ typedef struct
 	 * \brief Buffer to be used by block chaining or feedback modes.
 	 */
 	uint32_t fdback[2];
-} blowfishParam;
+};
+
+#ifndef __cplusplus
+typedef struct _blowfishParam blowfishParam;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

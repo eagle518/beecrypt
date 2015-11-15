@@ -27,6 +27,8 @@
 
 #include "beecrypt/c++/array.h"
 using beecrypt::bytearray;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/lang/String.h"
 using beecrypt::lang::String;
 #include "beecrypt/c++/security/spec/KeySpec.h"
@@ -35,19 +37,21 @@ using beecrypt::security::spec::KeySpec;
 namespace beecrypt {
 	namespace security {
 		namespace spec {
-			class BEECRYPTCXXAPI EncodedKeySpec : public KeySpec
+			/*!\brief Encoded key specification
+			 * \ingroup CXX_SECURITY_SPEC_m
+			 */
+			class BEECRYPTCXXAPI EncodedKeySpec : public beecrypt::lang::Object, public beecrypt::security::spec::KeySpec
 			{
-				private:
-					bytearray _encoded;
+			private:
+				bytearray _encoded;
 
-				public:
-					EncodedKeySpec(const byte*, size_t);
-					EncodedKeySpec(const bytearray&);
-					virtual ~EncodedKeySpec();
+			public:
+				EncodedKeySpec(const byte*, size_t);
+				EncodedKeySpec(const bytearray&);
+				virtual ~EncodedKeySpec() {};
 
-					const bytearray& getEncoded() const throw ();
-					virtual const String& getFormat() const throw () = 0;
-
+				const bytearray& getEncoded() const throw ();
+				virtual const String& getFormat() const throw () = 0;
 			};
 		}
 	}

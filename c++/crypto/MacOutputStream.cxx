@@ -46,12 +46,12 @@ void MacOutputStream::write(byte b) throw (IOException)
 
 void MacOutputStream::write(const byte *data, size_t offset, size_t length) throw (IOException)
 {
-	if (!data)
-		throw NullPointerException();
-
-	out.write(data, offset, length);
-	if (_on)
-		mac.update(data, offset, length);
+	if (length)
+	{
+		out.write(data, offset, length);
+		if (_on)
+			mac.update(data, offset, length);
+	}
 }
 
 void MacOutputStream::on(bool on)

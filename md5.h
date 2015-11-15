@@ -31,7 +31,11 @@
 /*!\brief Holds all the parameters necessary for the MD5 algorithm.
  * \ingroup HASH_md5_h
  */
-typedef struct
+#ifdef __cplusplus
+struct BEECRYPTAPI md5Param
+#else
+struct _md5Param
+#endif
 {
 	/*!\var h
 	 */
@@ -55,7 +59,11 @@ typedef struct
      *  copied before it is processed.
      */
 	uint32_t offset;
-} md5Param;
+};
+
+#ifndef __cplusplus
+typedef struct _md5Param md5Param;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

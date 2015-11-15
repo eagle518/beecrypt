@@ -18,16 +18,27 @@ dnl  You should have received a copy of the GNU Lesser General Public
 dnl  License along with this library; if not, write to the Free Software
 dnl  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+ifelse(substr(ASM_OS,0,7),freebsd,`
+define(USE_SIZE_DIRECTIVE,yes)
+define(USE_TYPE_DIRECTIVE,yes)
+')
+
 ifelse(substr(ASM_OS,0,5),linux,`
 define(USE_SIZE_DIRECTIVE,yes)
 define(USE_TYPE_DIRECTIVE,yes)
+')
+
+ifelse(substr(ASM_OS,0,6),cygwin,`
+define(USE_TYPE_DIRECTIVE,yes)
+define(SYMTYPE,`
+	.def SYMNAME($1); .scl 2; .type 32; .endef
+')
 ')
 
 define(SYMNAME,`GSYM_PREFIX`$1'')
 define(LOCAL,`LSYM_PREFIX`$1'')
 
 ifdef(`ALIGN',,`define(`ALIGN',`')')
-
 ifelse(USE_TYPE_DIRECTIVE,yes,`
 ifelse(substr(ASM_ARCH,0,3),arm,`
 define(FUNCTION_TYPE,`function')
@@ -38,11 +49,16 @@ define(FUNCTION_TYPE,`#function')
 define(FUNCTION_TYPE,`@function')
 ')
 ')
+ifdef(`SYMTYPE',,`
+define(SYMTYPE,`
+	.type SYMNAME($1),FUNCTION_TYPE
+')
+')
 define(C_FUNCTION_BEGIN,`
 	TEXTSEG
 	ALIGN
 	GLOBL SYMNAME($1)
-	.type SYMNAME($1),FUNCTION_TYPE
+	SYMTYPE($1)
 SYMNAME($1):
 ')
 ',`

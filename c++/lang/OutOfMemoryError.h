@@ -30,11 +30,15 @@ using beecrypt::lang::Error;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This class is used to indicate that the application has run
+		 *        out of memory.
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI OutOfMemoryError : public Error
 		{
-			public:
-				OutOfMemoryError() throw ();
-				OutOfMemoryError(const String&) throw ();
+		public:
+			OutOfMemoryError() throw ();
+			OutOfMemoryError(const String& message) throw ();
 		};
 	}
 }

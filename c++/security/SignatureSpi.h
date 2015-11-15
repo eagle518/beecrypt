@@ -31,6 +31,8 @@
 using beecrypt::bytearray;
 #include "beecrypt/c++/lang/IllegalStateException.h"
 using beecrypt::lang::IllegalStateException;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/AlgorithmParameters.h"
 using beecrypt::security::AlgorithmParameters;
 #include "beecrypt/c++/security/PrivateKey.h"
@@ -52,28 +54,30 @@ using beecrypt::security::spec::AlgorithmParameterSpec;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI SignatureSpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI SignatureSpi : public beecrypt::lang::Object
 		{
 			friend class Signature;
 
-			protected:
-				virtual AlgorithmParameters* engineGetParameters() const = 0;
-				virtual void engineSetParameter(const AlgorithmParameterSpec&) throw (InvalidAlgorithmParameterException) = 0;
+		protected:
+			virtual AlgorithmParameters* engineGetParameters() const = 0;
+			virtual void engineSetParameter(const AlgorithmParameterSpec&) throw (InvalidAlgorithmParameterException) = 0;
 
-				virtual void engineInitSign(const PrivateKey&, SecureRandom*) throw (InvalidKeyException) = 0;
+			virtual void engineInitSign(const PrivateKey&, SecureRandom*) throw (InvalidKeyException) = 0;
 
-				virtual void engineInitVerify(const PublicKey&) = 0;
+			virtual void engineInitVerify(const PublicKey&) = 0;
 
-				virtual void engineUpdate(byte) = 0;
-				virtual void engineUpdate(const byte*, size_t, size_t) = 0;
+			virtual void engineUpdate(byte) = 0;
+			virtual void engineUpdate(const byte*, size_t, size_t) = 0;
 
-				virtual bytearray* engineSign() throw (SignatureException) = 0;
-				virtual size_t engineSign(byte*, size_t, size_t) throw (ShortBufferException, SignatureException) = 0;
-				virtual size_t engineSign(bytearray&) throw (SignatureException) = 0;
-				virtual bool engineVerify(const byte*, size_t, size_t) throw (SignatureException) = 0;
+			virtual bytearray* engineSign() throw (SignatureException) = 0;
+			virtual size_t engineSign(byte*, size_t, size_t) throw (ShortBufferException, SignatureException) = 0;
+			virtual size_t engineSign(bytearray&) throw (SignatureException) = 0;
+			virtual bool engineVerify(const byte*, size_t, size_t) throw (SignatureException) = 0;
 
-			public:
-				virtual ~SignatureSpi() {};
+		public:
+			virtual ~SignatureSpi() {};
 		};
 	}
 }

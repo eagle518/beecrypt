@@ -30,11 +30,13 @@ using beecrypt::security::GeneralSecurityException;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI NoSuchAlgorithmException : public GeneralSecurityException
 		{
-			public:
-				NoSuchAlgorithmException() throw ();
-				NoSuchAlgorithmException(const String&) throw ();
+		public:
+			NoSuchAlgorithmException() throw ();
+			NoSuchAlgorithmException(const String& message) throw ();
 		};
 	}
 }

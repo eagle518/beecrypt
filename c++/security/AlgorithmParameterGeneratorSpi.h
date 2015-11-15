@@ -27,6 +27,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/AlgorithmParameters.h"
 using beecrypt::security::AlgorithmParameters;
 #include "beecrypt/c++/security/SecureRandom.h"
@@ -43,17 +45,19 @@ using std::type_info;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI AlgorithmParameterGeneratorSpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI AlgorithmParameterGeneratorSpi : public beecrypt::lang::Object
 		{
 			friend class BEECRYPTCXXAPI AlgorithmParameterGenerator;
 
-			protected:
-				virtual AlgorithmParameters* engineGenerateParameters() = 0;
-				virtual void engineInit(const AlgorithmParameterSpec&, SecureRandom*) throw (InvalidAlgorithmParameterException) = 0;
-				virtual void engineInit(size_t, SecureRandom*) throw (InvalidParameterException) = 0;
+		protected:
+			virtual AlgorithmParameters* engineGenerateParameters() = 0;
+			virtual void engineInit(const AlgorithmParameterSpec& genParamSpec, SecureRandom* random) throw (InvalidAlgorithmParameterException) = 0;
+			virtual void engineInit(size_t size, SecureRandom* random) throw (InvalidParameterException) = 0;
 
-			public:
-				virtual ~AlgorithmParameterGeneratorSpi() {};
+		public:
+			virtual ~AlgorithmParameterGeneratorSpi() {};
 		};
 	}
 }

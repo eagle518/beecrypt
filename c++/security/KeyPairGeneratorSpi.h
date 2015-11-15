@@ -27,6 +27,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/KeyPair.h"
 using beecrypt::security::KeyPair;
 #include "beecrypt/c++/security/SecureRandom.h"
@@ -40,18 +42,20 @@ using beecrypt::security::spec::AlgorithmParameterSpec;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI KeyPairGeneratorSpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI KeyPairGeneratorSpi : public beecrypt::lang::Object
 		{
 			friend class KeyPairGenerator;
 
-			protected:
-				virtual KeyPair* engineGenerateKeyPair() = 0;
+		protected:
+			virtual KeyPair* engineGenerateKeyPair() = 0;
 
-				virtual void engineInitialize(const AlgorithmParameterSpec&, SecureRandom*) throw (InvalidAlgorithmParameterException) = 0;
-				virtual void engineInitialize(size_t, SecureRandom*) throw (InvalidParameterException) = 0;
+			virtual void engineInitialize(const AlgorithmParameterSpec&, SecureRandom*) throw (InvalidAlgorithmParameterException) = 0;
+			virtual void engineInitialize(size_t, SecureRandom*) throw (InvalidParameterException) = 0;
 
-			public:
-				virtual ~KeyPairGeneratorSpi() {};
+		public:
+			virtual ~KeyPairGeneratorSpi() {};
 		};
 	}
 }

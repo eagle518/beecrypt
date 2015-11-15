@@ -32,14 +32,16 @@ using beecrypt::io::DataOutputStream;
 
 namespace beecrypt {
 	namespace beeyond {
+		/*!\ingroup CXX_BEEYOND_m
+		 */
 		class BEECRYPTCXXAPI BeeOutputStream : public DataOutputStream
 		{
-			public:
-				BeeOutputStream(OutputStream& out);
-				virtual ~BeeOutputStream();
+		public:
+			BeeOutputStream(OutputStream& out);
+			virtual ~BeeOutputStream();
 
-				void write(const mpnumber&) throw (IOException);
-				void write(const mpbarrett&) throw (IOException);
+			void write(const mpnumber&) throw (IOException);
+			void write(const mpbarrett&) throw (IOException);
 		};
 	}
 }

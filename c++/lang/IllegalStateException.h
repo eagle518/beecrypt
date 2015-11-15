@@ -30,11 +30,16 @@ using beecrypt::lang::RuntimeException;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This class is used to indicate that a method was called at
+		 *        an illegal or inappropriate time, e.g. before an object
+		 *        was initialized.
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI IllegalStateException : public RuntimeException
 		{
-			public:
-				IllegalStateException() throw ();
-				IllegalStateException(const String&) throw ();
+		public:
+			IllegalStateException() throw ();
+			IllegalStateException(const String& message) throw ();
 		};
 	}
 }

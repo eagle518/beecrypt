@@ -22,16 +22,20 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/KeyFactory.h"
 #include "beecrypt/c++/security/Security.h"
 
 using namespace beecrypt::security;
 
-KeyFactory::KeyFactory(KeyFactorySpi* spi, const String& algorithm, const Provider& provider)
+KeyFactory::KeyFactory(KeyFactorySpi* spi, const Provider* provider, const String& algorithm)
 {
 	_kspi = spi;
+	_prov = provider;
 	_algo = algorithm;
-	_prov = &provider;
 }
 
 KeyFactory::~KeyFactory()
@@ -43,7 +47,11 @@ KeyFactory* KeyFactory::getInstance(const String& algorithm) throw (NoSuchAlgori
 {
     Security::spi* tmp = Security::getSpi(algorithm, "KeyFactory");
 
-    KeyFactory* result = new KeyFactory((KeyFactorySpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<KeyFactorySpi*>(tmp->cspi));
+	#endif
+
+    KeyFactory* result = new KeyFactory(reinterpret_cast<KeyFactorySpi*>(tmp->cspi), tmp->prov, tmp->name);
 
     delete tmp;
 
@@ -54,7 +62,11 @@ KeyFactory* KeyFactory::getInstance(const String& algorithm, const String& provi
 {
     Security::spi* tmp = Security::getSpi(algorithm, "KeyFactory", provider);
 
-    KeyFactory* result = new KeyFactory((KeyFactorySpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<KeyFactorySpi*>(tmp->cspi));
+	#endif
+
+    KeyFactory* result = new KeyFactory(reinterpret_cast<KeyFactorySpi*>(tmp->cspi), tmp->prov, tmp->name);
 
     delete tmp;
 
@@ -65,7 +77,11 @@ KeyFactory* KeyFactory::getInstance(const String& algorithm, const Provider& pro
 {
     Security::spi* tmp = Security::getSpi(algorithm, "KeyFactory", provider);
 
-    KeyFactory* result = new KeyFactory((KeyFactorySpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<KeyFactorySpi*>(tmp->cspi));
+	#endif
+
+    KeyFactory* result = new KeyFactory(reinterpret_cast<KeyFactorySpi*>(tmp->cspi), tmp->prov, tmp->name);
 
     delete tmp;
 

@@ -22,20 +22,23 @@
 
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
+#include "beecrypt/c++/security/ProviderException.h"
+using beecrypt::security::ProviderException;
 #include "beecrypt/c++/provider/MD5Digest.h"
 
 using namespace beecrypt::provider;
 
 MD5Digest::MD5Digest() : _digest(16)
 {
-	md5Reset(&_param);
+	if (md5Reset(&_param))
+		throw ProviderException("BeeCrypt internal error in md5Reset");
 }
 
 MD5Digest::~MD5Digest()
 {
 }
 
-MD5Digest* MD5Digest::clone() const
+MD5Digest* MD5Digest::clone() const throw ()
 {
 	MD5Digest* result = new MD5Digest();
 
@@ -46,7 +49,8 @@ MD5Digest* MD5Digest::clone() const
 
 const bytearray& MD5Digest::engineDigest()
 {
-	md5Digest(&_param, _digest.data());
+	if (md5Digest(&_param, _digest.data()))
+		throw ProviderException("BeeCrypt internal error in md5Digest");
 
 	return _digest;
 }
@@ -59,7 +63,8 @@ size_t MD5Digest::engineDigest(byte* data, size_t offset, size_t length) throw (
 	if (length < 16)
 		throw ShortBufferException();
 
-	md5Digest(&_param, data);
+	if (md5Digest(&_param, data))
+		throw ProviderException("BeeCrypt internal error in md5Digest");
 
 	return 16;
 }
@@ -71,15 +76,18 @@ size_t MD5Digest::engineGetDigestLength()
 
 void MD5Digest::engineReset()
 {
-	md5Reset(&_param);
+	if (md5Reset(&_param))
+		throw ProviderException("BeeCrypt internal error in md5Reset");
 }
 
 void MD5Digest::engineUpdate(byte b)
 {
-	md5Update(&_param, &b, 1);
+	if (md5Update(&_param, &b, 1))
+		throw ProviderException("BeeCrypt internal error in md5Update");
 }
 
 void MD5Digest::engineUpdate(const byte* data, size_t offset, size_t length)
 {
-	md5Update(&_param, data+offset, length);
+	if (md5Update(&_param, data+offset, length))
+		throw ProviderException("BeeCrypt internal error in md5Update");
 }

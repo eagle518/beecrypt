@@ -31,11 +31,13 @@ using beecrypt::security::cert::CertificateException;
 namespace beecrypt {
 	namespace security {
 		namespace cert {
+			/*!\ingroup CXX_SECURITY_CERT_m
+			 */
 			class BEECRYPTCXXAPI CertificateExpiredException : public CertificateException
 			{
-				public:
-					CertificateExpiredException() throw ();
-					CertificateExpiredException(const String&) throw ();
+			public:
+				CertificateExpiredException() throw ();
+				CertificateExpiredException(const String& message) throw ();
 			};
 		}
 	}

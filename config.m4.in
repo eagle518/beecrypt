@@ -13,3 +13,4 @@ define(`LSYM_PREFIX',`@ASM_LSYM_PREFIX@')
 define(`ALIGN',`@ASM_ALIGN@')
 define(`__CONFIG_M4_INCLUDED__')
 ')
+@ASM_GNU_STACK@

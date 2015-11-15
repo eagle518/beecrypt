@@ -86,20 +86,23 @@ void FileOutputStream::write(byte b) throw (IOException)
 
 void FileOutputStream::write(const byte* data, size_t offset, size_t length) throw (IOException)
 {
-	if (!data)
-		throw NullPointerException();
+	if (length)
+	{
+		if (!data)
+			throw NullPointerException();
 
-	if (!_f)
-		throw IOException("no valid file handle to write");
+		if (!_f)
+			throw IOException("no valid file handle to write");
 
-	size_t rc = fwrite(data+offset, 1, length, _f);
+		size_t rc = fwrite(data+offset, 1, length, _f);
 
-	if (rc < length)
-		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
-		#else
-		throw IOException("incomplete fwrite");
-		#endif
+		if (rc < length)
+			#if HAVE_ERRNO_H
+			throw IOException(strerror(errno));
+			#else
+			throw IOException("incomplete fwrite");
+			#endif
+	}
 }
 
 void FileOutputStream::write(const bytearray& b) throw (IOException)

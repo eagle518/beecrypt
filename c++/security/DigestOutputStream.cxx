@@ -46,12 +46,12 @@ void DigestOutputStream::write(byte b) throw (IOException)
 
 void DigestOutputStream::write(const byte *data, size_t offset, size_t length) throw (IOException)
 {
-	if (!data)
-		throw NullPointerException();
-
-	out.write(data, offset, length);
-	if (_on)
-		digest.update(data, offset, length);
+	if (length)
+	{
+		out.write(data, offset, length);
+		if (_on)
+			digest.update(data, offset, length);
+	}
 }
 
 void DigestOutputStream::on(bool on)

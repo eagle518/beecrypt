@@ -17,7 +17,7 @@
  */
 
 /*!\file SHA1withRSASignature.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_SHA1WITHRSASIGNATURE_H
@@ -31,9 +31,9 @@ namespace beecrypt {
 	namespace provider {
 		class SHA1withRSASignature : public PKCS1RSASignature
 		{
-			public:
-				SHA1withRSASignature();
-				~SHA1withRSASignature();
+		public:
+			SHA1withRSASignature();
+			~SHA1withRSASignature();
 		};
 	}
 }

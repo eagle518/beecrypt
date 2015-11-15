@@ -17,7 +17,7 @@
  */
 
 /*!\file RSAKeyPairGenerator.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_RSAKEYPAIRGENERATOR_H
@@ -38,24 +38,24 @@ using beecrypt::security::InvalidParameterException;
 
 namespace beecrypt {
 	namespace provider {
-		class RSAKeyPairGenerator : public KeyPairGeneratorSpi
+		class RSAKeyPairGenerator : public beecrypt::security::KeyPairGeneratorSpi
 		{
-			private:
-				size_t _size;
-				RSAKeyGenParameterSpec* _spec;
-				SecureRandom* _srng;
+		private:
+			size_t _size;
+			RSAKeyGenParameterSpec* _spec;
+			SecureRandom* _srng;
 
-				KeyPair* genpair(randomGeneratorContext*);
+			KeyPair* genpair(randomGeneratorContext*);
 
-			protected:
-				virtual KeyPair* engineGenerateKeyPair();
+		protected:
+			virtual KeyPair* engineGenerateKeyPair();
 
-				virtual void engineInitialize(const AlgorithmParameterSpec&, SecureRandom*) throw (InvalidAlgorithmParameterException);
-				virtual void engineInitialize(size_t, SecureRandom*) throw (InvalidParameterException);
+			virtual void engineInitialize(const AlgorithmParameterSpec&, SecureRandom*) throw (InvalidAlgorithmParameterException);
+			virtual void engineInitialize(size_t, SecureRandom*) throw (InvalidParameterException);
 
-			public:
-				RSAKeyPairGenerator();
-				virtual ~RSAKeyPairGenerator();
+		public:
+			RSAKeyPairGenerator();
+			virtual ~RSAKeyPairGenerator();
 		};
 	}
 }

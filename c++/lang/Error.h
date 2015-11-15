@@ -30,11 +30,15 @@ using beecrypt::lang::Throwable;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This subclass of Throwable is used to indicate a serious
+		 *        problem, which should not be caught by the application.
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI Error : public Throwable
 		{
-			public:
-				Error() throw ();
-				Error(const String&) throw ();
+		public:
+			Error() throw ();
+			Error(const String& message) throw ();
 		};
 	}
 }

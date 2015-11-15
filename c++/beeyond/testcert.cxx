@@ -56,33 +56,21 @@ int main(int argc, char* argv[])
 
 		KeyPair* pair = kpg->generateKeyPair();
 
-		cout << "keypair generated" << endl << flush;
-
 		BeeCertificate* self = BeeCertificate::self(pair->getPublic(), pair->getPrivate(), "SHA1withDSA");
-
-		cout << "self generated" << endl << flush;
 
 		ByteArrayInputStream bis(self->getEncoded());
 
-		CertificateFactory* cf = CertificateFactory::getInstance("BEE");
-
-		cout << "got cf" << endl << flush;
+		CertificateFactory* cf = CertificateFactory::getInstance(self->getType());
 
 		Certificate* cert = cf->generateCertificate(bis);
 
-		cout << "verifying" << endl << flush;
-
 		cert->verify(pair->getPublic());
 
-		cout << "verified" << endl << flush;
-
-		if (!(*cert == *self))
+		if (!cert->equals(*self))
 		{
-			cerr << "certificates differ" << endl;
+			std::cout << "cloned certificate differs" << std::endl;
 			failures++;
 		}
-		else
-			cout << "certificates equal" << endl << flush;
 
 		delete cert;
 		delete cf;

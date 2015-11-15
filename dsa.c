@@ -106,12 +106,18 @@ int dsavrfy(const mpbarrett* p, const mpbarrett* q, const mpnumber* g, const mpn
 
 	register int rc = 0;
 
+	/* h(m) shouldn't contain more bits than q */
+	if (mpbits(hm->size, hm->data) > mpbits(q->size, q->modl))
+		return rc;
+
+	/* check 0 < r < q */
 	if (mpz(r->size, r->data))
 		return rc;
 
 	if (mpgex(r->size, r->data, qsize, q->modl))
 		return rc;
 
+	/* check 0 < s < q */
 	if (mpz(s->size, s->data))
 		return rc;
 

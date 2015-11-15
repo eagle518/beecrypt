@@ -17,7 +17,7 @@
  */
 
 /*!\file DHKeyFactory.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DHKEYFACTORY_H
@@ -36,7 +36,7 @@ using beecrypt::security::spec::KeySpec;
 
 namespace beecrypt {
 	namespace provider {
-		class DHKeyFactory : public KeyFactorySpi
+		class DHKeyFactory : public beecrypt::security::KeyFactorySpi
 		{
 		protected:
 			virtual PrivateKey* engineGeneratePrivate(const KeySpec&) throw (InvalidKeySpecException);

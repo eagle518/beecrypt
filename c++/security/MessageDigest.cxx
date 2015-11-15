@@ -22,16 +22,20 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/c++/security/MessageDigest.h"
 #include "beecrypt/c++/security/Security.h"
 
 using namespace beecrypt::security;
 
-MessageDigest::MessageDigest(MessageDigestSpi* spi, const String& algorithm, const Provider& provider)
+MessageDigest::MessageDigest(MessageDigestSpi* spi, const Provider* provider, const String& algorithm)
 {
 	_mspi = spi;
+	_prov = provider;
 	_algo = algorithm;
-	_prov = &provider;
 }
 
 MessageDigest::~MessageDigest()
@@ -43,7 +47,11 @@ MessageDigest* MessageDigest::getInstance(const String& algorithm) throw (NoSuch
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "MessageDigest");
 
-	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<MessageDigestSpi*>((MessageDigestSpi*) tmp->cspi));
+	#endif
+
+	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -54,7 +62,11 @@ MessageDigest* MessageDigest::getInstance(const String& algorithm, const String&
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "MessageDigest", provider);
 
-	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<MessageDigestSpi*>((MessageDigestSpi*) tmp->cspi));
+	#endif
+
+	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->prov, tmp->name);
 
 	delete tmp;
 
@@ -65,19 +77,23 @@ MessageDigest* MessageDigest::getInstance(const String& algorithm, const Provide
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "MessageDigest", provider);
 
-	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->name, tmp->prov);
+	#if HAVE_ASSERT_H
+	assert(dynamic_cast<MessageDigestSpi*>((MessageDigestSpi*) tmp->cspi));
+	#endif
+
+	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->prov, tmp->name);
 
 	delete tmp;
 
 	return result;
 }
 
-MessageDigest* MessageDigest::clone() const
+MessageDigest* MessageDigest::clone() const throw (CloneNotSupportedException)
 {
 	MessageDigestSpi* _mspc = _mspi->clone();
 
 	if (_mspc)
-		return new MessageDigest(_mspc, _algo, *_prov);
+		return new MessageDigest(_mspc, _prov, _algo);
 	else
 		return 0;
 }

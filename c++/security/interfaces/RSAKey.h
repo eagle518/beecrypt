@@ -32,12 +32,12 @@ namespace beecrypt {
 	namespace security {
 		namespace interfaces {
 			/*!\brief RSA key interface.
-			* \ingroup CXX_IF_m
-			*/
+			 * \ingroup CXX_SECURITY_INTERFACES_m
+			 */
 			class RSAKey
 			{
-				public:
-					virtual const mpbarrett& getModulus() const throw () = 0;
+			public:
+				virtual const mpbarrett& getModulus() const throw () = 0;
 			};
 		}
 	}

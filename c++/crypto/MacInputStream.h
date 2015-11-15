@@ -32,26 +32,27 @@ using beecrypt::io::FilterInputStream;
 
 namespace beecrypt {
 	namespace crypto {
-		class BEECRYPTCXXAPI MacInputStream : public FilterInputStream
+		/*!\ingroup CXX_CRYPTO_m
+		 */
+		class BEECRYPTCXXAPI MacInputStream : public beecrypt::io::FilterInputStream
 		{
-			private:
-				bool _on;
+		private:
+			bool _on;
 
-			protected:
-				Mac& mac;
+		protected:
+			Mac& mac;
 
-			public:
-				MacInputStream(InputStream&, Mac&);
-				virtual ~MacInputStream();
+		public:
+			MacInputStream(InputStream&, Mac&);
+			virtual ~MacInputStream();
 
-				virtual int read() throw (IOException);
-				virtual int read(byte* data, size_t offset, size_t length) throw (IOException);
+			virtual int read() throw (IOException);
+			virtual int read(byte* data, size_t offset, size_t length) throw (IOException);
 
-				void on(bool);
+			void on(bool);
 
-				Mac& getMac();
-				void setMac(Mac&);
-
+			Mac& getMac();
+			void setMac(Mac&);
 		};
 	}
 }

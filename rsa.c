@@ -45,7 +45,6 @@ int rsapub(const mpbarrett* n, const mpnumber* e,
 	if (temp)
 	{
 		mpnsize(c, size);
-
 		mpbpowmod_w(n, m->size, m->data, e->size, e->data, c->data, temp);
 
 		free(temp);

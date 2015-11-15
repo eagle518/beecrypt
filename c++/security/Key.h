@@ -33,19 +33,16 @@ using beecrypt::lang::String;
 namespace beecrypt {
 	namespace security {
 		/*!\brief The top-level interface for all keys.
-		* \ingroup CXX_IF_m
+		* \ingroup CXX_SECURITY_m
 		*/
 		class BEECRYPTCXXAPI Key
 		{
-			public:
-				virtual ~Key() {};
+		public:
+			virtual ~Key() {};
 
-				virtual Key* clone() const = 0;
-
-				virtual const bytearray* getEncoded() const = 0;
-
-				virtual const String& getAlgorithm() const throw () = 0;
-				virtual const String* getFormat() const throw () = 0;
+			virtual const bytearray* getEncoded() const = 0;
+			virtual const String& getAlgorithm() const throw () = 0;
+			virtual const String* getFormat() const throw () = 0;
 		};
 	}
 }

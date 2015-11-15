@@ -30,11 +30,15 @@ using beecrypt::lang::Exception;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This class is the superclass of exceptions that can be thrown
+		 *        during normal operation.
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI RuntimeException : public Exception
 		{
-			public:
-				RuntimeException() throw ();
-				RuntimeException(const String&) throw ();
+		public:
+			RuntimeException() throw ();
+			RuntimeException(const String& message) throw ();
 		};
 	}
 }

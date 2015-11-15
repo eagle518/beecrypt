@@ -25,6 +25,8 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/PrivateKey.h"
 using beecrypt::security::PrivateKey;
 #include "beecrypt/c++/security/PublicKey.h"
@@ -32,21 +34,22 @@ using beecrypt::security::PublicKey;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI KeyPair
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI KeyPair : public beecrypt::lang::Object
 		{
 			friend class KeyPairGenerator;
 
-			private:
-				PublicKey* pub;
-				PrivateKey* pri;
+		private:
+			PublicKey* _pub;
+			PrivateKey* _pri;
 
-			public:
-				KeyPair(const PublicKey&, const PrivateKey&);
-				KeyPair(PublicKey*, PrivateKey*);
-				~KeyPair();
+		public:
+			KeyPair(PublicKey*, PrivateKey*);
+			virtual ~KeyPair();
 
-				const PublicKey& getPublic() const throw ();
-				const PrivateKey& getPrivate() const throw ();
+			const PublicKey& getPublic() const throw ();
+			const PrivateKey& getPrivate() const throw ();
 		};
 	}
 }

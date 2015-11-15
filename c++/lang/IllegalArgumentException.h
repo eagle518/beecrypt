@@ -30,11 +30,15 @@ using beecrypt::lang::RuntimeException;
 
 namespace beecrypt {
 	namespace lang {
+		/*!\brief This class is used to indicate that a method was passed an
+		 *        illegal or inappropriate argument.
+		 * \ingroup CXX_LANG_m
+		 */
 		class BEECRYPTCXXAPI IllegalArgumentException : public RuntimeException
 		{
-			public:
-				IllegalArgumentException() throw ();
-				IllegalArgumentException(const String&) throw ();
+		public:
+			IllegalArgumentException() throw ();
+			IllegalArgumentException(const String& message) throw ();
 		};
 	}
 }

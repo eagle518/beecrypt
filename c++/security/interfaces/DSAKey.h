@@ -32,12 +32,12 @@ namespace beecrypt {
 	namespace security {
 		namespace interfaces {
 			/*!\brief DSA key interface.
-			* \ingroup CXX_IF_m
-			*/
+			 * \ingroup CXX_SECURITY_INTERFACES_m
+			 */
 			class DSAKey
 			{
-				public:
-					virtual const DSAParams& getParams() const throw () = 0;
+			public:
+				virtual const DSAParams& getParams() const throw () = 0;
 			};
 		}
 	}

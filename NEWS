@@ -1,3 +1,24 @@
+4.1.1:
+	- Fixed shared library version info.
+
+4.1.0:
+	- Added SHA-384 and SHA-512 algorithms.
+	- Added HMAC-SHA-384 and HMAC-SHA-512 algorithms.
+	- Added generic SSE2 optimization for the above algorithms.
+	- Added more digest algorithms for PKCS#1 EMSA.
+	- Optimized swap32 and swap64 routines on Linux.
+	- Fixed missing definition in mpopt.h for s390x.
+	- Fixed nostackexec configuration bug.
+	- Fixed problem in Date::toString.
+	- Fixed deadlock problem which occured in certain cases where security
+	  or crypto SPI constructor called getInstance for another security or
+	  crypto SPI.
+	- Fixed a bug in the generic CBC encryption code; when called with
+	  nblocks == 1, the feedback was set incorrectly.
+	- Fixed a bug in mpbsubmod; sometimes it takes multiple additions of
+	  the modulus to get a positive number.
+	- Fixed PowerPC 64-bit configuration problem on Linux.
+
 4.0.0:
 	- Added a C++ API interface, modeled after Java's security & crypto API.
 	- Added the new GNU noexecstack feature.

@@ -17,7 +17,7 @@
  */
 
 /*!\file DSAPublicKeyImpl.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_DSAPUBLICKEYIMPL_H
@@ -25,6 +25,10 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/interfaces/DSAPublicKey.h"
 using beecrypt::security::interfaces::DSAPublicKey;
 #include "beecrypt/c++/security/spec/DSAParameterSpec.h"
@@ -32,28 +36,31 @@ using beecrypt::security::spec::DSAParameterSpec;
 
 namespace beecrypt {
 	namespace provider {
-		class DSAPublicKeyImpl : public DSAPublicKey
+		class DSAPublicKeyImpl : public beecrypt::lang::Object, public beecrypt::security::interfaces::DSAPublicKey, public beecrypt::lang::Cloneable
 		{
-			private:
-				DSAParameterSpec* _params;
-				mpnumber _y;
-				mutable bytearray* _enc;
+		private:
+			DSAParameterSpec* _params;
+			mpnumber _y;
+			mutable bytearray* _enc;
 
-			public:
-				DSAPublicKeyImpl(const DSAPublicKey&);
-				DSAPublicKeyImpl(const DSAParams&, const mpnumber&);
-				DSAPublicKeyImpl(const dsaparam&, const mpnumber&);
-				DSAPublicKeyImpl(const mpbarrett&, const mpbarrett&, const mpnumber&, const mpnumber&);
-				virtual ~DSAPublicKeyImpl();
+		public:
+			DSAPublicKeyImpl(const DSAPublicKey&);
+			DSAPublicKeyImpl(const DSAPublicKeyImpl&);
+			DSAPublicKeyImpl(const DSAParams&, const mpnumber&);
+			DSAPublicKeyImpl(const dsaparam&, const mpnumber&);
+			DSAPublicKeyImpl(const mpbarrett&, const mpbarrett&, const mpnumber&, const mpnumber&);
+			virtual ~DSAPublicKeyImpl();
 
-				virtual DSAPublicKey* clone() const;
+			virtual DSAPublicKeyImpl* clone() const throw ();
 
-				virtual const DSAParams& getParams() const throw ();
-				virtual const mpnumber& getY() const throw ();
+			virtual bool equals(const Object& compare) const throw ();
 
-				virtual const bytearray* getEncoded() const;
-				virtual const String& getAlgorithm() const throw ();
-				virtual const String* getFormat() const throw ();
+			virtual const DSAParams& getParams() const throw ();
+			virtual const mpnumber& getY() const throw ();
+
+			virtual const bytearray* getEncoded() const;
+			virtual const String& getAlgorithm() const throw ();
+			virtual const String* getFormat() const throw ();
 		};
 	}
 }

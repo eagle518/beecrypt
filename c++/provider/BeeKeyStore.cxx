@@ -20,24 +20,34 @@
 # include "config.h"
 #endif
 
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
 #include "beecrypt/aes.h"
 #include "beecrypt/pkcs12.h"
 #include "beecrypt/sha256.h"
 
 #include "beecrypt/c++/crypto/Mac.h"
 using beecrypt::crypto::Mac;
+#include "beecrypt/c++/crypto/MacInputStream.h"
+using beecrypt::crypto::MacInputStream;
+#include "beecrypt/c++/crypto/MacOutputStream.h"
+using beecrypt::crypto::MacOutputStream;
 #include "beecrypt/c++/io/ByteArrayInputStream.h"
 using beecrypt::io::ByteArrayInputStream;
 #include "beecrypt/c++/io/DataInputStream.h"
 using beecrypt::io::DataInputStream;
 #include "beecrypt/c++/io/DataOutputStream.h"
 using beecrypt::io::DataOutputStream;
-#include "beecrypt/c++/crypto/MacInputStream.h"
-using beecrypt::crypto::MacInputStream;
-#include "beecrypt/c++/crypto/MacOutputStream.h"
-using beecrypt::crypto::MacOutputStream;
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
 #include "beecrypt/c++/security/SecureRandom.h"
 using beecrypt::security::SecureRandom;
+#include "beecrypt/c++/security/ProviderException.h"
+using beecrypt::security::ProviderException;
+#include "beecrypt/c++/beeyond/BeeCertificate.h"
+using beecrypt::beeyond::BeeCertificate;
 #include "beecrypt/c++/beeyond/PKCS12PBEKey.h"
 using beecrypt::beeyond::PKCS12PBEKey;
 #include "beecrypt/c++/provider/KeyProtector.h"
@@ -55,39 +65,42 @@ namespace {
 #define BKS_PRIVATEKEY_ENTRY	((javaint) 0x1)
 #define BKS_CERTIFICATE_ENTRY	((javaint) 0x2)
 
-BeeKeyStore::Entry::~Entry()
+BeeKeyStore::Entry::~Entry() throw ()
 {
 }
 
-BeeKeyStore::KeyEntry::KeyEntry()
+BeeKeyStore::KeyEntry::KeyEntry() throw ()
 {
 }
 
-BeeKeyStore::KeyEntry::KeyEntry(const bytearray& b, const vector<Certificate*>& c)
+BeeKeyStore::KeyEntry::KeyEntry(const bytearray& b, const vector<Certificate*>& c) throw (CloneNotSupportedException)
 {
 	encryptedkey = b;
+
 	for (vector<Certificate*>::const_iterator it = c.begin(); it != c.end(); it++)
-		chain.push_back((*it)->clone());
+	{
+		chain.push_back(BeeCertificate::cloneCertificate(*(*it)));
+	}
 }
 
-BeeKeyStore::KeyEntry::~KeyEntry()
+BeeKeyStore::KeyEntry::~KeyEntry() throw ()
 {
 	// delete all the certificates in the chain
 	for (size_t i = 0; i < chain.size(); i++)
 		delete chain[i];
 }
 
-BeeKeyStore::CertEntry::CertEntry()
+BeeKeyStore::CertEntry::CertEntry() throw ()
 {
 	cert = 0;
 }
 
-BeeKeyStore::CertEntry::CertEntry(const Certificate& c)
+BeeKeyStore::CertEntry::CertEntry(const Certificate& c) throw (CloneNotSupportedException)
 {
-	cert = c.clone();
+	cert = BeeCertificate::cloneCertificate(c);
 }
 
-BeeKeyStore::CertEntry::~CertEntry()
+BeeKeyStore::CertEntry::~CertEntry() throw ()
 {
 	if (cert)
 	{
@@ -201,7 +214,13 @@ const Certificate* BeeKeyStore::engineGetCertificate(const String& alias)
 	{
 		CertEntry* ce = dynamic_cast<CertEntry*>(it->second);
 		if (ce)
-			result =  ce->cert;
+			result = ce->cert;
+		else
+		{
+			KeyEntry* ke = dynamic_cast<KeyEntry*>(it->second);
+			if (ke)
+				result = ke->chain[0];
+		}
 	}
 	_lock.unlock();
 	return result;
@@ -217,7 +236,7 @@ const String* BeeKeyStore::engineGetCertificateAlias(const Certificate& cert)
 		const CertEntry* ce = dynamic_cast<const CertEntry*>(it->second);
 		if (ce)
 		{
-			if (cert == *(ce->cert))
+			if (cert.equals(*(ce->cert)))
 			{
 				result = &(it->first);
 				break;
@@ -232,13 +251,13 @@ const vector<Certificate*>* BeeKeyStore::engineGetCertificateChain(const String&
 {
 	const vector<Certificate*>* result = 0;
 
-	_lock.unlock();
+	_lock.lock();
 	entry_map::iterator it = _entries.find(alias);
 	if (it != _entries.end())
 	{
 		KeyEntry* ke = dynamic_cast<KeyEntry*>(it->second);
 		if (ke)
-			result = &ke->chain;
+			result = const_cast<vector<Certificate*>*>(&ke->chain);
 	}
 	_lock.unlock();
 	return result;
@@ -350,7 +369,7 @@ void BeeKeyStore::engineLoad(InputStream* in, const array<javachar>* password) t
 {
 	_lock.lock();
 
-	if (in == 0)
+	if (!in)
 	{
 		randomGeneratorContext rngc;
 
@@ -618,7 +637,7 @@ void BeeKeyStore::engineStore(OutputStream& out, const array<javachar>* password
 				continue;
 			}
 
-			throw RuntimeException();
+			throw ProviderException("entry is neither KeyEntry nor CertEntry");
 		}
 		/* don't call close on a FilterOutputStream because the
 		 * underlying stream still has to write data!

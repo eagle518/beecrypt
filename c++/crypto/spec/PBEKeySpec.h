@@ -28,29 +28,33 @@
 #include "beecrypt/c++/array.h"
 using beecrypt::array;
 using beecrypt::bytearray;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/spec/KeySpec.h"
 using beecrypt::security::spec::KeySpec;
 
 namespace beecrypt {
 	namespace crypto {
 		namespace spec {
-			class BEECRYPTCXXAPI PBEKeySpec : public KeySpec
+			/*!\ingroup CXX_CRYPTO_SPEC_m
+			 */
+			class BEECRYPTCXXAPI PBEKeySpec : public beecrypt::lang::Object, public beecrypt::security::spec::KeySpec
 			{
-				private:
-					array<javachar> _password;
-					bytearray* _salt;
-					size_t _iteration_count;
-					size_t _key_length;
+			private:
+				array<javachar> _password;
+				bytearray* _salt;
+				size_t _iteration_count;
+				size_t _key_length;
 
-				public:
-					PBEKeySpec(const array<javachar>* password);
-					PBEKeySpec(const array<javachar>* password, const bytearray* salt, size_t iterationCount, size_t keyLength);
-					virtual ~PBEKeySpec();
+			public:
+				PBEKeySpec(const array<javachar>* password);
+				PBEKeySpec(const array<javachar>* password, const bytearray* salt, size_t iterationCount, size_t keyLength);
+				virtual ~PBEKeySpec();
 
-					const array<javachar>& getPassword() const throw ();
-					const bytearray* getSalt() const throw ();
-					size_t getIterationCount() const throw ();
-					size_t getKeyLength() const throw ();
+				const array<javachar>& getPassword() const throw ();
+				const bytearray* getSalt() const throw ();
+				size_t getIterationCount() const throw ();
+				size_t getKeyLength() const throw ();
 			};
 		}
 	}

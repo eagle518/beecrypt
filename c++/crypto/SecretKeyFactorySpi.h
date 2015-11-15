@@ -29,6 +29,8 @@
 
 #include "beecrypt/c++/crypto/SecretKey.h"
 using beecrypt::crypto::SecretKey;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/InvalidKeyException.h"
 using beecrypt::security::InvalidKeyException;
 #include "beecrypt/c++/security/spec/KeySpec.h"
@@ -41,17 +43,19 @@ using std::type_info;
 
 namespace beecrypt {
 	namespace crypto {
-		class BEECRYPTCXXAPI SecretKeyFactorySpi
+		/*!\ingroup CXX_CRYPTO_m
+		 */
+		class BEECRYPTCXXAPI SecretKeyFactorySpi : public beecrypt::lang::Object
 		{
 			friend class SecretKeyFactory;
 
-			protected:
-				virtual SecretKey* engineGenerateSecret(const KeySpec&) throw (InvalidKeySpecException) = 0;
-				virtual KeySpec* engineGetKeySpec(const SecretKey&, const type_info&) throw (InvalidKeySpecException) = 0;
-				virtual SecretKey* engineTranslateKey(const SecretKey&) throw (InvalidKeyException) = 0;
+		protected:
+			virtual SecretKey* engineGenerateSecret(const KeySpec&) throw (InvalidKeySpecException) = 0;
+			virtual KeySpec* engineGetKeySpec(const SecretKey&, const type_info&) throw (InvalidKeySpecException) = 0;
+			virtual SecretKey* engineTranslateKey(const SecretKey&) throw (InvalidKeyException) = 0;
 
-			public:
-				virtual ~SecretKeyFactorySpi() {};
+		public:
+			virtual ~SecretKeyFactorySpi() {};
 		};
 	}
 }

@@ -11,7 +11,10 @@ Certificate.cxx \
 CertificateException.cxx \
 CertificateExpiredException.cxx \
 CertificateFactory.cxx \
-CertificateNotYetValidException.cxx
+CertificateNotYetValidException.cxx \
+CertPath.cxx \
+CertPathValidator.cxx \
+CertPathValidatorException.cxx
 
 cxxsecuritycert_HEADERS =\
 Certificate.h \
@@ -19,4 +22,10 @@ CertificateException.h \
 CertificateExpiredException.h \
 CertificateFactory.h \
 CertificateFactorySpi.h \
-CertificateNotYetValidException.h
+CertificateNotYetValidException.h \
+CertPath.h \
+CertPathParameters.h \
+CertPathValidator.h \
+CertPathValidatorException.h \
+CertPathValidatorResult.h \
+CertPathValidatorSpi.h

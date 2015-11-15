@@ -29,27 +29,31 @@
 
 #include "beecrypt/c++/array.h"
 using beecrypt::bytearray;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/ShortBufferException.h"
 using beecrypt::security::ShortBufferException;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI MessageDigestSpi
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI MessageDigestSpi : public beecrypt::lang::Object
 		{
 			friend class MessageDigest;
 
-			protected:
-				virtual const bytearray& engineDigest() = 0;
-				virtual size_t engineDigest(byte*, size_t, size_t) throw (ShortBufferException) = 0;
-				virtual size_t engineGetDigestLength() = 0;
-				virtual void engineReset() = 0;
-				virtual void engineUpdate(byte) = 0;
-				virtual void engineUpdate(const byte*, size_t, size_t) = 0;
+		protected:
+			virtual const bytearray& engineDigest() = 0;
+			virtual size_t engineDigest(byte* data, size_t offset, size_t length) throw (ShortBufferException) = 0;
+			virtual size_t engineGetDigestLength() = 0;
+			virtual void engineReset() = 0;
+			virtual void engineUpdate(byte b) = 0;
+			virtual void engineUpdate(const byte* data, size_t offset, size_t length) = 0;
 
-			public:
-				virtual ~MessageDigestSpi() {};
+		public:
+			virtual ~MessageDigestSpi() {};
 
-				virtual MessageDigestSpi* clone() const = 0;
+			virtual MessageDigestSpi* clone() const throw (CloneNotSupportedException) = 0;
 		};
 	}
 }

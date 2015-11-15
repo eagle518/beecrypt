@@ -37,6 +37,12 @@ using beecrypt::security::NoSuchAlgorithmException;
 using beecrypt::security::NoSuchProviderException;
 #include "beecrypt/c++/security/cert/CertificateFactory.h"
 using beecrypt::security::cert::CertificateFactory;
+#include "beecrypt/c++/security/cert/CertPathValidator.h"
+using beecrypt::security::cert::CertPathValidator;
+#include "beecrypt/c++/crypto/Cipher.h"
+using beecrypt::crypto::Cipher;
+#include "beecrypt/c++/crypto/KeyAgreement.h"
+using beecrypt::crypto::KeyAgreement;
 #include "beecrypt/c++/crypto/Mac.h"
 using beecrypt::crypto::Mac;
 #include "beecrypt/c++/crypto/SecretKeyFactory.h"
@@ -47,11 +53,16 @@ using std::vector;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI Security
 		{
 			friend class AlgorithmParameterGenerator;
 			friend class AlgorithmParameters;
 			friend class CertificateFactory;
+			friend class CertPathValidator;
+			friend class Cipher;
+			friend class KeyAgreement;
 			friend class KeyFactory;
 			friend class KeyPairGenerator;
 			friend class KeyStore;
@@ -61,40 +72,42 @@ namespace beecrypt {
 			friend class SecureRandom;
 			friend class Signature;
 
-			public:
-				typedef vector<const Provider*> provider_vector;
-				typedef provider_vector::iterator provider_vector_iterator;
+		public:
+			typedef vector<const Provider*> provider_vector;
+			typedef provider_vector::iterator provider_vector_iterator;
 
-			private:
-				struct spi
-				{
-					void* cspi;
-					String name;
-					const Provider& prov;
+		private:
+			struct spi
+			{
+				Object* cspi;
+				String name;
+				const Provider* prov;
 
-					spi(void* cspi, const String&, const Provider&);
-				};
+				spi(Object* cspi, const Provider*, const String&);
+			};
 
-				static spi* getSpi(const String& name, const String& type) throw (NoSuchAlgorithmException);
-				static spi* getSpi(const String& algo, const String& type, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
-				static spi* getSpi(const String& algo, const String& type, const Provider&) throw (NoSuchAlgorithmException);
-				static spi* getFirstSpi(const String& type);
+			static spi* getSpi(const String& name, const String& type) throw (NoSuchAlgorithmException);
+			static spi* getSpi(const String& algo, const String& type, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
+			static spi* getSpi(const String& algo, const String& type, const Provider&) throw (NoSuchAlgorithmException);
+			static spi* getFirstSpi(const String& type);
 
-				static const String& getKeyStoreDefault();
+			static const String& getKeyStoreDefault();
 
-				static bool _init;
-				static Properties _props;
-				static mutex _lock;
-				static provider_vector _providers;
+			static bool _init;
+			static Properties _props;
+			static mutex _lock;
+			static provider_vector _providers;
 
-				static void initialize();
+			static void initialize();
 				
-			public:
-				static int addProvider(const Provider& provider);
-				static int insertProviderAt(const Provider& provider, size_t position);
-				static void removeProvider(const String& name);
-				static const Provider* getProvider(const String& name);
-				static const provider_vector& getProviders();
+		public:
+			static int addProvider(const Provider& provider);
+			static int insertProviderAt(const Provider& provider, size_t position);
+			static void removeProvider(const String& name);
+			static const Provider* getProvider(const String& name);
+			static const provider_vector& getProviders();
+
+			static const String* getProperty(const String& key) throw ();
 		};
 	}
 }

@@ -28,28 +28,33 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/spec/KeySpec.h"
 using beecrypt::security::spec::KeySpec;
 
 namespace beecrypt {
 	namespace security {
 		namespace spec {
-			class BEECRYPTCXXAPI DSAPublicKeySpec : public KeySpec
+			/*!\brief DSA public key specification
+			 * \ingroup CXX_SECURITY_SPEC_m
+			 */
+			class BEECRYPTCXXAPI DSAPublicKeySpec : public beecrypt::lang::Object, public beecrypt::security::spec::KeySpec
 			{
-				private:
-					mpbarrett _p;
-					mpbarrett _q;
-					mpnumber _g;
-					mpnumber _y;
+			private:
+				mpbarrett _p;
+				mpbarrett _q;
+				mpnumber _g;
+				mpnumber _y;
 
-				public:
-					DSAPublicKeySpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g, const mpnumber& y);
-					virtual ~DSAPublicKeySpec();
+			public:
+				DSAPublicKeySpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g, const mpnumber& y);
+				virtual ~DSAPublicKeySpec();
 
-					const mpbarrett& getP() const throw ();
-					const mpbarrett& getQ() const throw ();
-					const mpnumber& getG() const throw ();
-					const mpnumber& getY() const throw ();
+				const mpbarrett& getP() const throw ();
+				const mpbarrett& getQ() const throw ();
+				const mpnumber& getG() const throw ();
+				const mpnumber& getY() const throw ();
 			};
 		}
 	}

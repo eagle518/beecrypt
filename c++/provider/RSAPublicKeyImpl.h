@@ -17,7 +17,7 @@
  */
 
 /*!\file RSAPublicKeyImpl.h
- * \ingroup CXX_PROV_m
+ * \ingroup CXX_PROVIDER_m
  */
 
 #ifndef _CLASS_RSAPUBLICKEYIMPL_H
@@ -25,31 +25,38 @@
 
 #ifdef __cplusplus
 
+#include "beecrypt/c++/lang/Cloneable.h"
+using beecrypt::lang::Cloneable;
+#include "beecrypt/c++/lang/Object.h"
+using beecrypt::lang::Object;
 #include "beecrypt/c++/security/interfaces/RSAPublicKey.h"
 using beecrypt::security::interfaces::RSAPublicKey;
 
 namespace beecrypt {
 	namespace provider {
-		class RSAPublicKeyImpl : public RSAPublicKey
+		class RSAPublicKeyImpl : public beecrypt::lang::Object, public beecrypt::security::interfaces::RSAPublicKey, public beecrypt::lang::Cloneable
 		{
-			private:
-				mpbarrett _n;
-				mpnumber _e;
-				mutable bytearray* _enc;
+		private:
+			mpbarrett _n;
+			mpnumber _e;
+			mutable bytearray* _enc;
 
-			public:
-				RSAPublicKeyImpl(const RSAPublicKey&);
-				RSAPublicKeyImpl(const mpbarrett&, const mpnumber&);
-				virtual ~RSAPublicKeyImpl();
+		public:
+			RSAPublicKeyImpl(const RSAPublicKey&);
+			RSAPublicKeyImpl(const RSAPublicKeyImpl&);
+			RSAPublicKeyImpl(const mpbarrett&, const mpnumber&);
+			virtual ~RSAPublicKeyImpl();
 
-				virtual RSAPublicKey* clone() const;
+			virtual bool equals(const Object& compare) const throw ();
 
-				virtual const mpbarrett& getModulus() const throw ();
-				virtual const mpnumber& getPublicExponent() const throw ();
+			virtual RSAPublicKeyImpl* clone() const throw ();
 
-				virtual const bytearray* getEncoded() const;
-				virtual const String& getAlgorithm() const throw ();
-				virtual const String* getFormat() const throw ();
+			virtual const mpbarrett& getModulus() const throw ();
+			virtual const mpnumber& getPublicExponent() const throw ();
+
+			virtual const bytearray* getEncoded() const;
+			virtual const String& getAlgorithm() const throw ();
+			virtual const String* getFormat() const throw ();
 		};
 	}
 }

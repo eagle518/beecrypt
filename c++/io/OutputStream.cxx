@@ -36,13 +36,16 @@ void OutputStream::flush() throw (IOException)
 {
 }
 
-void OutputStream::write(const byte* data, size_t offset, size_t len) throw (IOException)
+void OutputStream::write(const byte* data, size_t offset, size_t length) throw (IOException)
 {
-	if (!data)
-		throw NullPointerException();
+	if (length)
+	{
+		if (!data)
+			throw NullPointerException();
 
-	for (size_t i = 0; i < len; i++)
-		write(data[offset+i]);
+		for (size_t i = 0; i < length; i++)
+			write(data[offset+i]);
+	}
 }
 
 void OutputStream::write(const bytearray& b) throw (IOException)

@@ -30,11 +30,13 @@ using beecrypt::security::GeneralSecurityException;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI InvalidAlgorithmParameterException : public GeneralSecurityException
 		{
-			public:
-				InvalidAlgorithmParameterException() throw ();
-				InvalidAlgorithmParameterException(const String&) throw ();
+		public:
+			InvalidAlgorithmParameterException() throw ();
+			InvalidAlgorithmParameterException(const String& message) throw ();
 		};
 	}
 }

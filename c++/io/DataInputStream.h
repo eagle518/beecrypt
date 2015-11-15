@@ -34,33 +34,35 @@ using beecrypt::io::FilterInputStream;
 
 namespace beecrypt {
 	namespace io {
+		/*!\ingroup CXX_IO_m
+		 */
 		class BEECRYPTCXXAPI DataInputStream : public FilterInputStream, public DataInput
 		{
-			private:
-				bool _del;
-				InputStream* _pin;
-				UConverter* _utf;
-				UConverter* _loc;
+		private:
+			bool _del;
+			InputStream* _pin;
+			UConverter* _utf;
+			UConverter* _loc;
 
-			public:
-				DataInputStream(InputStream& in);
-				virtual ~DataInputStream();
+		public:
+			DataInputStream(InputStream& in);
+			virtual ~DataInputStream();
 
-				virtual bool readBoolean() throw (IOException);
-				virtual javabyte readByte() throw (IOException);
-				virtual javachar readChar() throw (IOException);
-				virtual void readFully(byte* data, size_t offset, size_t length) throw (IOException);
-				virtual void readFully(bytearray& b) throw (IOException);
-				virtual javaint readInt() throw (IOException);
-				virtual String* readLine() throw (IOException);
-				virtual void readLine(String&) throw (IOException);
-				virtual javalong readLong() throw (IOException);
-				virtual javashort readShort() throw (IOException);
-				virtual int readUnsignedByte() throw (IOException);
-				virtual int readUnsignedShort() throw (IOException);
-				virtual String* readUTF() throw (IOException);
-				virtual void readUTF(String&) throw (IOException);
-				virtual off_t skipBytes(off_t n) throw (IOException);
+			virtual bool readBoolean() throw (IOException);
+			virtual javabyte readByte() throw (IOException);
+			virtual javachar readChar() throw (IOException);
+			virtual void readFully(byte* data, size_t offset, size_t length) throw (IOException);
+			virtual void readFully(bytearray& b) throw (IOException);
+			virtual javaint readInt() throw (IOException);
+			virtual String* readLine() throw (IOException);
+			virtual void readLine(String& line) throw (IOException);
+			virtual javalong readLong() throw (IOException);
+			virtual javashort readShort() throw (IOException);
+			virtual int readUnsignedByte() throw (IOException);
+			virtual int readUnsignedShort() throw (IOException);
+			virtual String* readUTF() throw (IOException);
+			virtual void readUTF(String& str) throw (IOException);
+			virtual off_t skipBytes(off_t n) throw (IOException);
 		};
 	}
 }

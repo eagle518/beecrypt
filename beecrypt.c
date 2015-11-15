@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000, 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000, 2001, 2002, 2004 Beeyond Software Holding BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,10 +38,14 @@
 #include "beecrypt/md5.h"
 #include "beecrypt/sha1.h"
 #include "beecrypt/sha256.h"
+#include "beecrypt/sha384.h"
+#include "beecrypt/sha512.h"
 
 #include "beecrypt/hmacmd5.h"
 #include "beecrypt/hmacsha1.h"
 #include "beecrypt/hmacsha256.h"
+#include "beecrypt/hmacsha384.h"
+#include "beecrypt/hmacsha512.h"
 
 #include "beecrypt/aes.h"
 #include "beecrypt/blowfish.h"
@@ -242,7 +246,9 @@ static const hashFunction* hashFunctionList[] =
 {
 	&md5,
 	&sha1,
-	&sha256
+	&sha256,
+	&sha384,
+	&sha512
 };
 
 #define HASHFUNCTIONS (sizeof(hashFunctionList) / sizeof(hashFunction*))
@@ -445,7 +451,7 @@ int hashFunctionContextDigestMP(hashFunctionContext* ctxt, mpnumber* d)
 			return -1;
 		}
 
-		rc = os2ip(d->data, d->size, digest, ctxt->algo->digestsize);
+		rc = mpnsetbin(d, digest, ctxt->algo->digestsize);
 
 		free(digest);
 
@@ -474,7 +480,9 @@ static const keyedHashFunction* keyedHashFunctionList[] =
 {
 	&hmacmd5,
 	&hmacsha1,
-	&hmacsha256
+	&hmacsha256,
+	&hmacsha384,
+	&hmacsha512
 };
 
 #define KEYEDHASHFUNCTIONS 	(sizeof(keyedHashFunctionList) / sizeof(keyedHashFunction*))
@@ -832,6 +840,20 @@ int blockCipherContextFree(blockCipherContext* ctxt)
 	ctxt->param = (blockCipherParam*) 0;
 
 	return 0;
+}
+
+int blockCipherContextValidKeylen(blockCipherContext* ctxt, size_t bits)
+{
+	if (ctxt == (blockCipherContext*) 0)
+		return -1;
+
+	if (ctxt->algo == (blockCipher*) 0)
+		return -1;
+
+	if (bits < ctxt->algo->keybitsmin || bits > ctxt->algo->keybitsmax)
+		return 0;
+
+	return ((bits - ctxt->algo->keybitsmin) % ctxt->algo->keybitsinc) == 0;
 }
 
 int blockCipherContextECB(blockCipherContext* ctxt, uint32_t* dst, const uint32_t* src, int nblocks)

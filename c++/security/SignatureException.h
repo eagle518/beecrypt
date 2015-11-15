@@ -30,11 +30,13 @@ using beecrypt::security::GeneralSecurityException;
 
 namespace beecrypt {
 	namespace security {
+		/*!\ingroup CXX_SECURITY_m
+		 */
 		class BEECRYPTCXXAPI SignatureException : public GeneralSecurityException
 		{
-			public:
-				SignatureException() throw ();
-				SignatureException(const String&) throw ();
+		public:
+			SignatureException() throw ();
+			SignatureException(const String& message) throw ();
 		};
 	}
 }

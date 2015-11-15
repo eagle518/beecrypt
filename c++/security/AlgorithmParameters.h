@@ -23,8 +23,6 @@
 #ifndef _CLASS_ALGORITHMPARAMETERS_H
 #define _CLASS_ALGORITHMPARAMETERS_H
 
-// #include "beecrypt/api.h"
-
 #ifdef __cplusplus
 
 #include "beecrypt/c++/security/AlgorithmParametersSpi.h"
@@ -41,32 +39,34 @@ using std::type_info;
 
 namespace beecrypt {
 	namespace security {
-		class BEECRYPTCXXAPI AlgorithmParameters
+		/*!\ingroup CXX_SECURITY_m
+		 */
+		class BEECRYPTCXXAPI AlgorithmParameters : public beecrypt::lang::Object
 		{
-			public:
-				static AlgorithmParameters* getInstance(const String&) throw (NoSuchAlgorithmException);
-				static AlgorithmParameters* getInstance(const String&, const String&) throw (NoSuchAlgorithmException, NoSuchProviderException);
-				static AlgorithmParameters* getInstance(const String&, const Provider&) throw (NoSuchAlgorithmException);
+		public:
+			static AlgorithmParameters* getInstance(const String& algorithm) throw (NoSuchAlgorithmException);
+			static AlgorithmParameters* getInstance(const String& algorithm, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException);
+			static AlgorithmParameters* getInstance(const String& algorithm, const Provider& provider) throw (NoSuchAlgorithmException);
 
-			private:
-				AlgorithmParametersSpi* _aspi;
-				String                  _algo;
-				const Provider*         _prov;
+		private:
+			AlgorithmParametersSpi* _aspi;
+			const Provider*         _prov;
+			String                  _algo;
 
-			protected:
-				AlgorithmParameters(AlgorithmParametersSpi*, const String&, const Provider&);
+		protected:
+			AlgorithmParameters(AlgorithmParametersSpi* spi, const Provider* provider, const String& algorithm);
 
-			public:
-				~AlgorithmParameters();
+		public:
+			virtual ~AlgorithmParameters();
 
-				AlgorithmParameterSpec* getParameterSpec(const type_info&) throw (InvalidParameterSpecException);
+			AlgorithmParameterSpec* getParameterSpec(const type_info&) throw (InvalidParameterSpecException);
 
-				void init(const AlgorithmParameterSpec&) throw (InvalidParameterSpecException);
-				void init(const byte*, size_t);
-				void init(const byte*, size_t, const String&);
+			void init(const AlgorithmParameterSpec& spec) throw (InvalidParameterSpecException);
+			void init(const byte* data, size_t size);
+			void init(const byte* data, size_t size, const String& format);
 
-				const String& getAlgorithm() const throw ();
-				const Provider& getProvider() const throw ();
+			const String& getAlgorithm() const throw ();
+			const Provider& getProvider() const throw ();
 		};
 	}
 }

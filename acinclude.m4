@@ -243,6 +243,18 @@ AC_DEFUN([BEECRYPT_INT_TYPES],[
     fi
     ])
   AC_SUBST(TYPEDEF_UINT64_T,$bc_typedef_uint64_t)
+  AH_TEMPLATE([HAVE_LONG_LONG])
+  AH_TEMPLATE([HAVE_UNSIGNED_LONG_LONG])
+  AC_CHECK_TYPE([long long],[
+    AC_DEFINE([HAVE_LONG_LONG],1)
+    ],[
+    AC_DEFINE([HAVE_LONG_LONG],0)
+    ])
+  AC_CHECK_TYPE([unsigned long long],[
+    AC_DEFINE([HAVE_UNSIGNED_LONG_LONG],1)
+    ],[
+    AC_DEFINE([HAVE_UNSIGNED_LONG_LONG],0)
+    ])
   ])
 
 
@@ -413,8 +425,17 @@ AC_DEFUN([BEECRYPT_GNU_CC],[
     case $target_os in
     aix*)
       CC="$CC -maix64"
+      CXX="$CXX -maix64"
+      ;;
+    linux*)
+      CC="$CC -m64"
+      CXX="$CXX -m64"
       ;;
     esac
+    ;;
+  x86_64)
+    CC="$CC -m64"
+    CXX="$CXX -m64"
     ;;
   esac
   # Certain platforms needs special flags for multi-threaded code
@@ -437,28 +458,46 @@ AC_DEFUN([BEECRYPT_GNU_CC],[
   else
     # Generic optimizations, including cpu tuning
     BEECRYPT_CFLAGS_REM([-g])
-    BEECRYPT_CFLAGS_REM([-O2])
-    CFLAGS="$CFLAGS -O3 -fomit-frame-pointer"
+    CFLAGS="$CFLAGS -DNDEBUG -fomit-frame-pointer"
     if test "$bc_cv_c_aggressive_opt" = yes; then
       case $bc_target_cpu in
+      athlon64)
+		# -O3 degrades performance
+        # -mcpu=athlon64 degrades performance
+        ;;
+      alpha*)
+        BEECRYPT_CFLAGS_REM([-O2])
+        CFLAGS="$CFLAGS -O3"
+        ;;
       athlon*)
-        CFLAGS="$CFLAGS -mcpu=pentiumpro";
+        BEECRYPT_CFLAGS_REM([-O2])
+        CFLAGS="$CFLAGS -O3 -mcpu=pentiumpro"
         ;;
       i586)
-        CFLAGS="$CFLAGS -mcpu=pentium"
+        BEECRYPT_CFLAGS_REM([-O2])
+        CFLAGS="$CFLAGS -O3 -mcpu=pentium"
         ;;
       i686)
-        CFLAGS="$CFLAGS -mcpu=pentiumpro"
+        BEECRYPT_CFLAGS_REM([-O2])
+        CFLAGS="$CFLAGS -O3 -mcpu=pentiumpro"
         ;;
       ia64)
         # no -mcpu=... option on ia64
         ;;
       pentium*)
-        CFLAGS="$CFLAGS -mcpu=$bc_target_arch"
+        BEECRYPT_CFLAGS_REM([-O2])
+        CFLAGS="$CFLAGS -O3 -mcpu=$bc_target_arch"
+        ;;
+      powerpc*)
+        BEECRYPT_CFLAGS_REM([-O3])
+        CFLAGS="$CFLAGS -O3"
         ;;
       esac
       # Architecture-specific optimizations
       case $bc_target_arch in
+      athlon64)
+        # -march=athlon64 degrades performance
+        ;;
       athlon*)
         CFLAGS="$CFLAGS -march=$bc_target_arch"
         ;;
@@ -531,6 +570,7 @@ AC_DEFUN([BEECRYPT_GNU_CXX],[
   else
     # Generic optimizations, including cpu tuning
     BEECRYPT_CXXFLAGS_REM([-g])
+	CXXFLAGS="$CXXFLAGS -DNDEBUG"
     if test "$bc_cv_c_aggressive_opt" = yes; then
       case $bc_target_cpu in
       athlon*)
@@ -857,26 +897,22 @@ AC_DEFUN([BEECRYPT_NOEXECSTACK],[
     cat > conftest.c << EOF
 void foo(void) { }
 EOF
-    if AC_TRY_COMMAND([$CC -c -o conftest.o conftest.c]) then
+    CFLAGS_save=$CFLAGS
+    CFLAGS="$CFLAGS -Wa,--noexecstack"
+    CXXFLAGS_save=$CXXFLAGS
+    CXXFLAGS="$CXXFLAGS -Wa,--noexecstack"
+	AC_LANG_PUSH(C)
+    AC_TRY_COMPILE([],[{}],[
       bc_cv_as_noexecstack=yes
-      if test "$ac_cv_c_compiler_gnu" = yes; then
-         CFLAGS="$CFLAGS -Wa,--noexecstack"
-      fi
-      if test "$ac_cv_cxx_compiler_gnu" = yes; then
-         CXXFLAGS="$CXXFLAGS -Wa,--noexecstack"
-      fi
-    else
+      bc_gnu_stack='.section .note.GNU-stack,"",@progbits; .previous'
+      ],[
+      CFLAGS=$CFLAGS_save
+      CXXFLAGS=$CXXFLAGS_save
       bc_cv_as_noexecstack=no
-    fi
+      bc_gnu_stack=''
+      ])
+    AC_LANG_POP(C)
     ])
-  AC_CACHE_CHECK([whether the linker can use noexecstack],bc_cv_ld_noexecstack,[
-    if AC_TRY_COMMAND([$LD -z noexecstack -o conftest conftest.o]) then
-      bc_cv_ld_noexecstack=yes
-      LDFLAGS="$LDFLAGS -z noexecstack"
-    else
-      bc_cv_ld_noexecstack=no
-    fi
-    ]) 
   ])
 
 
@@ -973,6 +1009,7 @@ AC_DEFUN([BEECRYPT_ASM_DEFS],[
   AC_SUBST(ASM_CPU,$bc_target_cpu)
   AC_SUBST(ASM_ARCH,$bc_target_arch)
   AC_SUBST(ASM_BIGENDIAN,$ac_cv_c_bigendian)
+  AC_SUBST(ASM_GNU_STACK,$bc_gnu_stack)
   ])
 
 
@@ -1229,3 +1266,42 @@ AC_DEFUN([BEECRYPT_MULTITHREAD],[
   AC_SUBST(TYPEDEF_BC_MUTEX_T,$bc_typedef_bc_mutex_t)
   AC_SUBST(TYPEDEF_BC_THREAD_T,$bc_typedef_bc_thread_t)
   ])
+
+AH_BOTTOM([
+#if ENABLE_THREADS
+# ifndef _REENTRANT
+#  define _REENTRANT
+# endif
+# if LINUX
+#  define _LIBC_REENTRANT
+# endif
+#else
+# ifdef _REENTRANT
+#  undef _REENTRANT
+# endif
+#endif
+])
+
+
+dnl  BEECRYPT_THREAD_LOCAL_STORAGE
+AC_DEFUN([BEECRYPT_THREAD_LOCAL_STORAGE],[
+  AH_TEMPLATE([ENABLE_THREAD_LOCAL_STORAGE],[Define to 1 if you want to enable thread-local-storage support])
+  if test "$ac_enable_threads" = yes; then
+    AC_MSG_CHECKING([if your compiler supports thread-local-storage])
+    AC_COMPILE_IFELSE([__thread int a = 0;],[
+      AC_DEFINE([ENABLE_THREAD_LOCAL_STORAGE],1)
+      AC_MSG_RESULT([yes])
+      ],[
+      AC_DEFINE([ENABLE_THREAD_LOCAL_STORAGE],0)
+      AC_MSG_RESULT([no])
+      ])
+  else
+    AC_DEFINE([ENABLE_THREAD_LOCAL_STORAGE],0)
+  fi
+  ])
+
+AH_BOTTOM([
+#if !ENABLE_THREAD_LOCAL_STORAGE
+# define __thread
+#endif
+])

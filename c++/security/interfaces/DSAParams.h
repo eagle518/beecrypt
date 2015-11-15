@@ -31,12 +31,15 @@
 namespace beecrypt {
 	namespace security {
 		namespace interfaces {
+			/*!\brief DSA parameter interface
+			 * \ingroup CXX_SECURITY_INTERFACES_m
+			 */
 			class DSAParams
 			{
-				public:
-					virtual const mpbarrett& getP() const throw () = 0;
-					virtual const mpbarrett& getQ() const throw () = 0;
-					virtual const mpnumber& getG() const throw () = 0;
+			public:
+				virtual const mpbarrett& getP() const throw () = 0;
+				virtual const mpbarrett& getQ() const throw () = 0;
+				virtual const mpnumber& getG() const throw () = 0;
 			};
 		}
 	}
