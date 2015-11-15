@@ -22,12 +22,8 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
-#include "beecrypt/c++/security/Security.h"
 #include "beecrypt/c++/security/cert/CertPathValidator.h"
+#include "beecrypt/c++/security/Security.h"
 
 using namespace beecrypt::security::cert;
 
@@ -47,9 +43,7 @@ CertPathValidator* CertPathValidator::getInstance(const String& algorithm) throw
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "CertPathValidator");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<CertPathValidatorSpi*>((CertPathValidatorSpi*) tmp->cspi));
-	#endif
 
 	CertPathValidator* result = new CertPathValidator((CertPathValidatorSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -62,9 +56,7 @@ CertPathValidator* CertPathValidator::getInstance(const String& algorithm, const
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "CertPathValidator", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<CertPathValidatorSpi*>((CertPathValidatorSpi*) tmp->cspi));
-	#endif
 
 	CertPathValidator* result = new CertPathValidator((CertPathValidatorSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -77,9 +69,7 @@ CertPathValidator* CertPathValidator::getInstance(const String& algorithm, const
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "CertPathValidator", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<CertPathValidatorSpi*>((CertPathValidatorSpi*) tmp->cspi));
-	#endif
 
 	CertPathValidator* result = new CertPathValidator((CertPathValidatorSpi*) tmp->cspi, tmp->prov, tmp->name);
 

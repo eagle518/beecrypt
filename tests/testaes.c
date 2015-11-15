@@ -19,15 +19,16 @@
 
 /*!\file testaes.c
  * \brief Unit test program for the Blowfish cipher.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "aes.h"
+#include "beecrypt/aes.h"
 
 extern int fromhex(byte*, const char*);
+extern void hexdump(const byte*, size_t);
 
 struct vector
 {

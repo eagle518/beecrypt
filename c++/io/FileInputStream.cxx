@@ -27,6 +27,10 @@
 #endif
 
 #include "beecrypt/c++/io/FileInputStream.h"
+#include "beecrypt/c++/lang/Integer.h"
+using beecrypt::lang::Integer;
+#include "beecrypt/c++/lang/String.h"
+using beecrypt::lang::String;
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
 
@@ -42,7 +46,7 @@ FileInputStream::~FileInputStream()
 {
 }
 
-off_t FileInputStream::available() throw (IOException)
+int FileInputStream::available() throw (IOException)
 {
 	if (!_f)
 		throw IOException("not a valid file handle");
@@ -51,33 +55,36 @@ off_t FileInputStream::available() throw (IOException)
 
 	if ((_curr = ftell(_f)) == -1)
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("ftell failed");
 		#endif
 
 	if (fseek(_f, 0, SEEK_END))
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("fseek failed");
 		#endif
 
 	if ((_size = ftell(_f)) == -1)
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("ftell failed");
 		#endif
 
 	if (fseek(_f, _curr, SEEK_SET))
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("fseek failed");
 		#endif
 
-	return (off_t) (_size - _curr);
+	if ((_size - _curr) > Integer::MAX_VALUE)
+		return Integer::MAX_VALUE;
+	else
+		return (int)(_size - _curr);
 }
 
 void FileInputStream::close() throw (IOException)
@@ -86,7 +93,7 @@ void FileInputStream::close() throw (IOException)
 	{
 		if (fclose(_f))
 			#if HAVE_ERRNO_H
-			throw IOException(strerror(errno));
+			throw IOException(::strerror(errno));
 			#else
 			throw IOException("fclose failed");
 			#endif
@@ -95,7 +102,7 @@ void FileInputStream::close() throw (IOException)
 	}
 }
 
-void FileInputStream::mark(off_t readlimit) throw ()
+void FileInputStream::mark(int readlimit) throw ()
 {
 	if (_f)
 		_mark = ftell(_f);
@@ -114,7 +121,7 @@ int FileInputStream::read() throw (IOException)
 	return fgetc(_f);
 }
 
-int FileInputStream::read(byte* data, size_t offset, size_t length) throw (IOException)
+int FileInputStream::read(byte* data, int offset, int length) throw (IOException)
 {
 	if (!_f)
 		throw IOException("not a valid file handle");
@@ -122,7 +129,7 @@ int FileInputStream::read(byte* data, size_t offset, size_t length) throw (IOExc
 	if (!data)
 		throw NullPointerException();
 
-	size_t rc = fread(data+offset, 1, length, _f);
+	int rc = fread(data+offset, 1, length, _f);
 
 	if (rc == 0)
 		return -1;
@@ -145,25 +152,25 @@ void FileInputStream::reset() throw (IOException)
 
 	if (fseek(_f, _mark, SEEK_SET))
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("fseek failed");
 		#endif
 }
 
-off_t FileInputStream::skip(off_t n) throw (IOException)
+int FileInputStream::skip(int n) throw (IOException)
 {
 	if (!_f)
 		throw IOException("not a valid file handle");
 
-	off_t _avail = available();
+	int _avail = available();
 
 	if (n > _avail)
 		n = _avail;
 
 	if (fseek(_f, (long) n, SEEK_CUR))
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("fseek failed");
 		#endif

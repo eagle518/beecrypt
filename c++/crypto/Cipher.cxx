@@ -22,15 +22,12 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-
 #include "beecrypt/c++/crypto/Cipher.h"
 #include "beecrypt/c++/security/Security.h"
 using beecrypt::security::Security;
 
 #include <unicode/regex.h>
+#include <unicode/ustream.h>
 
 using namespace beecrypt::crypto;
 
@@ -58,6 +55,8 @@ Cipher::~Cipher()
 
 Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithmException, NoSuchPaddingException)
 {
+	UnicodeString match(transformation.toUnicodeString());
+
 	UErrorCode status = U_ZERO_ERROR;
 
 	if (!_amppat)
@@ -70,8 +69,10 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 			throw RuntimeException("ICU regex compilation problem");
 	}
 
-	RegexMatcher *m = _amppat->matcher(transformation, status);
+	status = U_ZERO_ERROR;
+	RegexMatcher *m = _amppat->matcher(match, status);
 
+	status = U_ZERO_ERROR;
 	if (m->matches(status))
 	{
 		Security::spi* tmp;
@@ -82,9 +83,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 		{
 			tmp = Security::getSpi(transformation, "Cipher");
 
-			#if HAVE_ASSERT_H
 			assert(dynamic_cast<CipherSpi*>((CipherSpi*) (CipherSpi*) tmp->cspi));
-			#endif
 
 			result = new Cipher(reinterpret_cast<CipherSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -92,7 +91,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 
 			return result;
 		}
-		catch (NoSuchAlgorithmException)
+		catch (NoSuchAlgorithmException&)
 		{
 			// no problem yet
 		}
@@ -113,9 +112,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 			{
 				tmp = Security::getSpi(algorithm + "/" + mode, "Cipher");
 
-				#if HAVE_ASSERT_H
 				assert(dynamic_cast<CipherSpi*>((CipherSpi*) (CipherSpi*) tmp->cspi));
-				#endif
 
 				result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -127,7 +124,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 					{
 						result->_cspi->engineSetPadding(padding);
 					}
-					catch (NoSuchPaddingException)
+					catch (NoSuchPaddingException&)
 					{
 						delete result;
 						throw;
@@ -136,7 +133,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 
 				return result;
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				// no problem yet
 			}
@@ -149,9 +146,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 			{
 				tmp = Security::getSpi(algorithm + "//" + padding, "Cipher");
 
-				#if HAVE_ASSERT_H
 				assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-				#endif
 
 				result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -163,7 +158,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 					{
 						result->_cspi->engineSetMode(mode);
 					}
-					catch (NoSuchAlgorithmException)
+					catch (NoSuchAlgorithmException&)
 					{
 						delete result;
 						throw;
@@ -172,7 +167,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 
 				return result;
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				// no problem yet
 			}
@@ -181,9 +176,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 		// Step 4: try to find algorithm
 		tmp = Security::getSpi(algorithm, "Cipher");
 
-		#if HAVE_ASSERT_H
 		assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-		#endif
 
 		result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -195,7 +188,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 			{
 				result->_cspi->engineSetMode(mode);
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				delete result;
 				throw;
@@ -208,7 +201,7 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 			{
 				result->_cspi->engineSetPadding(padding);
 			}
-			catch (NoSuchPaddingException)
+			catch (NoSuchPaddingException&)
 			{
 				delete result;
 				throw;
@@ -218,7 +211,10 @@ Cipher* Cipher::getInstance(const String& transformation) throw (NoSuchAlgorithm
 		return result;
 	}
 	else
+	{
+		delete m;
 		throw NoSuchAlgorithmException("Incorrect Algorithm/Mode/Padding syntax");
+	}
 }
 
 Cipher* Cipher::getInstance(const String& transformation, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException)
@@ -235,7 +231,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 			throw RuntimeException("ICU regex compilation problem");
 	}
 
-	RegexMatcher *m = _amppat->matcher(transformation, status);
+	RegexMatcher *m = _amppat->matcher(transformation.toUnicodeString(), status);
 
 	if (m->matches(status))
 	{
@@ -247,9 +243,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 		{
 			tmp = Security::getSpi(transformation, "Cipher", provider);
 
-			#if HAVE_ASSERT_H
 			assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-			#endif
 
 			result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -257,7 +251,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 
 			return result;
 		}
-		catch (NoSuchAlgorithmException)
+		catch (NoSuchAlgorithmException&)
 		{
 			// no problem yet
 		}
@@ -278,9 +272,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 			{
 				tmp = Security::getSpi(algorithm + "/" + mode, "Cipher", provider);
 
-				#if HAVE_ASSERT_H
 				assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-				#endif
 
 				result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -292,7 +284,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 					{
 						result->_cspi->engineSetPadding(padding);
 					}
-					catch (NoSuchPaddingException)
+					catch (NoSuchPaddingException&)
 					{
 						delete result;
 						throw;
@@ -301,7 +293,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 
 				return result;
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				// no problem yet
 			}
@@ -314,9 +306,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 			{
 				tmp = Security::getSpi(algorithm + "//" + padding, "Cipher", provider);
 
-				#if HAVE_ASSERT_H
 				assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-				#endif
 
 				result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -328,7 +318,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 					{
 						result->_cspi->engineSetMode(mode);
 					}
-					catch (NoSuchAlgorithmException)
+					catch (NoSuchAlgorithmException&)
 					{
 						delete result;
 						throw;
@@ -337,7 +327,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 
 				return result;
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				// no problem yet
 			}
@@ -346,9 +336,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 		// Step 4: try to find algorithm
 		tmp = Security::getSpi(algorithm, "Cipher", provider);
 
-		#if HAVE_ASSERT_H
 		assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-		#endif
 
 		result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -360,7 +348,7 @@ Cipher* Cipher::getInstance(const String& transformation, const String& provider
 			{
 				result->_cspi->engineSetMode(mode);
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				delete result;
 				throw;
@@ -400,7 +388,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 			throw RuntimeException("ICU regex compilation problem");
 	}
 
-	RegexMatcher *m = _amppat->matcher(transformation, status);
+	RegexMatcher *m = _amppat->matcher(transformation.toUnicodeString(), status);
 
 	if (m->matches(status))
 	{
@@ -412,9 +400,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 		{
 			tmp = Security::getSpi(transformation, "Cipher", provider);
 
-			#if HAVE_ASSERT_H
 			assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-			#endif
 
 			result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -422,7 +408,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 
 			return result;
 		}
-		catch (NoSuchAlgorithmException)
+		catch (NoSuchAlgorithmException&)
 		{
 			// no problem yet
 		}
@@ -443,9 +429,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 			{
 				tmp = Security::getSpi(algorithm + "/" + mode, "Cipher", provider);
 
-				#if HAVE_ASSERT_H
 				assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-				#endif
 
 				result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -457,7 +441,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 					{
 						result->_cspi->engineSetPadding(padding);
 					}
-					catch (NoSuchPaddingException)
+					catch (NoSuchPaddingException&)
 					{
 						delete result;
 						throw;
@@ -466,7 +450,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 
 				return result;
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				// no problem yet
 			}
@@ -479,9 +463,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 			{
 				tmp = Security::getSpi(algorithm + "//" + padding, "Cipher", provider);
 
-				#if HAVE_ASSERT_H
 				assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-				#endif
 
 				result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -493,7 +475,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 					{
 						result->_cspi->engineSetMode(mode);
 					}
-					catch (NoSuchAlgorithmException)
+					catch (NoSuchAlgorithmException&)
 					{
 						delete result;
 						throw;
@@ -502,7 +484,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 
 				return result;
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				// no problem yet
 			}
@@ -511,9 +493,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 		// Step 4: try to find algorithm
 		tmp = Security::getSpi(algorithm, "Cipher", provider);
 
-		#if HAVE_ASSERT_H
 		assert(dynamic_cast<CipherSpi*>((CipherSpi*) tmp->cspi));
-		#endif
 
 		result = new Cipher((CipherSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -525,7 +505,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 			{
 				result->_cspi->engineSetMode(mode);
 			}
-			catch (NoSuchAlgorithmException)
+			catch (NoSuchAlgorithmException&)
 			{
 				delete result;
 				throw;
@@ -538,7 +518,7 @@ Cipher* Cipher::getInstance(const String& transformation, const Provider& provid
 			{
 				result->_cspi->engineSetPadding(padding);
 			}
-			catch (NoSuchPaddingException)
+			catch (NoSuchPaddingException&)
 			{
 				delete result;
 				throw;
@@ -567,7 +547,7 @@ bytearray* Cipher::doFinal(const bytearray& input) throw (IllegalStateException,
 	return _cspi->engineDoFinal(input.data(), 0, input.size());
 }
 
-size_t Cipher::doFinal(bytearray& output, size_t outputOffset) throw (IllegalStateException, IllegalBlockSizeException, ShortBufferException, BadPaddingException)
+int Cipher::doFinal(bytearray& output, int outputOffset) throw (IllegalStateException, IllegalBlockSizeException, ShortBufferException, BadPaddingException)
 {
 	if (!_init)
 		throw IllegalStateException("Cipher not initialized");
@@ -575,7 +555,7 @@ size_t Cipher::doFinal(bytearray& output, size_t outputOffset) throw (IllegalSta
 	return _cspi->engineDoFinal(0, 0, 0, output, outputOffset);
 }
 
-bytearray* Cipher::doFinal(const byte* input, size_t inputOffset, size_t inputLength) throw (IllegalStateException, IllegalBlockSizeException, BadPaddingException)
+bytearray* Cipher::doFinal(const byte* input, int inputOffset, int inputLength) throw (IllegalStateException, IllegalBlockSizeException, BadPaddingException)
 {
 	if (!_init)
 		throw IllegalStateException("Cipher not initialized");
@@ -583,7 +563,7 @@ bytearray* Cipher::doFinal(const byte* input, size_t inputOffset, size_t inputLe
 	return _cspi->engineDoFinal(input, inputOffset, inputLength);
 }
 
-size_t Cipher::doFinal(const byte* input, size_t inputOffset, size_t inputLength, bytearray& output, size_t outputOffset) throw (IllegalStateException, IllegalBlockSizeException, ShortBufferException, BadPaddingException)
+int Cipher::doFinal(const byte* input, int inputOffset, int inputLength, bytearray& output, int outputOffset) throw (IllegalStateException, IllegalBlockSizeException, ShortBufferException, BadPaddingException)
 {
 	if (!_init)
 		throw IllegalStateException("Cipher not initialized");
@@ -591,7 +571,7 @@ size_t Cipher::doFinal(const byte* input, size_t inputOffset, size_t inputLength
 	return _cspi->engineDoFinal(input, inputOffset, inputLength, output, outputOffset);
 }
 
-size_t Cipher::getBlockSize() const throw ()
+int Cipher::getBlockSize() const throw ()
 {
 	return _cspi->engineGetBlockSize();
 }
@@ -601,7 +581,7 @@ bytearray* Cipher::getIV()
 	return _cspi->engineGetIV();
 }
 
-size_t Cipher::getOutputSize(size_t inputLength) throw ()
+int Cipher::getOutputSize(int inputLength) throw ()
 {
 	return _cspi->engineGetOutputSize(inputLength);
 }
@@ -657,7 +637,7 @@ bytearray* Cipher::update(const bytearray& input) throw (IllegalStateException)
 	return _cspi->engineUpdate(input.data(), 0, input.size());
 }
 
-bytearray* Cipher::update(const byte* input, size_t inputOffset, size_t inputLength) throw (IllegalStateException)
+bytearray* Cipher::update(const byte* input, int inputOffset, int inputLength) throw (IllegalStateException)
 {
 	if (!_init)
 		throw IllegalStateException("Cipher not initialized");
@@ -665,7 +645,7 @@ bytearray* Cipher::update(const byte* input, size_t inputOffset, size_t inputLen
 	return _cspi->engineUpdate(input, inputOffset, inputLength);
 }
 
-size_t Cipher::update(const byte* input, size_t inputOffset, size_t inputLength, bytearray& output, size_t outputOffset) throw (IllegalStateException, ShortBufferException)
+int Cipher::update(const byte* input, int inputOffset, int inputLength, bytearray& output, int outputOffset) throw (IllegalStateException, ShortBufferException)
 {
 	if (!_init)
 		throw IllegalStateException("Cipher not initialized");

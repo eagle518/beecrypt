@@ -29,10 +29,8 @@
 
 namespace {
 	#if WIN32
-	__declspec(thread) String* result = 0;
 	__declspec(thread) DateFormat* format = 0;
 	#else
-	__thread String* result = 0;
 	__thread DateFormat* format = 0;
 	#endif
 }
@@ -44,29 +42,29 @@ Date::Date() throw ()
 	_time = timestamp();
 }
 
-Date::Date(javalong time) throw ()
+Date::Date(jlong time) throw ()
 {
 	_time = time;
 }
 
-const Date& Date::operator=(const Date& set) throw ()
+bool Date::equals(const Object* obj) const throw ()
 {
-	_time = set._time;
-	return *this;
-}
-
-bool Date::equals(const Object& compare) const throw ()
-{
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const Date* d = dynamic_cast<const Date*>(&compare);
-	if (d)
+	if (obj)
 	{
-		return _time == d->_time;
+		const Date* d = dynamic_cast<const Date*>(obj);
+		if (d)
+			return _time == d->_time;
 	}
 
 	return false;
+}
+
+bool Date::equals(const Date& d) const throw ()
+{
+	return _time == d._time;
 }
 
 Date* Date::clone() const throw ()
@@ -74,7 +72,7 @@ Date* Date::clone() const throw ()
 	return new Date(_time);
 }
 
-int Date::compareTo(const Date& d) const throw ()
+jint Date::compareTo(const Date& d) const throw ()
 {
 	if (_time == d._time)
 		return 0;
@@ -82,6 +80,11 @@ int Date::compareTo(const Date& d) const throw ()
 		return -1;
 	else
 		return 1;
+}
+
+jint Date::hashCode() const throw ()
+{
+	return (jint) _time ^ (jint)(_time >> 32);
 }
 
 bool Date::after(const Date& cmp) const throw ()
@@ -94,27 +97,26 @@ bool Date::before(const Date& cmp) const throw ()
 	return _time < cmp._time;
 }
 
-javalong Date::getTime() const throw ()
+jlong Date::getTime() const throw ()
 {
 	return _time;
 }
 
-void Date::setTime(javalong time) throw ()
+void Date::setTime(jlong time) throw ()
 {
 	_time = time;
 }
 
-const String& Date::toString() const
+String Date::toString() const throw ()
 {
+	String result;
+
 	if (!format)
 		format = DateFormat::createDateTimeInstance();
 
-	if (!result)
-		result = new String();
-	else
-		result->remove();
+	UnicodeString tmp;
 
-	*result = format->format((UDate) _time, *result);
+	result = format->format((UDate) _time, tmp);
 
-	return *result;
+	return result;
 }

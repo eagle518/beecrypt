@@ -26,26 +26,28 @@
 
 using namespace beecrypt::crypto::spec;
 
-PBEKeySpec::PBEKeySpec(const array<javachar>* password) : _password(password ? *password : 0)
+PBEKeySpec::PBEKeySpec(const array<jchar>* password) : _password(password ? *password : 0)
 {
 	_salt = 0;
 	_iteration_count = 0;
 	_key_length = 0;
 }
 
-PBEKeySpec::PBEKeySpec(const array<javachar>* password, const bytearray* salt, size_t iterationCount, size_t keyLength) : _password(password ? *password : 0)
+PBEKeySpec::PBEKeySpec(const array<jchar>* password, const bytearray* salt, size_t iterationCount, size_t keyLength) : _password(password ? *password : 0)
 {
 	if (salt)
 		_salt = new bytearray(*salt);
+
 	_iteration_count = iterationCount;
 	_key_length = keyLength;
 }
 
 PBEKeySpec::~PBEKeySpec()
 {
+	_password.fill((jchar) ' ');
 }
 
-const array<javachar>& PBEKeySpec::getPassword() const throw ()
+const array<jchar>& PBEKeySpec::getPassword() const throw ()
 {
 	return _password;
 }

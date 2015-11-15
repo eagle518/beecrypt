@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/KeyPairGenerator.h"
 #include "beecrypt/c++/security/Security.h"
 
@@ -47,12 +43,6 @@ KeyPairGenerator* KeyPairGenerator::getInstance(const String& algorithm) throw (
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyPairGenerator");
 
-	#if 0 // HAVE_ASSERT_H
-	std::cout << "cspi is of typeid " << typeid(*tmp->cspi).name() << std::endl;
-
-	assert(dynamic_cast<KeyPairGeneratorSpi*>(tmp->cspi));
-	#endif
-
 	KeyPairGenerator* result = new KeyPairGenerator(reinterpret_cast<KeyPairGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
@@ -64,9 +54,7 @@ KeyPairGenerator* KeyPairGenerator::getInstance(const String& algorithm, const S
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyPairGenerator", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyPairGeneratorSpi*>(tmp->cspi));
-	#endif
 
 	KeyPairGenerator* result = new KeyPairGenerator(reinterpret_cast<KeyPairGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -79,9 +67,7 @@ KeyPairGenerator* KeyPairGenerator::getInstance(const String& algorithm, const P
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyPairGenerator", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyPairGeneratorSpi*>(tmp->cspi));
-	#endif
 
 	KeyPairGenerator* result = new KeyPairGenerator(reinterpret_cast<KeyPairGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -105,12 +91,12 @@ void KeyPairGenerator::initialize(const AlgorithmParameterSpec& spec, SecureRand
 	_kspi->engineInitialize(spec, random);
 }
 
-void KeyPairGenerator::initialize(size_t keysize) throw (InvalidParameterException)
+void KeyPairGenerator::initialize(int keysize) throw (InvalidParameterException)
 {
 	_kspi->engineInitialize(keysize, 0);
 }
 
-void KeyPairGenerator::initialize(size_t keysize, SecureRandom* random) throw (InvalidParameterException)
+void KeyPairGenerator::initialize(int keysize, SecureRandom* random) throw (InvalidParameterException)
 {
 	_kspi->engineInitialize(keysize, random);
 }

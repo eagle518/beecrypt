@@ -1,7 +1,8 @@
 #
 # Makefile.am contains the top-level automake definitions
 #
-# Copyright (c) 2001, 2002, 2004 Beeyond Software Holding BV
+# Copyright (c) 2001, 2002, 2004 X-Way Rights BV
+# Copyright (c) 2009 Bob Deblier
 #
 # Author: Bob Deblier <bob.deblier@telenet.be>
 #
@@ -28,39 +29,35 @@
 # 3. Interfaces removed (bad): Increment CURRENT, set AGE and REVISION to 0.
 #
 
-LIBBEECRYPT_LT_CURRENT = 10
-LIBBEECRYPT_LT_AGE = 4
+LIBBEECRYPT_LT_CURRENT = 7
+LIBBEECRYPT_LT_AGE = 0
 LIBBEECRYPT_LT_REVISION = 0
 
 AUTOMAKE_OPTIONS = gnu check-news no-dependencies
 
-SUBDIRS = . $(MAYBE_SUB) tests docs gas masm
+SUBDIRS = . include $(MAYBE_SUB) tests docs gas masm
 
 SUFFIXES = .s
 
-INCLUDES = -I$(top_srcdir)/..
+AM_CFLAGS = $(OPENMP_CFLAGS)
+
+INCLUDES = -I$(top_srcdir)/include
 
 .s.lo:
 	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
 
-BEECRYPT_OBJECTS = aes.lo aesopt.lo base64.lo beecrypt.lo blockmode.lo blockpad.lo blowfish.lo blowfishopt.lo dhaes.lo dldp.lo dlkp.lo dlpk.lo dlsvdp-dh.lo dsa.lo elgamal.lo endianness.lo entropy.lo fips186.lo hmac.lo hmacmd5.lo hmacsha1.lo hmacsha256.lo md5.lo memchunk.lo mp.lo mpopt.lo mpbarrett.lo mpnumber.lo mpprime.lo mtprng.lo pkcs1.lo pkcs12.lo rsa.lo rsakp.lo rsapk.lo sha1.lo sha1opt.lo sha256.lo sha384.lo sha512.lo timestamp.lo
+BEECRYPT_OBJECTS = aes.lo base64.lo beecrypt.lo blockmode.lo blockpad.lo blowfish.lo blowfishopt.lo dhies.lo dldp.lo dlkp.lo dlpk.lo dlsvdp-dh.lo dsa.lo elgamal.lo endianness.lo entropy.lo fips186.lo hmac.lo hmacmd5.lo hmacsha1.lo hmacsha224.lo hmacsha256.lo md4.lo md5.lo memchunk.lo mp.lo mpopt.lo mpbarrett.lo mpnumber.lo mpprime.lo mtprng.lo pkcs1.lo pkcs12.lo ripemd128.lo ripemd160.lo ripemd256.lo ripemd320.lo rsa.lo rsakp.lo rsapk.lo sha1.lo sha1opt.lo sha256.lo sha384.lo sha512.lo sha2k32.lo sha2k64.lo timestamp.lo
 
-libaltdir=$(prefix)/lib@LIBALT@
+lib_LTLIBRARIES = libbeecrypt.la
 
-libalt_LTLIBRARIES = libbeecrypt.la
-
-libbeecrypt_la_SOURCES = aes.c base64.c beecrypt.c blockmode.c blockpad.c blowfish.c dhaes.c dldp.c dlkp.c dlpk.c dlsvdp-dh.c dsa.c elgamal.c endianness.c entropy.c fips186.c hmac.c hmacmd5.c hmacsha1.c hmacsha256.c md5.c hmacsha384.c hmacsha512.c memchunk.c mp.c mpbarrett.c mpnumber.c mpprime.c mtprng.c pkcs1.c pkcs12.c rsa.c rsakp.c rsapk.c sha1.c sha256.c sha384.c sha512.c sha_k.c timestamp.c cppglue.cxx
+libbeecrypt_la_SOURCES = aes.c base64.c beecrypt.c blockmode.c blockpad.c blowfish.c dhies.c dldp.c dlkp.c dlpk.c dlsvdp-dh.c dsa.c elgamal.c endianness.c entropy.c fips186.c hmac.c hmacmd5.c hmacsha1.c hmacsha224.c hmacsha256.c md4.c md5.c hmacsha384.c hmacsha512.c memchunk.c mp.c mpbarrett.c mpnumber.c mpprime.c mtprng.c pkcs1.c pkcs12.c ripemd128.c ripemd160.c ripemd256.c ripemd320.c rsa.c rsakp.c rsapk.c sha1.c sha224.c sha256.c sha384.c sha512.c sha2k32.c sha2k64.c timestamp.c cppglue.cxx
 libbeecrypt_la_DEPENDENCIES = $(BEECRYPT_OBJECTS)
-libbeecrypt_la_LIBADD = aesopt.lo blowfishopt.lo mpopt.lo sha1opt.lo
+libbeecrypt_la_LIBADD = blowfishopt.lo mpopt.lo sha1opt.lo $(OPENMP_LIBS)
 libbeecrypt_la_LDFLAGS = -no-undefined -version-info $(LIBBEECRYPT_LT_CURRENT):$(LIBBEECRYPT_LT_REVISION):$(LIBBEECRYPT_LT_AGE)
 
-pkginclude_HEADERS = aes.h aesopt.h api.h base64.h beecrypt.h blockmode.h blockpad.h blowfish.h blowfishopt.h dhaes.h dldp.h dlkp.h dlpk.h dlsvdp-dh.h dsa.h elgamal.h endianness.h entropy.h fips186.h gnu.h hmac.h hmacmd5.h hmacsha1.h hmacsha256.h hmacsha384.h hmacsha512.h md5.h memchunk.h mp.h mpbarrett.h mpnumber.h mpopt.h mpprime.h mtprng.h pkcs1.h pkcs12.h rsa.h rsakp.h rsapk.h sha1.h sha1opt.h sha256.h sha384.h sha512.h sha_k.h timestamp.h win.h
+EXTRA_DIST = BENCHMARKS BUGS CONTRIBUTORS README.WIN32 autogen.sh
 
-noinst_HEADERS = aes_be.h aes_le.h
-
-EXTRA_DIST = BENCHMARKS BUGS CONTRIBUTORS README.DLL README.WIN32 Doxyheader beecrypt.rc autogen.sh Makefile.mak
-
-DISTCLEANFILES = mpopt.s aesopt.s blowfishopt.s sha1opt.s
+DISTCLEANFILES = mpopt.s blowfishopt.s sha1opt.s
 
 bench:
 	(cd tests && $(MAKE) $(AM_MAKEFLAGS) bench)

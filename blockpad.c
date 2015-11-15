@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file blockpad.c
  * \brief Blockcipher padding algorithms.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup BC_m
  */
 

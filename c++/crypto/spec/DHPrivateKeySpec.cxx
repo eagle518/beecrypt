@@ -18,33 +18,29 @@
 
 #define BEECRYPT_CXX_DLL_EXPORT
 
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "beecrypt/c++/crypto/spec/DHPrivateKeySpec.h"
 
 using namespace beecrypt::crypto::spec;
 
-DHPrivateKeySpec::DHPrivateKeySpec(const mpbarrett& p, const mpnumber& g, const mpnumber& x)
+DHPrivateKeySpec::DHPrivateKeySpec(const BigInteger& x, const BigInteger& p, const BigInteger& g) : _p(p), _g(g), _x(x)
 {
-	_p = p;
-	_g = g;
-	_x = x;
 }
 
-DHPrivateKeySpec::~DHPrivateKeySpec()
-{
-	_x.wipe();
-}
-
-const mpbarrett& DHPrivateKeySpec::getP() const throw ()
+const BigInteger& DHPrivateKeySpec::getP() const throw ()
 {
 	return _p;
 }
 
-const mpnumber& DHPrivateKeySpec::getG() const throw ()
+const BigInteger& DHPrivateKeySpec::getG() const throw ()
 {
 	return _g;
 }
 
-const mpnumber& DHPrivateKeySpec::getX() const throw ()
+const BigInteger& DHPrivateKeySpec::getX() const throw ()
 {
 	return _x;
 }

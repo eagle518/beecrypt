@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/AlgorithmParameterGenerator.h"
 #include "beecrypt/c++/security/AlgorithmParameterGeneratorSpi.h"
 #include "beecrypt/c++/security/AlgorithmParameters.h"
@@ -51,9 +47,7 @@ AlgorithmParameterGenerator* AlgorithmParameterGenerator::getInstance(const Stri
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameterGenerator");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi));
-	#endif
 
     AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator(reinterpret_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -66,9 +60,7 @@ AlgorithmParameterGenerator* AlgorithmParameterGenerator::getInstance(const Stri
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameterGenerator", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi));
-	#endif
 
     AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator(reinterpret_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -81,9 +73,7 @@ AlgorithmParameterGenerator* AlgorithmParameterGenerator::getInstance(const Stri
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameterGenerator", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi));
-	#endif
 
     AlgorithmParameterGenerator* result = new AlgorithmParameterGenerator(reinterpret_cast<AlgorithmParameterGeneratorSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -107,12 +97,12 @@ void AlgorithmParameterGenerator::init(const AlgorithmParameterSpec& genParamSpe
 	_aspi->engineInit(genParamSpec, random);
 }
 
-void AlgorithmParameterGenerator::init(size_t size) throw (InvalidParameterException)
+void AlgorithmParameterGenerator::init(int size) throw (InvalidParameterException)
 {
 	_aspi->engineInit(size, 0);
 }
 
-void AlgorithmParameterGenerator::init(size_t size, SecureRandom* random) throw (InvalidParameterException)
+void AlgorithmParameterGenerator::init(int size, SecureRandom* random) throw (InvalidParameterException)
 {
 	_aspi->engineInit(size, random);
 }

@@ -39,13 +39,7 @@ DHParameterGenerator::DHParameterGenerator()
  
 DHParameterGenerator::~DHParameterGenerator()
 {
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
-	_size = 0;
-	_srng = 0;
+	delete _spec;
 }
 
 AlgorithmParameters* DHParameterGenerator::engineGenerateParameters()
@@ -67,7 +61,7 @@ AlgorithmParameters* DHParameterGenerator::engineGenerateParameters()
 				throw "unexpected error in dldp_pMake";
 		}
 
-		_spec = new DHParameterSpec(param.p, param.g);
+		_spec = new DHParameterSpec(BigInteger(param.p), BigInteger(param.g));
 	}
 
 	try
@@ -78,10 +72,8 @@ AlgorithmParameters* DHParameterGenerator::engineGenerateParameters()
 
 		return param;
 	}
-	catch (Exception* ex)
+	catch (Exception&)
 	{
-		// shouldn't happen
-		delete ex;
 	}
 
 	return 0;
@@ -93,30 +85,23 @@ void DHParameterGenerator::engineInit(const AlgorithmParameterSpec& spec, Secure
 
 	if (dhspec)
 	{
-		if (_spec)
-		{
-			delete _spec;
-			_spec = 0;
-		}
+		delete _spec;
 
 		_spec = new DHParameterSpec(*dhspec);
-
 		_srng = random;
 	}
 	else
 		throw InvalidAlgorithmParameterException("expected DHParameterSpec");
 }
 
-void DHParameterGenerator::engineInit(size_t keysize, SecureRandom* random) throw (InvalidParameterException)
+void DHParameterGenerator::engineInit(int keysize, SecureRandom* random) throw (InvalidParameterException)
 {
 	if ((keysize < 768) || ((keysize & 0x3f) != 0))
 		throw InvalidParameterException("Prime size must be greater than 768 and be a multiple of 64");
 
+	delete _spec;
+
 	_size = keysize;
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	_spec = 0;
 	_srng = random;
 }

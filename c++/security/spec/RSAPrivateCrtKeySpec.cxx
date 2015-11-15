@@ -26,7 +26,7 @@
 
 using namespace beecrypt::security::spec;
 
-RSAPrivateCrtKeySpec::RSAPrivateCrtKeySpec(const mpbarrett& modulus, const mpnumber& publicExponent, const mpnumber& privateExponent, const mpbarrett& primeP, const mpbarrett& primeQ, const mpnumber& primeExponentP, const mpnumber& primeExponentQ, const mpnumber& crtCoefficient) : RSAPrivateKeySpec(modulus, privateExponent)
+RSAPrivateCrtKeySpec::RSAPrivateCrtKeySpec(const BigInteger& modulus, const BigInteger& publicExponent, const BigInteger& privateExponent, const BigInteger& primeP, const BigInteger& primeQ, const BigInteger& primeExponentP, const BigInteger& primeExponentQ, const BigInteger& crtCoefficient) : RSAPrivateKeySpec(modulus, privateExponent)
 {
 	_e = publicExponent;
 	_p = primeP;
@@ -36,36 +36,32 @@ RSAPrivateCrtKeySpec::RSAPrivateCrtKeySpec(const mpbarrett& modulus, const mpnum
 	_qi = crtCoefficient;
 }
 
-RSAPrivateCrtKeySpec::~RSAPrivateCrtKeySpec()
-{
-}
-
-const mpnumber& RSAPrivateCrtKeySpec::getPublicExponent() const throw ()
+const BigInteger& RSAPrivateCrtKeySpec::getPublicExponent() const throw ()
 {
 	return _e;
 }
 
-const mpbarrett& RSAPrivateCrtKeySpec::getPrimeP() const throw ()
+const BigInteger& RSAPrivateCrtKeySpec::getPrimeP() const throw ()
 {
 	return _p;
 }
 
-const mpbarrett& RSAPrivateCrtKeySpec::getPrimeQ() const throw ()
+const BigInteger& RSAPrivateCrtKeySpec::getPrimeQ() const throw ()
 {
 	return _q;
 }
 
-const mpnumber& RSAPrivateCrtKeySpec::getPrimeExponentP() const throw ()
+const BigInteger& RSAPrivateCrtKeySpec::getPrimeExponentP() const throw ()
 {
 	return _dp;
 }
 
-const mpnumber& RSAPrivateCrtKeySpec::getPrimeExponentQ() const throw ()
+const BigInteger& RSAPrivateCrtKeySpec::getPrimeExponentQ() const throw ()
 {
 	return _dq;
 }
 
-const mpnumber& RSAPrivateCrtKeySpec::getCrtCoefficient() const throw ()
+const BigInteger& RSAPrivateCrtKeySpec::getCrtCoefficient() const throw ()
 {
 	return _qi;
 }

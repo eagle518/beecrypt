@@ -22,9 +22,9 @@
 # include "config.h"
 #endif
 
-#include "c++/lang/System.h"
+#include "beecrypt/c++/lang/System.h"
 using beecrypt::lang::System;
-#include "c++/util/Properties.h"
+#include "beecrypt/c++/util/Properties.h"
 using beecrypt::util::Properties;
 
 #include <unicode/ustream.h>
@@ -42,16 +42,18 @@ int main(int argc, char* argv[])
 	p.setProperty("lime", "green");
 	p.setProperty("grape", "blue");
 
-	Enumeration* e = p.propertyNames();
+#if 0
+	Enumeration<const String>* e = p.propertyNames();
 
 	while (e->hasMoreElements())
 	{
-		const String* s = (const String*) e->nextElement();
+		const String* s = e->nextElement();
 
 		cout << *s << endl;
 	}
 
 	delete e;
+#endif
 
 	p.store(System::out, "properties test");
 }

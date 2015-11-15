@@ -19,7 +19,7 @@
 
 /*!\file benchhf.c
  * \brief Benchmark program for Hash Functions.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  */
 
 #include "beecrypt/beecrypt.h"
@@ -63,7 +63,7 @@ int benchmark(const hashFunction* hf, int size)
 	if (data)
 	{
 		double exact, speed;
-		javalong start, now;
+		jlong start, now;
 		int iterations = 0;
 
 		/* get starting time */

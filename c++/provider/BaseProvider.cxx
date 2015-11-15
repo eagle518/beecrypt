@@ -24,12 +24,11 @@
 #include "beecrypt/c++/provider/BeeCertificateFactory.h"
 #include "beecrypt/c++/provider/BeeCertPathValidator.h"
 #include "beecrypt/c++/provider/BaseProvider.h"
-#include "beecrypt/c++/provider/BeeKeyFactory.h"
 #include "beecrypt/c++/provider/BeeKeyStore.h"
 #include "beecrypt/c++/provider/BeeSecureRandom.h"
 #include "beecrypt/c++/provider/BlowfishCipher.h"
-#include "beecrypt/c++/provider/DHAESCipher.h"
-#include "beecrypt/c++/provider/DHAESParameters.h"
+#include "beecrypt/c++/provider/DHIESCipher.h"
+#include "beecrypt/c++/provider/DHIESParameters.h"
 #include "beecrypt/c++/provider/DHKeyAgreement.h"
 #include "beecrypt/c++/provider/DHKeyFactory.h"
 #include "beecrypt/c++/provider/DHKeyPairGenerator.h"
@@ -50,6 +49,7 @@
 #include "beecrypt/c++/provider/RSAKeyFactory.h"
 #include "beecrypt/c++/provider/RSAKeyPairGenerator.h"
 #include "beecrypt/c++/provider/SHA1Digest.h"
+#include "beecrypt/c++/provider/SHA224Digest.h"
 #include "beecrypt/c++/provider/SHA256Digest.h"
 #include "beecrypt/c++/provider/SHA384Digest.h"
 #include "beecrypt/c++/provider/SHA512Digest.h"
@@ -60,9 +60,9 @@
 #include "beecrypt/c++/provider/SHA512withRSASignature.h"
 
 namespace {
-	const String PROVIDER_NAME = UNICODE_STRING_SIMPLE("BeeCrypt++");
-	const String PROVIDER_INFO = UNICODE_STRING_SIMPLE("Copyright (c) 2004 Beeyond Software Holding BV");
-	const double PROVIDER_VERSION = 0.2;
+	const String PROVIDER_NAME("BeeCrypt++");
+	const String PROVIDER_INFO("Copyright (c) 2004 Beeyond Software Holding BV");
+	const double PROVIDER_VERSION = 4.2;
 }
 
 extern "C" {
@@ -92,12 +92,6 @@ void* beecrypt_BeeCertPathValidator_create()
 }
 
 PROVAPI
-void* beecrypt_BeeKeyFactory_create()
-{
-	return new beecrypt::provider::BeeKeyFactory();
-}
-
-PROVAPI
 void* beecrypt_BeeKeyStore_create()
 {
 	return new beecrypt::provider::BeeKeyStore();
@@ -116,15 +110,15 @@ void* beecrypt_BlowfishCipher_create()
 }
 
 PROVAPI
-void* beecrypt_DHAESCipher_create()
+void* beecrypt_DHIESCipher_create()
 {
-	return new beecrypt::provider::DHAESCipher();
+	return new beecrypt::provider::DHIESCipher();
 }
 
 PROVAPI
-void* beecrypt_DHAESParameters_create()
+void* beecrypt_DHIESParameters_create()
 {
-	return new beecrypt::provider::DHAESParameters();
+	return new beecrypt::provider::DHIESParameters();
 }
 
 PROVAPI
@@ -248,6 +242,12 @@ void* beecrypt_SHA1Digest_create()
 }
 
 PROVAPI
+void* beecrypt_SHA224Digest_create()
+{
+	return new beecrypt::provider::SHA224Digest();
+}
+
+PROVAPI
 void* beecrypt_SHA256Digest_create()
 {
 	return new beecrypt::provider::SHA256Digest();
@@ -303,102 +303,80 @@ BaseProvider::BaseProvider() : Provider(PROVIDER_NAME, PROVIDER_VERSION, PROVIDE
 {
 	_dlhandle = 0;
 
-	putall();
+	init();
 }
 
 BaseProvider::BaseProvider(void* dlhandle) : Provider(PROVIDER_NAME, PROVIDER_VERSION, PROVIDER_INFO)
 {
 	_dlhandle = dlhandle;
 
-	putall();
+	init();
 }
 
-BaseProvider::~BaseProvider()
+void BaseProvider::init()
 {
-}
-
-void BaseProvider::putall()
-{
-	put("AlgorithmParameterGenerator.DH"           , "beecrypt_DHParameterGenerator_create");
-	put("AlgorithmParameterGenerator.DSA"          , "beecrypt_DSAParameterGenerator_create");
-	put("AlgorithmParameters.DH"                   , "beecrypt_DHParameters_create");
-	put("AlgorithmParameters.DHAES"                , "beecrypt_DHAESParameters_create");
-	put("AlgorithmParameters.DSA"                  , "beecrypt_DSAParameters_create");
-	put("CertificateFactory.BEE"                   , "beecrypt_BeeCertificateFactory_create");
-	put("CertPathValidator.BEE"                    , "beecrypt_BeeCertificateFactory_create");
-	put("Cipher.AES"                               , "beecrypt_AESCipher_create");
-	put("Cipher.Blowfish"                          , "beecrypt_BlowfishCipher_create");
-	put("Cipher.DHAES"                             , "beecrypt_DHAESCipher_create");
-	put("KeyAgreement.DH"                          , "beecrypt_DHKeyAgreement_create");
-	put("KeyFactory.BEE"                           , "beecrypt_BeeKeyFactory_create");
-	put("KeyFactory.DH"                            , "beecrypt_DHKeyFactory_create");
-	put("KeyFactory.DSA"                           , "beecrypt_DSAKeyFactory_create");
-	put("KeyFactory.RSA"                           , "beecrypt_RSAKeyFactory_create");
-	put("KeyStore.BEE"                             , "beecrypt_BeeKeyStore_create");
-	put("KeyPairGenerator.DH"                      , "beecrypt_DHKeyPairGenerator_create");
-	put("KeyPairGenerator.DSA"                     , "beecrypt_DSAKeyPairGenerator_create");
-	put("KeyPairGenerator.RSA"                     , "beecrypt_RSAKeyPairGenerator_create");
-	put("Mac.HMAC-MD5"                             , "beecrypt_HMACMD5_create");
-	put("Mac.HMAC-SHA-1"                           , "beecrypt_HMACSHA1_create");
-	put("Mac.HMAC-SHA-256"                         , "beecrypt_HMACSHA256_create");
-	put("Mac.HMAC-SHA-384"                         , "beecrypt_HMACSHA384_create");
-	put("Mac.HMAC-SHA-512"                         , "beecrypt_HMACSHA512_create");
-	put("MessageDigest.MD5"                        , "beecrypt_MD5Digest_create");
-	put("MessageDigest.SHA-1"                      , "beecrypt_SHA1Digest_create");
-	put("MessageDigest.SHA-256"                    , "beecrypt_SHA256Digest_create");
-	put("MessageDigest.SHA-384"                    , "beecrypt_SHA384Digest_create");
-	put("MessageDigest.SHA-512"                    , "beecrypt_SHA512Digest_create");
-	put("SecretKeyFactory.PKCS#12/PBE"             , "beecrypt_PKCS12KeyFactory_create");
-//  put("SecretKeyFactory.HMAC-MD5"                , "beecrypt_HMACMD5KeyFactory_create");
-//  put("SecretKeyFactory.HMAC-SHA1"               , "beecrypt_HMACMD5KeyFactory_create");
-//  put("SecretKeyFactory.HMAC-SHA256"             , "beecrypt_HMACMD5KeyFactory_create");
-	put("SecureRandom.BEE"                         , "beecrypt_BeeSecureRandom_create");
-	put("Signature.MD5withRSA"                     , "beecrypt_MD5withRSASignature_create");
-	put("Signature.SHA1withDSA"                    , "beecrypt_SHA1withDSASignature_create");
-	put("Signature.SHA1withRSA"                    , "beecrypt_SHA1withRSASignature_create");
-	put("Signature.SHA256withRSA"                  , "beecrypt_SHA256withRSASignature_create");
-	put("Signature.SHA384withRSA"                  , "beecrypt_SHA384withRSASignature_create");
-	put("Signature.SHA512withRSA"                  , "beecrypt_SHA512withRSASignature_create");
-	put("Alg.Alias.KeyAgreement.DiffieHellman"     , "KeyAgreement.DH");
-	put("Alg.Alias.KeyFactory.DiffieHellman"       , "KeyFactory.DH");
-	put("Alg.Alias.KeyPairGenerator.DiffieHellman" , "KeyPairGenerator.DH");
-	put("Alg.Alias.Signature.DSS"                  , "Signature.SHA1withDSA");
-	put("Alg.Alias.Signature.SHAwithDSA"           , "Signature.SHA1withDSA");
-	put("Alg.Alias.Signature.SHA/DSA"              , "Signature.SHA1withDSA");
-	put("Alg.Alias.Signature.SHA-1/DSA"            , "Signature.SHA1withDSA");
-}
-
-namespace {
-	bool init = false;
-	BaseProvider* singleton;
+	setProperty("AlgorithmParameterGenerator.DH"           , "beecrypt_DHParameterGenerator_create");
+	setProperty("AlgorithmParameterGenerator.DSA"          , "beecrypt_DSAParameterGenerator_create");
+	setProperty("AlgorithmParameters.DH"                   , "beecrypt_DHParameters_create");
+	setProperty("AlgorithmParameters.DHIES"                , "beecrypt_DHIESParameters_create");
+	setProperty("AlgorithmParameters.DSA"                  , "beecrypt_DSAParameters_create");
+	setProperty("CertificateFactory.BEE"                   , "beecrypt_BeeCertificateFactory_create");
+	setProperty("CertPathValidator.BEE"                    , "beecrypt_BeeCertPathValidator_create");
+	setProperty("Cipher.AES"                               , "beecrypt_AESCipher_create");
+	setProperty("Cipher.AES SupportedPaddings"             , "NOPADDING,PKCS5Padding");
+	setProperty("Cipher.Blowfish"                          , "beecrypt_BlowfishCipher_create");
+	setProperty("Cipher.Blowfish SupportedPaddings"        , "NOPADDING,PKCS5Padding");
+	setProperty("Cipher.DHIES"                             , "beecrypt_DHIESCipher_create");
+	setProperty("KeyAgreement.DH"                          , "beecrypt_DHKeyAgreement_create");
+	setProperty("KeyFactory.DH"                            , "beecrypt_DHKeyFactory_create");
+	setProperty("KeyFactory.DSA"                           , "beecrypt_DSAKeyFactory_create");
+	setProperty("KeyFactory.RSA"                           , "beecrypt_RSAKeyFactory_create");
+	setProperty("KeyStore.BEE"                             , "beecrypt_BeeKeyStore_create");
+	setProperty("KeyPairGenerator.DH"                      , "beecrypt_DHKeyPairGenerator_create");
+	setProperty("KeyPairGenerator.DSA"                     , "beecrypt_DSAKeyPairGenerator_create");
+	setProperty("KeyPairGenerator.RSA"                     , "beecrypt_RSAKeyPairGenerator_create");
+	setProperty("Mac.HmacMD5"                              , "beecrypt_HMACMD5_create");
+	setProperty("Mac.HmacSHA1"                             , "beecrypt_HMACSHA1_create");
+	setProperty("Mac.HmacSHA256"                           , "beecrypt_HMACSHA256_create");
+	setProperty("Mac.HmacSHA384"                           , "beecrypt_HMACSHA384_create");
+	setProperty("Mac.HmacSHA512"                           , "beecrypt_HMACSHA512_create");
+	setProperty("MessageDigest.MD5"                        , "beecrypt_MD5Digest_create");
+	setProperty("MessageDigest.SHA-1"                      , "beecrypt_SHA1Digest_create");
+	setProperty("MessageDigest.SHA-256"                    , "beecrypt_SHA256Digest_create");
+	setProperty("MessageDigest.SHA-384"                    , "beecrypt_SHA384Digest_create");
+	setProperty("MessageDigest.SHA-512"                    , "beecrypt_SHA512Digest_create");
+	setProperty("SecretKeyFactory.PKCS#12/PBE"             , "beecrypt_PKCS12KeyFactory_create");
+	setProperty("SecureRandom.BEE"                         , "beecrypt_BeeSecureRandom_create");
+	setProperty("Signature.MD5withRSA"                     , "beecrypt_MD5withRSASignature_create");
+	setProperty("Signature.SHA1withDSA"                    , "beecrypt_SHA1withDSASignature_create");
+	setProperty("Signature.SHA1withRSA"                    , "beecrypt_SHA1withRSASignature_create");
+	setProperty("Signature.SHA256withRSA"                  , "beecrypt_SHA256withRSASignature_create");
+	setProperty("Signature.SHA384withRSA"                  , "beecrypt_SHA384withRSASignature_create");
+	setProperty("Signature.SHA512withRSA"                  , "beecrypt_SHA512withRSASignature_create");
+	setProperty("Alg.Alias.Cipher.DHAES"                   , "Cipher.DHIES");
+	setProperty("Alg.Alias.Cipher.DHES"                    , "Cipher.DHIES");
+	setProperty("Alg.Alias.KeyAgreement.DiffieHellman"     , "KeyAgreement.DH");
+	setProperty("Alg.Alias.KeyFactory.DiffieHellman"       , "KeyFactory.DH");
+	setProperty("Alg.Alias.KeyPairGenerator.DiffieHellman" , "KeyPairGenerator.DH");
+	setProperty("Alg.Alias.Mac.HMAC-MD5"                   , "Mac.HmacMD5");
+	setProperty("Alg.Alias.Mac.HMAC-SHA-1"                 , "Mac.HmacSHA1");
+	setProperty("Alg.Alias.Mac.HMAC-SHA-256"               , "Mac.HmacSHA256");
+	setProperty("Alg.Alias.Mac.HMAC-SHA-384"               , "Mac.HmacSHA384");
+	setProperty("Alg.Alias.Mac.HMAC-SHA-512"               , "Mac.HmacSHA512");
+	setProperty("Alg.Alias.Signature.DSS"                  , "Signature.SHA1withDSA");
+	setProperty("Alg.Alias.Signature.SHAwithDSA"           , "Signature.SHA1withDSA");
+	setProperty("Alg.Alias.Signature.SHA/DSA"              , "Signature.SHA1withDSA");
+	setProperty("Alg.Alias.Signature.SHA-1/DSA"            , "Signature.SHA1withDSA");
 }
 
 extern "C" {
 
 #if WIN32
 __declspec(dllexport)
-BOOL WINAPI DllMain(HINSTANCE hInst, DWORD wDataSeg, LPVOID lpReserved)
-{
-	switch (wDataSeg)
-	{
-   	case DLL_PROCESS_ATTACH:
-   		break;
-	case DLL_PROCESS_DETACH:
-		break;
-   	}
-   	return TRUE;
-}
-
-__declspec(dllexport)
 #endif
-const Provider& provider_const_ref(void *dlhandle)
+Provider* provider_instantiate(void* dlhandle)
 {
-	if (!init)
-	{
-		singleton = new BaseProvider(dlhandle);
-		init = true;
-	}
-	return *singleton;
+	return new BaseProvider(dlhandle);
 }
 
 }

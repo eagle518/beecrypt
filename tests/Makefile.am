@@ -1,9 +1,10 @@
 #
-# Makefile.am's purpose is to build the beetest_ test_ program.
+# Makefile.am's purpose is to build the unit test programs and benchmarks.
 #
-# Copyright (c) 2001, 2002, 2003 Virtual Unlimited B.V.
+# Copyright (c) 2001, 2002, 2003 X-Way Rights BV
+# Copyright (c) 2009 Bob Deblier
 #
-# Author: Bob Deblier <bob.deblier@pandora.be>
+# Author: Bob Deblier <bob.deblier@telenet.be>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -22,16 +23,27 @@
 
 AUTOMAKE_OPTIONS = gnu no-dependencies
 
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir)/include
+
 LDADD = $(top_builddir)/libbeecrypt.la
 
-TESTS = testmd5 testsha1 testsha256 testsha384 testsha512 testhmacmd5 testhmacsha1 testaes testblowfish testmp testmpinv testdsa testrsa testrsacrt testdldp
+TESTS = testmd5 testripemd128 testripemd160 testripemd256 testripemd320 testsha1 testsha224 testsha256 testsha384 testsha512 testhmacmd5 testhmacsha1 testaes testblowfish testmp testmpinv testdsa testrsa testrsacrt testdldp testelgamal
 
-check_PROGRAMS = testmd5 testsha1 testsha256 testsha384 testsha512 testhmacmd5 testhmacsha1 testaes testblowfish testmp testmpinv testdsa testrsa testrsacrt  testdldp
+check_PROGRAMS = testmd5 testripemd128 testripemd160 testripemd256 testripemd320 testsha1 testsha224 testsha256 testsha384 testsha512 testhmacmd5 testhmacsha1 testaes testblowfish testmp testmpinv testdsa testrsa testrsacrt testdldp testelgamal
 
 testmd5_SOURCES = testmd5.c
 
+testripemd128_SOURCES = testripemd128.c
+
+testripemd160_SOURCES = testripemd160.c
+
+testripemd256_SOURCES = testripemd256.c
+
+testripemd320_SOURCES = testripemd320.c
+
 testsha1_SOURCES = testsha1.c
+
+testsha224_SOURCES = testsha224.c
 
 testsha256_SOURCES = testsha256.c
 
@@ -59,18 +71,24 @@ testrsacrt_SOURCES = testrsacrt.c
 
 testdldp_SOURCES = testdldp.c
 
-EXTRA_PROGRAMS = benchme benchhf benchbc
+testelgamal_SOURCES = testelgamal.c
+
+EXTRA_PROGRAMS = benchme benchrsa benchhf benchbc
 
 benchme_SOURCES = benchme.c
+
+benchrsa_SOURCES = benchrsa.c
 
 benchhf_SOURCES = benchhf.c
 
 benchbc_SOURCES = benchbc.c
 
 # Run every benchmark test twice
-bench: benchme benchhf benchbc
+bench: benchme benchrsa benchhf benchbc
 	./benchme
 	./benchme
+	./benchrsa
+	./benchrsa
 	./benchhf MD5
 	./benchhf MD5
 	./benchhf SHA-1
@@ -83,4 +101,3 @@ bench: benchme benchhf benchbc
 	./benchbc AES 128
 	./benchbc Blowfish 128
 	./benchbc Blowfish 128
-

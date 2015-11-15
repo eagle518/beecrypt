@@ -55,7 +55,7 @@ const bytearray& MD5Digest::engineDigest()
 	return _digest;
 }
 
-size_t MD5Digest::engineDigest(byte* data, size_t offset, size_t length) throw (ShortBufferException)
+int MD5Digest::engineDigest(byte* data, int offset, int length) throw (ShortBufferException)
 {
 	if (!data)
 		throw NullPointerException();
@@ -69,7 +69,7 @@ size_t MD5Digest::engineDigest(byte* data, size_t offset, size_t length) throw (
 	return 16;
 }
 
-size_t MD5Digest::engineGetDigestLength()
+int MD5Digest::engineGetDigestLength()
 {
 	return 16;
 }
@@ -86,7 +86,7 @@ void MD5Digest::engineUpdate(byte b)
 		throw ProviderException("BeeCrypt internal error in md5Update");
 }
 
-void MD5Digest::engineUpdate(const byte* data, size_t offset, size_t length)
+void MD5Digest::engineUpdate(const byte* data, int offset, int length)
 {
 	if (md5Update(&_param, data+offset, length))
 		throw ProviderException("BeeCrypt internal error in md5Update");

@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/AlgorithmParameters.h"
 #include "beecrypt/c++/security/AlgorithmParametersSpi.h"
 #include "beecrypt/c++/security/Provider.h"
@@ -51,9 +47,7 @@ AlgorithmParameters* AlgorithmParameters::getInstance(const String& algorithm) t
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameters");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<AlgorithmParametersSpi*>(tmp->cspi));
-	#endif
 
 	AlgorithmParameters* result = new AlgorithmParameters(reinterpret_cast<AlgorithmParametersSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -66,9 +60,7 @@ AlgorithmParameters* AlgorithmParameters::getInstance(const String& algorithm, c
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameters", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<AlgorithmParametersSpi*>(tmp->cspi));
-	#endif
 
 	AlgorithmParameters* result = new AlgorithmParameters(reinterpret_cast<AlgorithmParametersSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -81,15 +73,18 @@ AlgorithmParameters* AlgorithmParameters::getInstance(const String& algorithm, c
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "AlgorithmParameters", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<AlgorithmParametersSpi*>(tmp->cspi));
-	#endif
 
 	AlgorithmParameters* result = new AlgorithmParameters(reinterpret_cast<AlgorithmParametersSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
 	delete tmp;
 
 	return result;
+}
+
+const bytearray& AlgorithmParameters::getEncoded(const String* format) throw (IOException)
+{
+	return _aspi->engineGetEncoded(format);
 }
 
 AlgorithmParameterSpec* AlgorithmParameters::getParameterSpec(const type_info& info) throw (InvalidParameterSpecException)
@@ -102,12 +97,7 @@ void AlgorithmParameters::init(const AlgorithmParameterSpec& spec) throw (Invali
 	_aspi->engineInit(spec);
 }
 
-void AlgorithmParameters::init(const byte* data, size_t size)
-{
-	_aspi->engineInit(data, size);
-}
-
-void AlgorithmParameters::init(const byte* data, size_t size, const String& format)
+void AlgorithmParameters::init(const byte* data, int size, const String* format)
 {
 	_aspi->engineInit(data, size, format);
 }
@@ -120,4 +110,9 @@ const String& AlgorithmParameters::getAlgorithm() const throw ()
 const Provider& AlgorithmParameters::getProvider() const throw ()
 {
 	return *_prov;
+}
+
+String AlgorithmParameters::toString() throw ()
+{
+	return _aspi->engineToString();
 }

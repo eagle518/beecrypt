@@ -60,25 +60,20 @@ int main(int argc, char* argv[])
 		sig->initVerify(pair->getPublic());
 
 		if (!sig->verify(*tmp))
+		{
+			cerr << "signature failure" << endl;
 			failures++;
+		}
 
-		KeyFactory* kf = KeyFactory::getInstance("BEE");
-
-		KeySpec* spec = kf->getKeySpec(pair->getPublic(), typeid(EncodedKeySpec));
-
-		PublicKey* pub = kf->generatePublic(*spec);
-
-		delete pub;
-		delete spec;
-		delete kf;
 		delete tmp;
 		delete sig;
 		delete pair;
 		delete kpg;
 	}
-	catch (Exception& ex)
+	catch (Exception ex)
 	{
-		cerr << "Exception: " << ex.getMessage() << endl;
+		if (ex.getMessage())
+			cerr << "Exception: " << *ex.getMessage() << endl;
 		failures++;
 	}
 	catch (...)

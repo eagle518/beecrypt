@@ -21,9 +21,17 @@
 #endif
 
 #include "beecrypt/c++/provider/RSAPrivateCrtKeyImpl.h"
-#include "beecrypt/c++/provider/BeeKeyFactory.h"
+#include "beecrypt/c++/io/ByteArrayOutputStream.h"
+using beecrypt::io::ByteArrayOutputStream;
+#include "beecrypt/c++/beeyond/BeeOutputStream.h"
+using beecrypt::beeyond::BeeOutputStream;
 
 using namespace beecrypt::provider;
+
+namespace {
+	const String FORMAT_BEE("BEE");
+	const String ALGORITHM_RSA("RSA");
+}
 
 RSAPrivateCrtKeyImpl::RSAPrivateCrtKeyImpl(const RSAPrivateCrtKey& copy) : _n(copy.getModulus()), _e(copy.getPublicExponent()), _d(copy.getPrivateExponent()), _p(copy.getPrimeP()), _q(copy.getPrimeQ()), _dp(copy.getPrimeExponentP()), _dq(copy.getPrimeExponentQ()), _qi(copy.getCrtCoefficient())
 {
@@ -35,38 +43,34 @@ RSAPrivateCrtKeyImpl::RSAPrivateCrtKeyImpl(const RSAPrivateCrtKeyImpl& copy) : _
 	_enc = 0;
 }
 
-RSAPrivateCrtKeyImpl::RSAPrivateCrtKeyImpl(const mpbarrett& n, const mpnumber& e, const mpnumber& d, const mpbarrett& p, const mpbarrett& q, const mpnumber& dp, const mpnumber& dq, const mpnumber& qi) : _n(n), _e(e), _d(d), _p(p), _q(q), _dp(dp), _dq(dq), _qi(qi)
+RSAPrivateCrtKeyImpl::RSAPrivateCrtKeyImpl(const BigInteger& n, const BigInteger& e, const BigInteger& d, const BigInteger& p, const BigInteger& q, const BigInteger& dp, const BigInteger& dq, const BigInteger& qi) : _n(n), _e(e), _d(d), _p(p), _q(q), _dp(dp), _dq(dq), _qi(qi)
 {
 	_enc = 0;
 }
 
 RSAPrivateCrtKeyImpl::~RSAPrivateCrtKeyImpl()
 {
-	_d.wipe();
-	_p.wipe();
-	_q.wipe();
-	_dp.wipe();
-	_dq.wipe();
-	_qi.wipe();
-	if (_enc)
-		delete _enc;
+	delete _enc;
 }
 
-bool RSAPrivateCrtKeyImpl::equals(const Object& compare) const throw ()
+bool RSAPrivateCrtKeyImpl::equals(const Object* obj) const throw ()
 {
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const RSAPrivateKey* pri = dynamic_cast<const RSAPrivateKey*>(&compare);
-	if (pri)
+	if (obj)
 	{
-		if (pri->getModulus() != _n)
-			return false;
+		const RSAPrivateKey* pri = dynamic_cast<const RSAPrivateKey*>(obj);
+		if (pri)
+		{
+			if (pri->getModulus() != _n)
+				return false;
 
-		if (pri->getPrivateExponent() != _d)
-			return false;
+			if (pri->getPrivateExponent() != _d)
+				return false;
 
-		return true;
+			return true;
+		}
 	}
 	return false;
 }
@@ -76,62 +80,81 @@ RSAPrivateCrtKeyImpl* RSAPrivateCrtKeyImpl::clone() const throw ()
 	return new RSAPrivateCrtKeyImpl(*this);
 }
 
-const mpbarrett& RSAPrivateCrtKeyImpl::getModulus() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getModulus() const throw ()
 {
 	return _n;
 }
 
-const mpnumber& RSAPrivateCrtKeyImpl::getPrivateExponent() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getPrivateExponent() const throw ()
 {
 	return _d;
 }
 
-const mpnumber& RSAPrivateCrtKeyImpl::getPublicExponent() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getPublicExponent() const throw ()
 {
 	return _e;
 }
 
-const mpbarrett& RSAPrivateCrtKeyImpl::getPrimeP() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getPrimeP() const throw ()
 {
 	return _p;
 }
 
-const mpbarrett& RSAPrivateCrtKeyImpl::getPrimeQ() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getPrimeQ() const throw ()
 {
 	return _q;
 }
 
-const mpnumber& RSAPrivateCrtKeyImpl::getPrimeExponentP() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getPrimeExponentP() const throw ()
 {
 	return _dp;
 }
 
-const mpnumber& RSAPrivateCrtKeyImpl::getPrimeExponentQ() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getPrimeExponentQ() const throw ()
 {
 	return _dq;
 }
 
-const mpnumber& RSAPrivateCrtKeyImpl::getCrtCoefficient() const throw ()
+const BigInteger& RSAPrivateCrtKeyImpl::getCrtCoefficient() const throw ()
 {
 	return _qi;
 }
 
-const bytearray* RSAPrivateCrtKeyImpl::getEncoded() const
+const bytearray* RSAPrivateCrtKeyImpl::getEncoded() const throw ()
 {
 	if (!_enc)
-		_enc = BeeKeyFactory::encode(*this);
+	{
+        try
+        {
+            ByteArrayOutputStream bos;
+            BeeOutputStream bee(bos);
+
+			bee.writeBigInteger(_n);
+			bee.writeBigInteger(_d);
+			bee.writeBigInteger(_e);
+			bee.writeBigInteger(_p);
+			bee.writeBigInteger(_q);
+			bee.writeBigInteger(_dp);
+			bee.writeBigInteger(_dq);
+			bee.writeBigInteger(_qi);
+            bee.close();
+
+            _enc = bos.toByteArray();
+        }
+        catch (IOException&)
+        {
+        }
+	}
 
 	return _enc;
 }
 
 const String& RSAPrivateCrtKeyImpl::getAlgorithm() const throw ()
 {
-	static const String ALGORITHM = UNICODE_STRING_SIMPLE("RSA");
-	return ALGORITHM;
+	return ALGORITHM_RSA;
 }
 
 const String* RSAPrivateCrtKeyImpl::getFormat() const throw ()
 {
-	static const String FORMAT = UNICODE_STRING_SIMPLE("BEE");
-	return &FORMAT;
+	return &FORMAT_BEE;
 }

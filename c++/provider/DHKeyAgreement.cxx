@@ -34,6 +34,9 @@ using beecrypt::crypto::spec::SecretKeySpec;
 #include "beecrypt/c++/security/ProviderException.h"
 using beecrypt::security::ProviderException;
 
+#include <memory>
+using std::auto_ptr;
+
 using namespace beecrypt::provider;
 
 DHKeyAgreement::DHKeyAgreement()
@@ -44,10 +47,7 @@ DHKeyAgreement::DHKeyAgreement()
 
 DHKeyAgreement::~DHKeyAgreement()
 {
-	_x.wipe();
-
-	if (_secret)
-		delete _secret;
+	delete _secret;
 }
 
 Key* DHKeyAgreement::engineDoPhase(const Key& key, bool lastPhase) throw (InvalidKeyException, IllegalStateException)
@@ -55,26 +55,25 @@ Key* DHKeyAgreement::engineDoPhase(const Key& key, bool lastPhase) throw (Invali
 	if (_state == INITIALIZED)
 	{
 		const DHPublicKey* pub = dynamic_cast<const DHPublicKey*>(&key);
-
 		if (pub)
 		{
+			transform(_y, pub->getY());
+
+			if (mpz(_y.size, _y.data) || mpgex(_y.size, _y.data, _param.p.size, _param.p.modl))
+				throw InvalidKeyException("y must be in range [1 .. (p-1)]");
+
 			mpnumber _s;
 
-			_y = pub->getY();
-
 			if (dlsvdp_pDHSecret(&_param, &_x, &_y, &_s))
-				throw ProviderException("BeeCrypt internal error in dlsvdp_pDHSecret");
+			   throw ProviderException("BeeCrypt internal error in dlsvdp_pDHSecret");
 
 			if (lastPhase)
 			{
-				size_t bits = mpbits(_s.size, _s.data);
-				size_t bytes = ((bits+7) >> 3) + (((bits&7) == 0) ? 1 : 0);
+				size_t req = (_s.bitlength() + 8) >> 3;
 
-				_secret = new bytearray(bytes);
+				_secret = new bytearray(req);
 
-				i2osp(_secret->data(), bytes, _s.data, _s.size);
-
-				_s.wipe();
+				i2osp(_secret->data(), _secret->size(), _s.data, _s.size);
 
 				_state = SHARED;
 
@@ -97,13 +96,12 @@ Key* DHKeyAgreement::engineDoPhase(const Key& key, bool lastPhase) throw (Invali
 void DHKeyAgreement::engineInit(const Key& key, SecureRandom* random) throw (InvalidKeyException)
 {
 	const DHPrivateKey* pri = dynamic_cast<const DHPrivateKey*>(&key);
-
 	if (pri)
 	{
-		_param.p = pri->getParams().getP();
-		_param.g = pri->getParams().getG();
+		transform(_param.p, pri->getParams().getP());
+		transform(_param.g, pri->getParams().getG());
 
-		_x = pri->getX();
+		transform(_x, pri->getX());
 
 		_state = INITIALIZED;
 	}
@@ -126,11 +124,11 @@ bytearray* DHKeyAgreement::engineGenerateSecret() throw (IllegalStateException)
 		throw IllegalStateException();
 }
 
-size_t DHKeyAgreement::engineGenerateSecret(bytearray& b, size_t offset) throw (IllegalStateException, ShortBufferException)
+int DHKeyAgreement::engineGenerateSecret(bytearray& b, int offset) throw (IllegalStateException, ShortBufferException)
 {
 	if (_state == SHARED)
 	{
-		size_t size = _secret->size();
+		int size = _secret->size();
 
 		if ((b.size() - offset) > size)
 			throw ShortBufferException();
@@ -163,17 +161,13 @@ SecretKey* DHKeyAgreement::engineGenerateSecret(const String& algorithm) throw (
 
 		try
 		{
-			SecretKey* tmp = skf->generateSecret(spec);
+			auto_ptr<SecretKey> tmp(skf->generateSecret(spec));
 
-			delete skf;
-
-			return tmp;
+			return tmp.release();
 		}
-		catch (InvalidKeySpecException e)
+		catch (InvalidKeySpecException& e)
 		{
-			delete skf;
-
-			throw InvalidKeyException(e.getMessage());
+			throw InvalidKeyException().initCause(e);
 		}
 	}
 	else

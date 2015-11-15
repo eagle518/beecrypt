@@ -31,10 +31,6 @@ CertPath::CertPath(const String& type)
 	_type = type;
 }
 
-CertPath::~CertPath()
-{
-}
-
 const String& CertPath::getType() const throw ()
 {
 	return _type;

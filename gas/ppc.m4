@@ -2,7 +2,7 @@ dnl  ppc.m4
 dnl
 dnl  Copyright (c) 2003 Bob Deblier
 dnl 
-dnl  Author: Bob Deblier <bob.deblier@pandora.be>
+dnl  Author: Bob Deblier <bob.deblier@telenet.be>
 dnl 
 dnl  This library is free software; you can redistribute it and/or
 dnl  modify it under the terms of the GNU Lesser General Public
@@ -60,6 +60,10 @@ define(LOAD_ADDRESS,`
 	la $2,$1@l($2)
 ')
 define(EXTERNAL_VARIABLE)
+')
+
+ifelse(substr(ASM_OS,0,6),lynxos,`
+define(USE_NUMERIC_REGISTERS)
 ')
 
 

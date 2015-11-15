@@ -19,14 +19,14 @@
 
 /*!\file testdldp.c
  * \brief Unit test program for discrete logarithm domain parameters.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "beecrypt.h"
-#include "dldp.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/dldp.h"
 
 int main()
 {

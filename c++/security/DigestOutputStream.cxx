@@ -33,10 +33,6 @@ DigestOutputStream::DigestOutputStream(OutputStream& out, MessageDigest& m) : Fi
 	_on = true;
 }
 
-DigestOutputStream::~DigestOutputStream()
-{
-}
-
 void DigestOutputStream::write(byte b) throw (IOException)
 {
 	out.write(b);
@@ -44,7 +40,7 @@ void DigestOutputStream::write(byte b) throw (IOException)
 		digest.update(b);
 }
 
-void DigestOutputStream::write(const byte *data, size_t offset, size_t length) throw (IOException)
+void DigestOutputStream::write(const byte *data, int offset, int length) throw (IOException)
 {
 	if (length)
 	{

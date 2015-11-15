@@ -33,11 +33,12 @@ DHParameters::DHParameters()
 
 DHParameters::~DHParameters()
 {
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	delete _spec;
+}
+
+const bytearray& DHParameters::engineGetEncoded(const String* format) throw (IOException)
+{
+	throw IOException("not implemented");
 }
 
 AlgorithmParameterSpec* DHParameters::engineGetParameterSpec(const type_info& info) throw (InvalidParameterSpecException)
@@ -72,12 +73,13 @@ void DHParameters::engineInit(const AlgorithmParameterSpec& spec) throw (Invalid
 		throw InvalidParameterSpecException("expected a DHParameterSpec");
 }
 
-void DHParameters::engineInit(const byte*, size_t)
+void DHParameters::engineInit(const byte*, int, const String* format)
 {
 	throw ProviderException("not implemented");
 }
 
-void DHParameters::engineInit(const byte*, size_t, const String& format)
+String DHParameters::engineToString() throw ()
 {
-	throw ProviderException("not implemented");
+    return String("(not implemented");
 }
+

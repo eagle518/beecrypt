@@ -23,8 +23,19 @@
 #endif
 
 #include "beecrypt/c++/security/Provider.h"
+#include "beecrypt/c++/lang/RuntimeException.h"
+using beecrypt::lang::RuntimeException;
 
 using namespace beecrypt::security;
+
+Provider::Instantiator::Instantiator(instantiator inst) : _inst(inst)
+{
+}
+
+Object* Provider::Instantiator::instantiate()
+{
+	return _inst();
+}
 
 Provider::Provider(const String& name, double version, const String& info)
 {
@@ -32,13 +43,11 @@ Provider::Provider(const String& name, double version, const String& info)
 	_info = info;
 	_vers = version;
 
-	_lock.init();
-
 	UErrorCode status = U_ZERO_ERROR;
 
 	_conv = ucnv_open(NULL, &status);
 	if (U_FAILURE(status))
-		throw "failed to create default unicode converter";
+		throw RuntimeException("failed to create default unicode converter");
 
 	#if WIN32
 	_dlhandle = NULL;
@@ -51,61 +60,61 @@ Provider::Provider(const String& name, double version, const String& info)
 
 Provider::~Provider()
 {
-	_lock.destroy();
-
 	ucnv_close(_conv);
 }
 
-Provider::instantiator Provider::getInstantiator(const String& key) const
+Object* Provider::instantiate(const String& key) const
 {
-	instantiator_map::const_iterator it = _imap.find(key);
-
-	if (it != _imap.end())
-		return it->second;
+	Instantiator* inst = _imap.get(&key);
+	if (inst)
+		return inst->instantiate();
 	else
 		return 0;
 }
 
-void Provider::put(const String& key, const String& value)
+Object* Provider::setProperty(const String& key, const String& value)
 {
-	_lock.lock();
+	Object* result = 0;
 
-	// add it in the properties
-	setProperty(key, value);
-
-	// add it in the instantiator map only if there is no space in the value (i.e. it's a property instead of a class)
-	if (value.indexOf((UChar) 0x20) == -1)
+	synchronized (this)
 	{
-		char symname[1024];
+		// add it in the properties
+		result = Properties::setProperty(key, value);
 
-		UErrorCode status = U_ZERO_ERROR;
-
-		ucnv_fromUChars(_conv, symname, 1024, value.getBuffer(), value.length(), &status);
-
-		if (status != U_ZERO_ERROR)
+		// add it in the instantiator map only if there is no space in the value (i.e. it's a property instead of a class)
+		if (value.indexOf((UChar) 0x20) == -1)
 		{
-			_lock.unlock();
-			throw "error in ucnv_fromUChars";
+			const array<jchar>& src = value.toCharArray();
+
+			char symname[1024];
+
+			UErrorCode status = U_ZERO_ERROR;
+
+			ucnv_fromUChars(_conv, symname, 1024, src.data(), src.size(), &status);
+
+			if (status != U_ZERO_ERROR)
+					throw RuntimeException("error in ucnv_fromUChars");
+
+			instantiator i;
+
+			#if WIN32
+			if (!_dlhandle)
+				_dlhandle = GetModuleHandle(NULL);
+			i = (instantiator) GetProcAddress((HMODULE) _dlhandle, symname);
+			#elif HAVE_DLFCN_H
+			i = (instantiator) dlsym(_dlhandle, symname);
+			#else
+			# error
+			#endif
+
+			if (i)
+			{
+				Instantiator* tmp = _imap.put(new String(key), new Instantiator(i));
+				assert(tmp == 0);
+			}
 		}
-
-		instantiator i;
-
-		#if WIN32
-		if (!_dlhandle)
-			_dlhandle = GetModuleHandle(NULL);
-		i = (instantiator) GetProcAddress((HMODULE) _dlhandle, symname);
-		#elif HAVE_DLFCN_H
-		i = (instantiator) dlsym(_dlhandle, symname);
-		#else
-		# error
-		#endif
-
-		_imap[key] = i;
 	}
-	else
-		_imap[key] = 0;
-
-	_lock.unlock();
+	return result;
 }
 
 const String& Provider::getInfo() const throw ()

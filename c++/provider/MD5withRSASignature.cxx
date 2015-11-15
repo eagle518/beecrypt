@@ -29,7 +29,3 @@ using namespace beecrypt::provider;
 MD5withRSASignature::MD5withRSASignature() : PKCS1RSASignature(&md5)
 {
 }
-
-MD5withRSASignature::~MD5withRSASignature()
-{
-}

@@ -26,35 +26,26 @@
 
 using namespace beecrypt::security::spec;
 
-DSAPrivateKeySpec::DSAPrivateKeySpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g, const mpnumber& x)
+DSAPrivateKeySpec::DSAPrivateKeySpec(const BigInteger& x, const BigInteger& p, const BigInteger& q, const BigInteger& g): _p(p), _q(q), _g(g), _x(x)
 {
-	_p = p;
-	_q = q;
-	_g = g;
-	_x = x;
 }
 
-DSAPrivateKeySpec::~DSAPrivateKeySpec()
-{
-	_x.wipe();
-}
-
-const mpbarrett& DSAPrivateKeySpec::getP() const throw ()
+const BigInteger& DSAPrivateKeySpec::getP() const throw ()
 {
 	return _p;
 }
 
-const mpbarrett& DSAPrivateKeySpec::getQ() const throw ()
+const BigInteger& DSAPrivateKeySpec::getQ() const throw ()
 {
 	return _q;
 }
 
-const mpnumber& DSAPrivateKeySpec::getG() const throw ()
+const BigInteger& DSAPrivateKeySpec::getG() const throw ()
 {
 	return _g;
 }
 
-const mpnumber& DSAPrivateKeySpec::getX() const throw ()
+const BigInteger& DSAPrivateKeySpec::getX() const throw ()
 {
 	return _x;
 }

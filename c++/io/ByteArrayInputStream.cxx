@@ -30,15 +30,13 @@ using namespace beecrypt::io;
 
 ByteArrayInputStream::ByteArrayInputStream(const bytearray& b) : _buf(b)
 {
-	_lock.init();
 	_count = _buf.size();
 	_mark = 0;
 	_pos = 0;
 }
 
-ByteArrayInputStream::ByteArrayInputStream(const byte* data, size_t offset, size_t length) : _buf(data+offset, length)
+ByteArrayInputStream::ByteArrayInputStream(const byte* data, jint offset, jint length) : _buf(data+offset, length)
 {
-	_lock.init();
 	_count = _buf.size();
 	_mark = 0;
 	_pos = 0;
@@ -46,19 +44,18 @@ ByteArrayInputStream::ByteArrayInputStream(const byte* data, size_t offset, size
 
 ByteArrayInputStream::~ByteArrayInputStream()
 {
-	_lock.destroy();
 }
 
-off_t ByteArrayInputStream::available() throw (IOException)
+jint ByteArrayInputStream::available() throw (IOException)
 {
-	return (off_t)(_count - _pos);
+	return _count - _pos;
 }
 
 void ByteArrayInputStream::close() throw (IOException)
 {
 }
 
-void ByteArrayInputStream::mark(off_t readlimit) throw ()
+void ByteArrayInputStream::mark(jint readlimit) throw ()
 {
 	_mark = _pos;
 }
@@ -68,62 +65,62 @@ bool ByteArrayInputStream::markSupported() throw ()
 	return true;
 }
 
-int ByteArrayInputStream::read() throw (IOException)
+jint ByteArrayInputStream::read() throw (IOException)
 {
-	register int rc;
-	_lock.lock();
-	rc = (_pos < _count) ? _buf[_pos++] : -1;
-	_lock.unlock();
+	register jint rc = -1;
+
+	synchronized (this)
+	{
+		if (_pos < _count)
+			rc = _buf[_pos++];
+	}
+
 	return rc;
 }
 
-int ByteArrayInputStream::read(byte* data, size_t offset, size_t length) throw (IOException)
+jint ByteArrayInputStream::read(byte* data, jint offset, jint length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();
 
-	_lock.lock();
-	if (_pos >= _count)
+	synchronized (this)
 	{
-		_lock.unlock();
-		return -1;
+		if (_pos >= _count)
+			return -1;
+
+		if (_pos + length > _count)
+			length = _count - _pos;
+
+		if (length == 0)
+			return 0;
+
+		memcpy(data+offset, _buf.data()+_pos, length);
+		_pos += length;
 	}
-
-	if (_pos + length > _count)
-		length = _count - _pos;
-
-	if (length == 0)
-	{
-		_lock.unlock();
-		return 0;
-	}
-
-	memcpy(data+offset, _buf.data()+_pos, length);
-	_pos += length;
-
-	_lock.unlock();
 
 	return length;
 }
 
-int ByteArrayInputStream::read(bytearray& b) throw (IOException)
+jint ByteArrayInputStream::read(bytearray& b) throw (IOException)
 {
 	return read(b.data(), 0, b.size());
 }
 
 void ByteArrayInputStream::reset() throw (IOException)
 {
-	_lock.lock();
-	_pos = _mark;
-	_lock.unlock();
+	synchronized (this)
+	{
+		_pos = _mark;
+	}
 }
 
-off_t ByteArrayInputStream::skip(off_t n) throw (IOException)
+jint ByteArrayInputStream::skip(jint n) throw (IOException)
 {
-	_lock.lock();
-	if (_pos + n > _count)
-		n = _count - _pos;
-	_pos += n;
-	_lock.unlock();
+	synchronized (this)
+	{
+		if (_pos + n > _count)
+			n = _count - _pos;
+		_pos += n;
+	}
 	return n;
 }

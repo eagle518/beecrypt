@@ -29,7 +29,3 @@ using namespace beecrypt::provider;
 SHA512withRSASignature::SHA512withRSASignature() : PKCS1RSASignature(&sha512)
 {
 }
-
-SHA512withRSASignature::~SHA512withRSASignature()
-{
-}

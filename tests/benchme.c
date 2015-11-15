@@ -19,12 +19,12 @@
 
 /*!\file benchme.c
  * \brief Benchmark program for Modular Exponentiation.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  */
 
-#include "beecrypt.h"
-#include "dldp.h"
-#include "timestamp.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/dldp.h"
+#include "beecrypt/timestamp.h"
 
 #include <stdio.h>
 
@@ -38,7 +38,7 @@ int main()
 {
 	dldp_p params;
 	mpnumber gq;
-	javalong start, now;
+	jlong start, now;
 	int iterations = 0;
 
 	dldp_pInit(&params);
@@ -49,6 +49,7 @@ int main()
 	mpnzero(&gq);
 
 	/* get starting time */
+	iterations = 0;
 	start = timestamp();
 	do
 	{
@@ -57,14 +58,31 @@ int main()
 		iterations++;
 	} while (now < (start + (SECONDS * ONE_SECOND)));
 
-	mpnfree(&gq);
-
 	printf("(%d bits ^ %d bits) mod (%d bits): %d times in %d seconds\n",
 		(int) mpbits(params.g.size, params.g.data),
 		(int) mpbits(params.q.size, params.q.modl),
 		(int) mpbits(params.p.size, params.p.modl),
 		iterations,
 		SECONDS);
+
+	/* get starting time */
+	iterations = 0;
+	start = timestamp();
+	do
+	{
+		mpbnpowmod(&params.p, &params.g, (mpnumber*) &params.g, &gq);
+		now = timestamp();
+		iterations++;
+	} while (now < (start + (SECONDS * ONE_SECOND)));
+
+	printf("(%d bits ^ %d bits) mod (%d bits): %d times in %d seconds\n",
+		(int) mpbits(params.g.size, params.g.data),
+		(int) mpbits(params.g.size, params.g.data),
+		(int) mpbits(params.p.size, params.p.modl),
+		iterations,
+		SECONDS);
+
+	mpnfree(&gq);
 
 	dldp_pFree(&params);
 

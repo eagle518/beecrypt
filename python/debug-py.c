@@ -1,10 +1,5 @@
-
-/*@unchecked@*/
-extern PyTypeObject PyCode_Type;
-/*@unchecked@*/
-extern PyTypeObject PyDictIter_Type;
-/*@unchecked@*/
-extern PyTypeObject PyFrame_Type;
+#include "compile.h"
+#include "frameobject.h"
 
 #include "beecrypt/python/mpw-py.h"	/* XXX debug only */
 #include "beecrypt/python/rng-py.h"	/* XXX debug only */
@@ -33,7 +28,6 @@ static const char * lbl(void * s)
     if (o->ob_type == &PyCode_Type)	return "Code";
     if (o->ob_type == &PyComplex_Type)	return "Complex";
     if (o->ob_type == &PyDict_Type)	return "Dict";
-    if (o->ob_type == &PyDictIter_Type)	return "DictIter";
     if (o->ob_type == &PyFile_Type)	return "File";
     if (o->ob_type == &PyFloat_Type)	return "Float";
     if (o->ob_type == &PyFrame_Type)	return "Frame";

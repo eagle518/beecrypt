@@ -1,3 +1,19 @@
+4.2.0:
+	- Added OpenMP support (initially for RSA CRT).
+	- Added SHA-224 and HMAC-SHA-224.
+	- Added RIPEMD-128/160/256/320 (thanks to Jeff Johnson).
+	- Added MD4 (thanks to Jeff Johnson).
+	- Applied RedHat/Debian/Gentoo patches for 4.1.2.
+	- Improved gcc compilation flags for sparc.
+	- Started work on MinGW compatibility.
+	- Major overhaul of the C++ API; be warned that the code is still
+	  tricky in certain places.
+	- Added synchronization methods to Object class; there's also a
+	  macro allowing the use of synchronized (...) { }.
+	- Added Runnable interface and Thread class; the latter provides
+	  basic support conform to the Java API.
+	- Added collections.
+
 4.1.2:
 	- Fixed Cygwin DLL missing symbols problem.
 	- Fixed GNU-stack assembler section on some platforms (Debian-ARM).

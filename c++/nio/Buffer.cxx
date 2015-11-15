@@ -23,6 +23,8 @@
 #endif
 
 #include "beecrypt/c++/nio/Buffer.h"
+#include "beecrypt/c++/lang/String.h"
+using beecrypt::lang::String;
 
 using namespace beecrypt::nio;
 

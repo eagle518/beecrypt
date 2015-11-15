@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 Beeyond Software Holding BV
+ * Copyright (c) 2004 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@
 #endif
 
 #include "beecrypt/sha512.h"
-#include "beecrypt/sha_k.h"
+#include "beecrypt/sha2k64.h"
 #include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_sha512_m
@@ -66,7 +66,15 @@ static const uint64_t hinit[8] = {
 	#endif
 };
 
-const hashFunction sha512 = { "SHA-512", sizeof(sha512Param), 128, 64, (hashFunctionReset) sha512Reset, (hashFunctionUpdate) sha512Update, (hashFunctionDigest) sha512Digest };
+const hashFunction sha512 = {
+	.name = "SHA-512",
+	.paramsize = sizeof(sha512Param),
+	.blocksize = 128,
+	.digestsize = 64,
+	.reset = (hashFunctionReset) sha512Reset,
+	.update = (hashFunctionUpdate) sha512Update,
+	.digest = (hashFunctionDigest) sha512Digest
+};
 
 int sha512Reset(register sha512Param* sp)
 {
@@ -87,13 +95,13 @@ int sha512Reset(register sha512Param* sp)
 #ifdef OPTIMIZE_SSE2
 
 # define R(x,s) _mm_srli_si64(x,s)
-# define S(x,s) _m_pxor(_mm_srli_si64(x,s),_mm_slli_si64(x,64-(s)))
-# define CH(x,y,z) _m_pxor(_m_pand(x,_m_pxor(y,z)),z)
+# define S(x,s) _mm_xor_si64(_mm_srli_si64(x,s),_mm_slli_si64(x,64-(s)))
+# define CH(x,y,z) _mm_xor_si64(_m_pand(x,_mm_xor_si64(y,z)),z)
 # define MAJ(x,y,z) _m_por(_m_pand(_m_por(x,y),z),_m_pand(x,y))
-# define SIG0(x) _m_pxor(_m_pxor(S(x,28),S(x,34)),S(x,39))
-# define SIG1(x) _m_pxor(_m_pxor(S(x,14),S(x,18)),S(x,41))
-# define sig0(x) _m_pxor(_m_pxor(S(x,1),S(x,8)),R(x,7))
-# define sig1(x) _m_pxor(_m_pxor(S(x,19),S(x,61)),R(x,6))
+# define SIG0(x) _mm_xor_si64(_mm_xor_si64(S(x,28),S(x,34)),S(x,39))
+# define SIG1(x) _mm_xor_si64(_mm_xor_si64(S(x,14),S(x,18)),S(x,41))
+# define sig0(x) _mm_xor_si64(_mm_xor_si64(S(x,1),S(x,8)),R(x,7))
+# define sig1(x) _mm_xor_si64(_mm_xor_si64(S(x,19),S(x,61)),R(x,6))
 
 # define ROUND(a,b,c,d,e,f,g,h,w,k) \
 	temp = _mm_add_si64(h, _mm_add_si64(_mm_add_si64(SIG1(e), CH(e,f,g)), _mm_add_si64(k, w))); \
@@ -122,10 +130,10 @@ int sha512Reset(register sha512Param* sp)
 void sha512Process(register sha512Param* sp)
 {
 	#ifdef OPTIMIZE_SSE2
-	# if defined(__GNUC__)
-	static const __m64 MASK = { 0x00FF00FF, 0x00FF00FF };
-	# elif defined(_MSC_VER)
+	# if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 	static const __m64 MASK = { 0x00FF00FF00FF00FF };
+	# elif defined(__GNUC__)
+	static const __m64 MASK = { 0x00FF00FF, 0x00FF00FF };
 	# else
 	#  error
 	# endif
@@ -140,7 +148,7 @@ void sha512Process(register sha512Param* sp)
 	while (t--)
 	{
 		temp = *w;
-		*(w++) = _m_pxor(
+		*(w++) = _mm_xor_si64(
 				_mm_slli_si64(_m_pshufw(_m_pand(temp, MASK), 27), 8),
 				_m_pshufw(_m_pand(_mm_srli_si64(temp, 8), MASK), 27)
 			);
@@ -311,7 +319,7 @@ int sha512Update(register sha512Param* sp, const byte* data, size_t size)
 	mpadd(2, sp->length, add);
 	#elif (MP_WBITS == 32)
 	mpw add[4];
-	mpsetw(4, add, size);
+	mpsetws(4, add, size);
 	mplshift(4, add, 3);
 	mpadd(4, sp->length, add);
 	#else

@@ -17,7 +17,7 @@
  *
  */
 
-#include "beecrypt.h"
+#include "beecrypt/beecrypt.h"
 
 #include <string.h>
 
@@ -52,4 +52,20 @@ int fromhex(byte* data, const char* hexdata)
 		}
 	}
 	return (length+1) >> 1;
+}
+
+int hexdump(const byte* data, size_t size)
+{
+	size_t i;
+
+	for (i = 0; i < size; i++)
+	{
+		printf("%02x", data[i]);
+		if ((i & 0xf) == 0xf)
+			printf("\n");
+		else
+			printf(" ");
+	}
+	if ((i & 0xf))
+		printf("\n");
 }

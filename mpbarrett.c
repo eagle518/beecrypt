@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
+ * Copyright (c) 2002 Bob Deblier
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
  *        "Handbook of Applied Cryptography", Chapter 14.3.3
  *        Menezes, van Oorschot, Vanstone
  *        CRC Press
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup MP__m
  */
 
@@ -441,8 +441,8 @@ void mpbmulmod_w(const mpbarrett* b, size_t xsize, const mpw* xdata, size_t ysiz
 {
 	/* xsize and ysize must be <= b->size */
 	register size_t  size = b->size;
+	register size_t  fill = size*2-xsize-ysize;
 	register mpw* temp = wksp + size*2+2;
-	register mpw  fill = size*2-xsize-ysize;
 
 	if (fill)
 		mpzero(fill, temp);
@@ -460,8 +460,8 @@ void mpbsqrmod_w(const mpbarrett* b, size_t xsize, const mpw* xdata, mpw* result
 {
 	/* xsize must be <= b->size */
 	register size_t  size = b->size;
+	register size_t  fill = 2*(size-xsize);
 	register mpw* temp = wksp + size*2+2;
-	register mpw  fill = 2*(size-xsize);
 
 	if (fill)
 		mpzero(fill, temp);

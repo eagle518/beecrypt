@@ -20,13 +20,13 @@
 /*!\file testhmacmd5.c
  * \brief Unit test program for HMAC-MD5; it tests all vectors specified
  *        by RFC 2202.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "hmacmd5.h"
+#include "beecrypt/hmacmd5.h"
 
 struct vector
 {

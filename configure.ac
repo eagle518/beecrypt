@@ -1,30 +1,51 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([beecrypt],[4.1.2],[bob.deblier@telenet.be])
-AM_INIT_AUTOMAKE
+AC_INIT([beecrypt],[4.2.0],[bob.deblier@telenet.be])
 AC_CANONICAL_TARGET
-AC_CONFIG_SRCDIR(beecrypt.h)
+AC_CONFIG_SRCDIR(include/beecrypt/beecrypt.h)
 AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE
+
+# Checks for AWK - used by expert mode
+AC_PROG_AWK
 
 # Checks for package options
-AC_ARG_ENABLE(debug, [  --enable-debug          creates debugging code [[default=no]]],[
-  if test "$enableval" = no; then
-    ac_enable_debug=no
-  else
-    ac_enable_debug=yes
-  fi
-  ],[ ac_enable_debug=no])
-
-AC_ARG_WITH(cpu,[  --with-cpu              optimize for specific cpu],[
-  BEECRYPT_WITH_CPU
+AC_ARG_ENABLE(expert-mode, [  --enable-expert-mode      follow user-defined CFLAGS settings [[default=no]]],[
+  ac_enable_expert_mode=yes
   ],[
-  BEECRYPT_WITHOUT_CPU
+  if test "X$CFLAGS" != "X"; then
+    echo "enabling expert mode"
+    ac_enable_expert_mode=yes
+  else
+    ac_enable_expert_mode=no
+  fi
+  ])
+
+AC_ARG_ENABLE(debug, [  --enable-debug          creates debugging code [[default=no]]],[
+  if test "$ac_enable_expert_mode" = yes; then
+    AC_MSG_ERROR([--enable-debug cannot be used in conjunction with --enable-expert-mode])
+  fi
+  ac_enable_debug=yes
+  ],[
+  ac_enable_debug=no
+  ])
+
+AC_ARG_WITH(cpu,[  --with-cpu              optimize for specific cpu],[A
+  if test "$ac_enable_expert_mode" = yes; then
+    AC_MSG_ERROR([--with-cpu cannot be used in conjunction with --enable-expert-mode])
+  fi
+  BEE_WITH_CPU
+  ],[
+  BEE_WITHOUT_CPU
   ])
 
 AC_ARG_WITH(arch,[  --with-arch             optimize for specific architecture (may not run on other cpus of same family)],[
-  BEECRYPT_WITH_ARCH
+  if test "$ac_enable_expert_mode" = yes; then
+    AC_MSG_ERROR([--with-arch cannot be used in conjunction with --enable-expert-mode])
+  fi
+  BEE_WITH_ARCH
   ],[
-  BEECRYPT_WITHOUT_ARCH
+  BEE_WITHOUT_ARCH
   ])
 
 AC_ARG_ENABLE(threads,[  --enable-threads        enables multithread support [[default=yes]]],[
@@ -33,7 +54,7 @@ AC_ARG_ENABLE(threads,[  --enable-threads        enables multithread support [[d
   else
     ac_enable_threads=yes
   fi
-  ],[ ac_enable_threads=yes])
+  ],[ac_enable_threads=yes])
 
 AC_ARG_ENABLE(aio,[  --enable-aio            enables asynchronous i/o for entropy gathering [[default=yes]]],[
   if test "$enableval" = no; then
@@ -69,13 +90,29 @@ AC_ARG_WITH(java,[  --with-java             creates the Java glue code [[default
   fi
   ],[ac_with_java=yes])
 
-AC_ARG_WITH(python,[  --with-python           creates the Python module [[default=yes]]],[
+AC_ARG_WITH(python,[  --with-python[[=ARG]]     creates the Python module [[default=yes]]; you can optionally specify the python executable],[
   if test "$withval" = no; then
     ac_with_python=no
   else
     ac_with_python=yes
+    ac_with_python_val=$withval
   fi
-  ],[ac_with_python=yes])
+  ],[
+  ac_with_python_val=`which python`
+  if test "X$ac_with_python_val" = "X"; then
+    ac_with_python=no
+  else
+    ac_with_python=yes
+  fi
+  ])
+
+# Check for expert mode
+if test "$ac_enable_expert_mode" = yes; then
+  BEE_EXPERT_MODE
+fi
+
+# Check for aggressive optimization
+BEE_AGGRESSIVE_OPT
 
 # Check for Unix variants
 AC_AIX
@@ -89,29 +126,38 @@ AM_PROG_AS
 AC_PROG_LD
 AC_PROG_LN_S
 AC_PROG_EGREP
-
-# Checks for compiler characteristics and flags
-BEECRYPT_CC
-BEECRYPT_CXX
-
-# Check for stack protection
-BEECRYPT_NOEXECSTACK
-
-# Checks for program flags needed by libtool
-BEECRYPT_LIBTOOL
-
-# Checks for further programs
-AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
+# Checks for OpenMP support
+AC_LANG_PUSH(C)
+AC_OPENMP
+AC_LANG_POP(C)
+AC_LANG_PUSH(C++)
+AC_OPENMP
+AC_LANG_POP(C++)
+
+# Checks for compiler characteristics and flags
+if test "$ac_enable_expert_mode" = no; then
+  BEE_CC
+  BEE_CXX
+fi
+
+# Check for stack protection
+BEE_CC_NOEXECSTACK
+BEE_CXX_NOEXECSTACK
+
+# Checks for program flags needed by libtool
+BEE_LIBTOOL
+
 # Predefines for autoheader
-BEECRYPT_OS_DEFS
+BEE_OS_DEFS
 
 AH_TEMPLATE([HAVE_ASSERT_H],[.])
 AH_TEMPLATE([HAVE_CTYPE_H],[.])
 AH_TEMPLATE([HAVE_ERRNO_H],[.])
 AH_TEMPLATE([HAVE_FCNTL_H],[.])
+AH_TEMPLATE([HAVE_STDIO_H],[.])
 AH_TEMPLATE([HAVE_TERMIO_H],[.])
 AH_TEMPLATE([HAVE_TERMIOS_H],[.])
 AH_TEMPLATE([HAVE_TIME_H],[.])
@@ -124,6 +170,7 @@ AH_TEMPLATE([HAVE_SYS_SOUNDCARD_H],[.])
 AH_TEMPLATE([HAVE_SYS_STAT_H],[.])
 AH_TEMPLATE([HAVE_SYS_TIME_H],[.])
 AH_TEMPLATE([HAVE_SYS_TYPES_H],[.])
+AH_TEMPLATE([HAVE_ENDIAN_H],[.])
 AH_TEMPLATE([HAVE_ASM_BYTEORDER_H],[.])
 
 AH_TEMPLATE([HAVE_AIO_H],[.])
@@ -138,9 +185,9 @@ AH_TEMPLATE([HAVE_DEV_TTY],[Define to 1 if your system has device /dev/tty])
 AC_HEADER_STDC
 AC_CHECK_HEADERS([time.h sys/time.h])
 AC_HEADER_TIME
-AC_CHECK_HEADERS([assert.h stdio.h ctype.h errno.h fcntl.h malloc.h termio.h termios.h])
+AC_CHECK_HEADERS([assert.h ctype.h errno.h fcntl.h malloc.h stdio.h termio.h termios.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/mman.h sys/audioio.h sys/soundcard.h])
-AC_CHECK_HEADERS([endian.h asm/byteorder.h])
+AC_CHECK_HEADERS([endian.h sys/endian.h asm/byteorder.h])
 
 bc_include_stdio_h=
 bc_include_stdlib_h=
@@ -179,13 +226,13 @@ AC_SUBST(INCLUDE_STRING_H,$bc_include_string_h)
 AC_SUBST(INCLUDE_UNISTD_H,$bc_include_unistd_h)
 AC_SUBST(INCLUDE_DLFCN_H,$bc_include_dlfcn_h)
 
-BEECRYPT_DLFCN
-BEECRYPT_MULTITHREAD
-BEECRYPT_THREAD_LOCAL_STORAGE
+BEE_DLFCN
+BEE_MULTITHREAD
+BEE_THREAD_LOCAL_STORAGE
 
 # Checks for libraries.
 if test "$ac_enable_aio" = yes; then
-  BEECRYPT_WORKING_AIO
+  BEE_WORKING_AIO
   if test "$bc_cv_aio_works" = yes; then
     AC_DEFINE([ENABLE_AIO],1)
   fi
@@ -199,7 +246,7 @@ if test "$ac_with_mtmalloc" = yes; then
 fi
 
 case $target_os in
-  cygwin*)
+  cygwin* | mingw*)
     AC_CHECK_LIB([winmm],[main]) ac_cv_lib_winmm=ac_cv_lib_winmm_main
     ;;
 esac
@@ -220,9 +267,11 @@ AC_FUNC_MEMCMP
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memset memcmp memmove strcspn strerror strspn])
 
+AH_TEMPLATE([HAVE_NANOSLEEP],[.])
 AH_TEMPLATE([HAVE_GETHRTIME],[.])
 AH_TEMPLATE([HAVE_GETTIMEOFDAY],[.])
 if test "$ac_cv_header_sys_time_h" = yes; then
+  AC_CHECK_FUNCS([nanosleep])
   AC_CHECK_FUNCS([gethrtime])
   # gettimeofday detection fails on HP/UX!
   AC_MSG_CHECKING([for gettimeofday])
@@ -279,7 +328,9 @@ AH_TEMPLATE([JAVAGLUE],[Define to 1 if you want to include the Java code])
 
 if test "$ac_with_java" = yes ; then
   AC_CHECK_PROG(ac_cv_have_gcj, gcj, yes, no)
+  AC_CHECK_PROG(ac_cv_have_gcjh, gcjh, yes, no)
   if test "$ac_cv_have_gcj" = yes; then
+    AC_SUBST(javac,gcj)
     AC_CACHE_CHECK([for java native interface headers], ac_cv_java_include, [
       cat > conftest.java << EOF
 public class conftest
@@ -314,7 +365,9 @@ EOF
     AC_CHECK_PROG(ac_cv_have_java, java, yes, no)
     if test "$ac_cv_have_java" = yes; then
       AC_CHECK_PROG(ac_cv_have_javac, javac, yes, no)
+      AC_CHECK_PROG(ac_cv_have_javah, javah, yes, no)
       if test "$ac_cv_have_javac" = yes; then
+        AC_SUBST(javac,javac)
         AC_CACHE_CHECK([for java native interface headers],ac_cv_java_include,[
           cat > conftest.java << EOF
 public class conftest
@@ -383,7 +436,7 @@ fi
 
 if test "$ac_with_java" = yes ; then
   AC_DEFINE([JAVAGLUE],1)
-  AC_SUBST(JAVAINC,$ac_cv_java_include)
+  CPPFLAGS="$CPPFLAGS $ac_cv_java_include"
 fi
 
 
@@ -391,17 +444,16 @@ fi
 AH_TEMPLATE([PYTHONGLUE],[Define to 1 if you want to include the Python code])
 
 if test "$ac_with_python" = yes ; then
-  AC_CHECK_PROG(ac_cv_have_python, python, yes, no)
-  if test "$ac_cv_have_python" = yes; then
+  AC_PATH_PROG([PYTHON], `basename $ac_with_python_val`, [no], `AS_DIRNAME(["$ac_with_python_val"])`)
+  if test "$PYTHON" = no; then
+    ac_with_python=no
+  else
     AC_CACHE_CHECK([for python headers], ac_cv_python_include, [
-      ac_cv_python_include="-I`python -c 'import distutils.sysconfig; print distutils.sysconfig.get_python_inc()'`"
+      ac_cv_python_include="-I`$PYTHON -c 'import distutils.sysconfig; print distutils.sysconfig.get_python_inc()'`"
     ])
     AC_CACHE_CHECK([where to install python libraries], ac_cv_python_libdir, [
-      echo "import distutils.sysconfig; print distutils.sysconfig.get_python_lib()" > conftest.py
-      ac_cv_python_libdir=`python conftest.py`
+      ac_cv_python_libdir=`$PYTHON -c 'import distutils.sysconfig; print distutils.sysconfig.get_python_lib()'`
     ])
-  else
-    ac_with_python=no
   fi
 fi
 
@@ -416,7 +468,7 @@ fi
 AC_MSG_CHECKING([for platform-specific entropy devices])
 AC_MSG_RESULT()
 case $target_os in
-cygwin*)
+cygwin* | mingw*)
   AC_MSG_CHECKING([for wavein])
   AC_MSG_RESULT(yes)
   AC_MSG_CHECKING([for wincrypt])
@@ -454,7 +506,7 @@ solaris*)
 esac
 
 case $target_os in
-cygwin*)
+cygwin* | mingw*)
   ;;
 *)
   AC_MSG_CHECKING([for generic entropy devices])
@@ -493,6 +545,7 @@ if test "$ac_cv_have_dev_tty" = yes; then
   AC_DEFINE([HAVE_DEV_TTY],1)
 fi
 
+# Figure out extra flags
 if test "$ac_enable_debug" != yes; then
   case $bc_target_arch in
   alpha*)
@@ -501,9 +554,11 @@ if test "$ac_enable_debug" != yes; then
   arm*)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_ARM"
     ;;
+  x86_64 | athlon64 | athlon-fx | k8 | opteron | em64t | nocona)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_X86_64"
+    ;;
   athlon*)
-    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I386 -DOPTIMIZE_MMX"
-    CFLAGS="$CFLAGS -mmmx"
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX"
     ;;
   i386)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I386"
@@ -526,24 +581,23 @@ if test "$ac_enable_debug" != yes; then
   pentium)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I586"
     ;;
+  pentium-m)
+    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX -DOPTIMIZE_SSE -DOPTIMIZE_SSE2"
+    ;;
   pentium-mmx)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I586 -DOPTIMIZE_MMX"
-    CFLAGS="$CFLAGS -mmmx"
     ;;
   pentiumpro)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686"
     ;;
   pentium2)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX"
-    CFLAGS="$CFLAGS -mmmx"
     ;;
   pentium3)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX -DOPTIMIZE_SSE"
-    CFLAGS="$CFLAGS -msse"
     ;;
   pentium4)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_I686 -DOPTIMIZE_MMX -DOPTIMIZE_SSE -DOPTIMIZE_SSE2"
-    CFLAGS="$CFLAGS -msse2"
     ;;
   powerpc)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_POWERPC"
@@ -556,38 +610,32 @@ if test "$ac_enable_debug" != yes; then
     ;;
   sparcv8)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV8"
-    CFLAGS="$CFLAGS -Wa,-xarch=v8"
     ;;
   sparcv8plus*)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV8PLUS"
-    CFLAGS="$CFLAGS -Wa,-xarch=v8plus"
     ;;
   sparcv9*)
     CPPFLAGS="$CPPFLAGS -DOPTIMIZE_SPARCV9"
-    CFLAGS="$CFLAGS -Wa,-xarch=v9"
-    ;;
-  x86_64)
-    CPPFLAGS="$CPPFLAGS -DOPTIMIZE_X86_64"
     ;;
   esac
 fi
 
 if test "$ac_enable_debug" != yes; then
   # find out how to use assembler
-  BEECRYPT_ASM_DEFS
-  BEECRYPT_ASM_TEXTSEG
-  BEECRYPT_ASM_GLOBL
-  BEECRYPT_ASM_GSYM_PREFIX
-  BEECRYPT_ASM_LSYM_PREFIX
-  BEECRYPT_ASM_ALIGN
+  BEE_ASM_DEFS
+  BEE_ASM_TEXTSEG
+  BEE_ASM_GLOBL
+  BEE_ASM_GSYM_PREFIX
+  BEE_ASM_LSYM_PREFIX
+  BEE_ASM_ALIGN
 fi
 
 # generate assembler source files from m4 files
-BEECRYPT_ASM_SOURCES
+BEE_ASM_SOURCES
 
 # Check for standard types and integers of specific sizes
-BEECRYPT_INT_TYPES
-BEECRYPT_CPU_BITS
+BEE_INT_TYPES
+BEE_CPU_BITS
 
 MAYBE_SUB=
 # MAYBE_LTLIB=
@@ -609,55 +657,40 @@ fi
 AC_SUBST([MAYBE_SUB])
 # AC_SUBST([MAYBE_LTLIB])
 
-# Check where to install the libraries
-bc_libalt=
-case $target_os in
-linux*)
-  case $bc_target_arch in
-  powerpc64 | s390x | x86_64)
-    bc_libalt="64"
-    ;;
-  esac
-  ;;
-esac
-AC_SUBST(LIBALT,$bc_libalt)
-
 # Generate output files.
 AC_CONFIG_FILES([
     Makefile
-    Doxyfile
     config.m4
+	include/Makefile
+	include/beecrypt/Doxyfile
+	include/beecrypt/c++/Doxyfile
     c++/Makefile
     c++/beeyond/Makefile
     c++/crypto/Makefile
-    c++/crypto/interfaces/Makefile
     c++/crypto/spec/Makefile
     c++/io/Makefile
-    c++/nio/Makefile
     c++/lang/Makefile
+    c++/math/Makefile
+    c++/nio/Makefile
     c++/provider/Makefile
     c++/security/Makefile
+	c++/security/auth/Makefile
     c++/security/cert/Makefile
-    c++/security/interfaces/Makefile
     c++/security/spec/Makefile
     c++/util/Makefile
+    c++/util/concurrent/Makefile
+    c++/util/concurrent/locks/Makefile
     docs/Makefile
     gas/Makefile
     java/Makefile
+    java/build.xml
     masm/Makefile
     python/Makefile
     python/test/Makefile
     tests/Makefile
   ])
+
 AC_CONFIG_FILES([gnu.h],[
-    if test $srcdir != "."; then
-      cp gnu.h $ac_top_srcdir/gnu.h
-    fi
-  ])
-AC_CONFIG_COMMANDS_POST([
-    if test -h "beecrypt"; then
-      rm -f beecrypt
-    fi
-    $LN_S $srcdir beecrypt
+    cp gnu.h $ac_top_srcdir/include/beecrypt/gnu.h
   ])
 AC_OUTPUT

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000, 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000, 2001, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
  * The IEEE P.1363 designation is:
  * Discrete Logarithm Secret Value Derivation Primitive, Diffie-Hellman style.
  *
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup DL_m DL_dh_m
  */
 

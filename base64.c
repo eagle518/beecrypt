@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file base64.c
  * \brief Base64 encoding and decoding.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  */
 
 #define BEECRYPT_DLL_EXPORT
@@ -244,69 +244,67 @@ const char * b64encode_eolstr = B64ENCODE_EOLSTR;
 
 char* b64encode(const void* data, size_t ns)
 {
-    static char b64enc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    const char *e;
-    const unsigned char *s = data;
-    unsigned char *t, *te;
-    int nt;
-    int lc;
-    unsigned c;
+	static char b64enc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	const char *e;
+	const unsigned char *s = data;
+	unsigned char *t, *te;
+	int nt;
+	int lc;
+	unsigned c;
 
-    if (s == NULL)	return NULL;
-    if (*s == '\0')	return calloc(1, sizeof(*t));
+	if (s == NULL) return NULL;
 
-    if (ns == 0) ns = strlen((const char*) s);
-    nt = ((ns + 2) / 3) * 4;
+	if (ns == 0) ns = strlen((const char*) s);
+	nt = ((ns + 2) / 3) * 4;
 
-    /* Add additional bytes necessary for eol string(s). */
-    if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
+	/* Add additional bytes necessary for eol string(s). */
+	if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
 	{
 		lc = (nt + b64encode_chars_per_line - 1) / b64encode_chars_per_line;
 		if (((nt + b64encode_chars_per_line - 1) % b64encode_chars_per_line) != 0)
 			++lc;
 		nt += lc * strlen(b64encode_eolstr);
-    }
-
-    t = te = malloc(nt + 1);
-
-    lc = 0;
-    if (te)
-    while (ns > 0)
-	{
-		c = *s++;
-		*te++ = b64enc[ (c >> 2) ], lc++;
-		*te++ = b64enc[ ((c & 0x3) << 4) | (*s >> 4) ], lc++;
-		if (--ns == 0)
-		{
-			*te++ = '=';
-			*te++ = '=';
-			continue;
-		}
-		c = *s++;
-		*te++ = b64enc[ ((c & 0xf) << 2) | (*s >> 6) ], lc++;
-		if (--ns == 0)
-		{
-			*te++ = '=';
-			continue;
-		}
-		*te++ = b64enc[ (int)(*s & 0x3f) ], lc++;
-
-		/* Append eol string if desired. */
-		if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
-		{
-			if (lc >= b64encode_chars_per_line)
-			{
-				for (e = b64encode_eolstr; *e != '\0'; e++)
-					*te++ = *e;
-				lc = 0;
-			}
-		}
-		s++;
-		--ns;
 	}
 
+	t = te = malloc(nt + 1);
+
+	lc = 0;
 	if (te)
 	{
+		while (ns > 0)
+		{
+			c = *s++;
+			*te++ = b64enc[ (c >> 2) ], lc++;
+			*te++ = b64enc[ ((c & 0x3) << 4) | (((ns-1) > 0 ? *s : 0) >> 4) ], lc++; 
+			if (--ns == 0)
+			{
+				*te++ = '=';
+				*te++ = '=';
+				continue;
+			}
+			c = *s++;
+			*te++ = b64enc[ ((c & 0xf) << 2) | (((ns-1) > 0 ? *s : 0) >> 6) ], lc++;
+			if (--ns == 0)
+			{
+				*te++ = '=';
+				continue;
+			}
+			*te++ = b64enc[ (int)(*s & 0x3f) ], lc++;
+
+			/* Append eol string if desired. */
+			if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
+			{
+				if (lc >= b64encode_chars_per_line)
+				{
+					for (e = b64encode_eolstr; *e != '\0'; e++)
+						*te++ = *e;
+					lc = 0;
+				}
+			}
+			s++;
+			--ns;
+		}
+
 		/* Append eol string if desired. */
 		if (b64encode_chars_per_line > 0 && b64encode_eolstr != NULL)
 		{
@@ -317,9 +315,9 @@ char* b64encode(const void* data, size_t ns)
 			}
 		}
 		*te = '\0';
-    }
+	}
 
-    return (char*) t;
+	return (char*) t;
 }
 
 #define CRC24_INIT 0xb704ceL
@@ -327,10 +325,10 @@ char* b64encode(const void* data, size_t ns)
 
 char* b64crc (const unsigned char* data, size_t ns)
 {
-    const unsigned char *s = data;
-    uint32_t crc = CRC24_INIT;
+	const unsigned char *s = data;
+	uint32_t crc = CRC24_INIT;
 
-    while (ns-- > 0)
+	while (ns-- > 0)
 	{
 		int i;
 		crc ^= (*s++) << 16;
@@ -340,14 +338,14 @@ char* b64crc (const unsigned char* data, size_t ns)
 			if (crc & 0x1000000)
 			crc ^= CRC24_POLY;
 		}
-    }
-    crc &= 0xffffff;
-    #if !WORDS_BIGENDIAN
-    crc = swapu32(crc);
-    #endif
-    data = (byte *)&crc;
-    data++;
-    ns = 3;
+	}
+	crc &= 0xffffff;
+	#if !WORDS_BIGENDIAN
+	crc = swapu32(crc);
+	#endif
+	data = (byte *)&crc;
+	data++;
+	ns = 3;
 
 	return b64encode(data, ns);
 }
@@ -362,22 +360,22 @@ int b64decode(const char* s, void** datap, size_t* lenp)
 	int ns, nt;
 	unsigned a, b, c, d;
 
-    if (s == NULL)	return 1;
+	if (s == NULL)	return 1;
 
-    /* Setup character lookup tables. */
-    memset(b64dec, 0x80, sizeof(b64dec));
-    for (c = 'A'; c <= 'Z'; c++)
+	/* Setup character lookup tables. */
+	memset(b64dec, 0x80, sizeof(b64dec));
+	for (c = 'A'; c <= 'Z'; c++)
 		b64dec[ c ] = 0 + (c - 'A');
-    for (c = 'a'; c <= 'z'; c++)
+	for (c = 'a'; c <= 'z'; c++)
 		b64dec[ c ] = 26 + (c - 'a');
-    for (c = '0'; c <= '9'; c++)
+	for (c = '0'; c <= '9'; c++)
 		b64dec[ c ] = 52 + (c - '0');
 	b64dec[(unsigned)'+'] = 62;
 	b64dec[(unsigned)'/'] = 63;
 	b64dec[(unsigned)'='] = 0;
 
-    /* Mark whitespace characters. */
-    if (b64decode_whitespace)
+	/* Mark whitespace characters. */
+	if (b64decode_whitespace)
 	{
 		const char *e;
 		for (e = b64decode_whitespace; *e != '\0'; e++)
@@ -385,11 +383,11 @@ int b64decode(const char* s, void** datap, size_t* lenp)
 			if (b64dec[ (unsigned)*e ] == 0x80)
 				b64dec[ (unsigned)*e ] = 0x81;
 		}
-    }
-    
-    /* Validate input buffer */
-    ns = 0;
-    for (t = (unsigned char*) s; *t != '\0'; t++)
+	}
+	
+	/* Validate input buffer */
+	ns = 0;
+	for (t = (unsigned char*) s; *t != '\0'; t++)
 	{
 		switch (b64dec[(unsigned) *t])
 		{
@@ -401,14 +399,14 @@ int b64decode(const char* s, void** datap, size_t* lenp)
 			ns++;
 			break;
 		}
-    }
-    
-    if (((unsigned) ns) & 0x3)	return 2;
+	}
+	
+	if (((unsigned) ns) & 0x3)	return 2;
 
-    nt = (ns / 4) * 3;
-    t = te = malloc(nt + 1);
+	nt = (ns / 4) * 3;
+	t = te = malloc(nt + 1);
 
-    while (ns > 0)
+	while (ns > 0)
 	{
 		/* Get next 4 characters, ignoring whitespace. */
 		while ((a = b64dec[ (unsigned)*s++ ]) == 0x81)
@@ -426,20 +424,20 @@ int b64decode(const char* s, void** datap, size_t* lenp)
 		*te++ = (b << 4) | (c >> 2);
 		if (s[-1] == '=') break;
 		*te++ = (c << 6) | d;
-    }
+	}
 
-    if (ns != 0)
+	if (ns != 0)
 	{	/* XXX can't happen, just in case */
 		if (t) free((void *)t);
 		return 1;
-    }
-    if (lenp)
+	}
+	if (lenp)
 		*lenp = (te - t);
 
-    if (datap)
+	if (datap)
 		*datap = (void *)t;
-    else
+	else
 		if (t) free((void *)t);
 
-    return 0;
+	return 0;
 }

@@ -2,7 +2,7 @@ dnl  mpopt.x86.m4
 dnl
 dnl  Copyright (c) 2003 Bob Deblier
 dnl 
-dnl  Author: Bob Deblier <bob.deblier@pandora.be>
+dnl  Author: Bob Deblier <bob.deblier@telenet.be>
 dnl 
 dnl  This library is free software; you can redistribute it and/or
 dnl  modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ C_FUNCTION_BEGIN(mpzero)
 	movl 12(%esp),%edi
 
 	xorl %eax,%eax
-	repz; stosl
+	rep; stosl
 
 	popl %edi
 	ret
@@ -44,7 +44,7 @@ C_FUNCTION_BEGIN(mpfill)
 	movl 12(%esp),%edi
 	movl 16(%esp),%eax
 
-	repz; stosl
+	rep; stosl
 
 	popl %edi
 	ret
@@ -122,6 +122,7 @@ LOCAL(mpsubw_loop):
 LOCAL(mpsubw_skip):
 	sbbl %eax,%eax
 	negl %eax
+
 	popl %edi
 	ret
 C_FUNCTION_END(mpsubw)

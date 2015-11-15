@@ -38,10 +38,6 @@ PKCS1RSASignature::PKCS1RSASignature(const hashFunction* hf) : _hfc(hf)
 {
 }
 
-PKCS1RSASignature::~PKCS1RSASignature()
-{
-}
-
 AlgorithmParameters* PKCS1RSASignature::engineGetParameters() const
 {
 	return 0;
@@ -55,22 +51,20 @@ void PKCS1RSASignature::engineSetParameter(const AlgorithmParameterSpec& spec) t
 void PKCS1RSASignature::engineInitSign(const PrivateKey& key, SecureRandom* random) throw (InvalidKeyException)
 {
 	const RSAPrivateKey* rsa = dynamic_cast<const RSAPrivateKey*>(&key);
-
 	if (rsa)
 	{
 		/* copy key information */
-		_pair.n = rsa->getModulus();
-		_pair.d = rsa->getPrivateExponent();
+		transform(_pair.n, rsa->getModulus());
+		transform(_pair.d, rsa->getPrivateExponent());
 
 		const RSAPrivateCrtKey* crt = dynamic_cast<const RSAPrivateCrtKey*>(rsa);
-
 		if (crt)
 		{
-			_pair.p = crt->getPrimeP();
-			_pair.q = crt->getPrimeQ();
-			_pair.dp = crt->getPrimeExponentP();
-			_pair.dq = crt->getPrimeExponentQ();
-			_pair.qi = crt->getCrtCoefficient();
+			transform(_pair.p, crt->getPrimeP());
+			transform(_pair.q, crt->getPrimeQ());
+			transform(_pair.dp, crt->getPrimeExponentP());
+			transform(_pair.dq, crt->getPrimeExponentQ());
+			transform(_pair.qi, crt->getCrtCoefficient());
 			_crt = true;
 		}
 		else
@@ -88,12 +82,11 @@ void PKCS1RSASignature::engineInitSign(const PrivateKey& key, SecureRandom* rand
 void PKCS1RSASignature::engineInitVerify(const PublicKey& key) throw (InvalidKeyException)
 {
 	const RSAPublicKey* rsa = dynamic_cast<const RSAPublicKey*>(&key);
-
 	if (rsa)
 	{
 		/* copy key information */
-		_pair.n = rsa->getModulus();
-		_pair.e = rsa->getPublicExponent();
+		transform(_pair.n, rsa->getModulus());
+		transform(_pair.e, rsa->getPublicExponent());
 
 		/* reset the hash function */
 		hashFunctionContextReset(&_hfc);
@@ -109,14 +102,14 @@ void PKCS1RSASignature::engineUpdate(byte b)
 	hashFunctionContextUpdate(&_hfc, &b, 1);
 }
 
-void PKCS1RSASignature::engineUpdate(const byte* data, size_t offset, size_t len)
+void PKCS1RSASignature::engineUpdate(const byte* data, int offset, int len)
 {
 	hashFunctionContextUpdate(&_hfc, data+offset, len);
 }
 
 bytearray* PKCS1RSASignature::engineSign() throw (SignatureException)
 {
-	size_t sigsize = (_pair.n.bitlength()+7) >> 3;
+	int sigsize = (_pair.n.bitlength()+7) >> 3;
 
 	bytearray* signature = new bytearray(sigsize);
 
@@ -125,12 +118,12 @@ bytearray* PKCS1RSASignature::engineSign() throw (SignatureException)
 	return signature;
 }
 
-size_t PKCS1RSASignature::engineSign(byte* signature, size_t offset, size_t len) throw (ShortBufferException, SignatureException)
+int PKCS1RSASignature::engineSign(byte* signature, int offset, int len) throw (ShortBufferException, SignatureException)
 {
 	if (!signature)
 		throw NullPointerException();
 
-	size_t sigsize = (_pair.n.bitlength()+7) >> 3;
+	int sigsize = (_pair.n.bitlength()+7) >> 3;
 
 	/* test if we have enough space in output buffer */
 	if (sigsize > (len - offset))
@@ -162,21 +155,21 @@ size_t PKCS1RSASignature::engineSign(byte* signature, size_t offset, size_t len)
 	return sigsize;
 }
 
-size_t PKCS1RSASignature::engineSign(bytearray& signature) throw (SignatureException)
+int PKCS1RSASignature::engineSign(bytearray& signature) throw (SignatureException)
 {
-	size_t sigsize = (_pair.n.bitlength()+7) >> 3;
+	int sigsize = (_pair.n.bitlength()+7) >> 3;
 
 	signature.resize(sigsize);
 
 	return engineSign(signature.data(), 0, signature.size());
 }
 
-bool PKCS1RSASignature::engineVerify(const byte* signature, size_t offset, size_t len) throw (SignatureException)
+bool PKCS1RSASignature::engineVerify(const byte* signature, int offset, int len) throw (SignatureException)
 {
 	if (!signature)
 		throw NullPointerException();
 
-	size_t sigsize = (_pair.n.bitlength()+7) >> 3;
+	int sigsize = (_pair.n.bitlength()+7) >> 3;
 
 	/* test if we have enough data in signature */
 	if (sigsize > (len - offset))
@@ -192,5 +185,5 @@ bool PKCS1RSASignature::engineVerify(const byte* signature, size_t offset, size_
 	mpnsetbin(&c, em.data(), sigsize);
 	mpnsetbin(&m, signature+offset, sigsize);
 
-	return rsavrfy(&_pair.n, &_pair.e, &m, &c);
+	return rsavrfy(&_pair.n, &_pair.e, &m, &c) > 0;
 }

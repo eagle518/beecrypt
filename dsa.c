@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2001, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

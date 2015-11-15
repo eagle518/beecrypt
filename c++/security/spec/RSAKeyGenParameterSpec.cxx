@@ -26,25 +26,21 @@
 
 using namespace beecrypt::security::spec;
 
-const mpnumber RSAKeyGenParameterSpec::F0(3);
-const mpnumber RSAKeyGenParameterSpec::F4(65537);
+const BigInteger RSAKeyGenParameterSpec::F0(3);
+const BigInteger RSAKeyGenParameterSpec::F4(65537);
 
-RSAKeyGenParameterSpec::RSAKeyGenParameterSpec(size_t keysize, const mpnumber& publicExponent)
+RSAKeyGenParameterSpec::RSAKeyGenParameterSpec(int keysize, const BigInteger& publicExponent)
 {
 	_keysize = keysize;
 	_e = publicExponent;
 }
 
-RSAKeyGenParameterSpec::~RSAKeyGenParameterSpec()
-{
-}
-
-size_t RSAKeyGenParameterSpec::getKeysize() const throw ()
+int RSAKeyGenParameterSpec::getKeysize() const throw ()
 {
 	return _keysize;
 }
 
-const mpnumber& RSAKeyGenParameterSpec::getPublicExponent() const throw ()
+const BigInteger& RSAKeyGenParameterSpec::getPublicExponent() const throw ()
 {
 	return _e;
 }

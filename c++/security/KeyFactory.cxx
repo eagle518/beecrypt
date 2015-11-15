@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/KeyFactory.h"
 #include "beecrypt/c++/security/Security.h"
 
@@ -47,9 +43,7 @@ KeyFactory* KeyFactory::getInstance(const String& algorithm) throw (NoSuchAlgori
 {
     Security::spi* tmp = Security::getSpi(algorithm, "KeyFactory");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyFactorySpi*>(tmp->cspi));
-	#endif
 
     KeyFactory* result = new KeyFactory(reinterpret_cast<KeyFactorySpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -62,9 +56,7 @@ KeyFactory* KeyFactory::getInstance(const String& algorithm, const String& provi
 {
     Security::spi* tmp = Security::getSpi(algorithm, "KeyFactory", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyFactorySpi*>(tmp->cspi));
-	#endif
 
     KeyFactory* result = new KeyFactory(reinterpret_cast<KeyFactorySpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -77,9 +69,7 @@ KeyFactory* KeyFactory::getInstance(const String& algorithm, const Provider& pro
 {
     Security::spi* tmp = Security::getSpi(algorithm, "KeyFactory", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyFactorySpi*>(tmp->cspi));
-	#endif
 
     KeyFactory* result = new KeyFactory(reinterpret_cast<KeyFactorySpi*>(tmp->cspi), tmp->prov, tmp->name);
 

@@ -20,24 +20,23 @@
 # include "config.h"
 #endif
 
-#include "c++/bstream.h"
-#include "c++/beeyond/BeeCertificate.h"
+#include "beecrypt/c++/beeyond/BeeCertificate.h"
 using beecrypt::beeyond::BeeCertificate;
-#include "c++/io/ByteArrayInputStream.h"
+#include "beecrypt/c++/io/ByteArrayInputStream.h"
 using beecrypt::io::ByteArrayInputStream;
-#include "c++/security/AlgorithmParameterGenerator.h"
+#include "beecrypt/c++/security/AlgorithmParameterGenerator.h"
 using beecrypt::security::AlgorithmParameterGenerator;
-#include "c++/security/AlgorithmParameters.h"
+#include "beecrypt/c++/security/AlgorithmParameters.h"
 using beecrypt::security::AlgorithmParameters;
-#include "c++/security/KeyFactory.h"
+#include "beecrypt/c++/security/KeyFactory.h"
 using beecrypt::security::KeyFactory;
-#include "c++/security/KeyPairGenerator.h"
+#include "beecrypt/c++/security/KeyPairGenerator.h"
 using beecrypt::security::KeyPairGenerator;
-#include "c++/security/Signature.h"
+#include "beecrypt/c++/security/Signature.h"
 using beecrypt::security::Signature;
-#include "c++/security/cert/CertificateFactory.h"
+#include "beecrypt/c++/security/cert/CertificateFactory.h"
 using beecrypt::security::cert::CertificateFactory;
-#include "c++/security/spec/EncodedKeySpec.h"
+#include "beecrypt/c++/security/spec/EncodedKeySpec.h"
 using beecrypt::security::spec::EncodedKeySpec;
 
 #include <iostream>
@@ -50,13 +49,13 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		KeyPairGenerator* kpg = KeyPairGenerator::getInstance("DSA");
+		KeyPairGenerator* kpg = KeyPairGenerator::getInstance("RSA");
 
 		kpg->initialize(1024);
 
 		KeyPair* pair = kpg->generateKeyPair();
 
-		BeeCertificate* self = BeeCertificate::self(pair->getPublic(), pair->getPrivate(), "SHA1withDSA");
+		BeeCertificate* self = BeeCertificate::self(pair->getPublic(), pair->getPrivate(), "SHA1withRSA");
 
 		ByteArrayInputStream bis(self->getEncoded());
 
@@ -66,7 +65,7 @@ int main(int argc, char* argv[])
 
 		cert->verify(pair->getPublic());
 
-		if (!cert->equals(*self))
+		if (!cert->equals(self))
 		{
 			std::cout << "cloned certificate differs" << std::endl;
 			failures++;
@@ -80,7 +79,6 @@ int main(int argc, char* argv[])
 	}
 	catch (Exception& ex)
 	{
-		std::cerr << "exception: " << ex.getMessage();
 		std::cerr << " type " << typeid(ex).name() << std::endl;
 		failures++;
 	}

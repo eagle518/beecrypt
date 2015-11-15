@@ -33,25 +33,24 @@ Certificate::Certificate(const String& type)
 	_type = type;
 }
 
-Certificate::~Certificate()
+bool Certificate::equals(const Object* obj) const throw ()
 {
-}
-
-bool Certificate::equals(const Object& compare) const throw ()
-{
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const Certificate* c = dynamic_cast<const Certificate*>(&compare);
-	if (c)
+	if (obj)
 	{
-		if (_type != c->_type)
-			return false;
+		const Certificate* c = dynamic_cast<const Certificate*>(obj);
+		if (c)
+		{
+			if (!_type.equals(&c->_type))
+				return false;
 
-		if (getEncoded() != c->getEncoded())
-			return false;
+			if (getEncoded() != c->getEncoded())
+				return false;
 
-		return true;
+			return true;
+		}
 	}
 	return false;
 }

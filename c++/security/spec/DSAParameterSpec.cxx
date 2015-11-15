@@ -33,28 +33,24 @@ DSAParameterSpec::DSAParameterSpec(const DSAParams& copy)
 	_g = copy.getG();
 }
 
-DSAParameterSpec::DSAParameterSpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g)
+DSAParameterSpec::DSAParameterSpec(const BigInteger& p, const BigInteger& q, const BigInteger& g)
 {
 	_p = p;
 	_q = q;
 	_g = g;
 }
 
-DSAParameterSpec::~DSAParameterSpec()
-{
-}
-
-const mpbarrett& DSAParameterSpec::getP() const throw ()
+const BigInteger& DSAParameterSpec::getP() const throw ()
 {
 	return _p;
 }
 
-const mpbarrett& DSAParameterSpec::getQ() const throw ()
+const BigInteger& DSAParameterSpec::getQ() const throw ()
 {
 	return _q;
 }
 
-const mpnumber& DSAParameterSpec::getG() const throw ()
+const BigInteger& DSAParameterSpec::getG() const throw ()
 {
 	return _g;
 }

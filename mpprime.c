@@ -19,7 +19,7 @@
 
 /*!\file mpprime.c
  * \brief Multi-precision primes.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup MP_m
  */
 
@@ -777,10 +777,10 @@ int mppsppdiv_w(const mpbarrett* p, mpw* wksp)
 /*
  * needs workspace of (5*size+2)
  */
-int mppmilrabtwo_w(const mpbarrett* p, int s, const mpw* rdata, const mpw* ndata, mpw* wksp)
+int mppmilrabtwo_w(const mpbarrett* p, size_t s, const mpw* rdata, const mpw* ndata, mpw* wksp)
 {
 	register size_t size = p->size;
-	register int j = 0;
+	register size_t j = 0;
 
 	mpbtwopowmod_w(p, size, rdata, wksp, wksp+size);
 
@@ -802,10 +802,10 @@ int mppmilrabtwo_w(const mpbarrett* p, int s, const mpw* rdata, const mpw* ndata
 /*
  * needs workspace of (5*size+2) words
  */
-int mppmilraba_w(const mpbarrett* p, const mpw* adata, int s, const mpw* rdata, const mpw* ndata, mpw* wksp)
+int mppmilraba_w(const mpbarrett* p, const mpw* adata, size_t s, const mpw* rdata, const mpw* ndata, mpw* wksp)
 {
 	register size_t size = p->size;
-	register int j = 0;
+	register size_t j = 0;
 
 	mpbpowmod_w(p, size, adata, size, rdata, wksp, wksp+size);
 
@@ -848,7 +848,7 @@ int mppmilrab_w(const mpbarrett* p, randomGeneratorContext* rc, int t, mpw* wksp
 	register mpw* rdata = ndata+size;
 	register mpw* adata = rdata+size;
 
-	int s;
+	size_t s;
 
 	mpcopy(size, ndata, p->modl);
 	mpsubw(size, ndata, 1);

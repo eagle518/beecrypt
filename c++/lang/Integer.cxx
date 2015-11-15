@@ -28,20 +28,12 @@ using beecrypt::lang::String;
 
 #include <unicode/numfmt.h>
 
-namespace {
-	#if WIN32
-	__declspec(thread) String* result = 0;
-	#else
-	__thread String* result = 0;
-	#endif
-};
-
 using namespace beecrypt::lang;
 
-const javaint Integer::MIN_VALUE = (((javaint) 1) << 31);
-const javaint Integer::MAX_VALUE = ~MIN_VALUE;
+const jint Integer::MIN_VALUE = (((jint) 1) << 31);
+const jint Integer::MAX_VALUE = ~MIN_VALUE;
 
-const String& Integer::toString(javaint i) throw ()
+String Integer::toString(jint i) throw ()
 {
 	char tmp[12];
 
@@ -51,15 +43,10 @@ const String& Integer::toString(javaint i) throw ()
 	sprintf(tmp, "%ld", i);
 	#endif
 
-	if (result)
-		delete result;
-
-	result = new String(tmp);
-
-	return *result;
+	return String(tmp);
 }
 
-const String& Integer::toHexString(javaint i) throw ()
+String Integer::toHexString(jint i) throw ()
 {
 	char tmp[10];
 
@@ -69,15 +56,10 @@ const String& Integer::toHexString(javaint i) throw ()
 	sprintf(tmp, "%lx", i);
 	#endif
 
-	if (result)
-		delete result;
-
-	result = new String(tmp);
-
-	return *result;
+	return String(tmp);
 }
 
-const String& Integer::toOctalString(javaint i) throw ()
+String Integer::toOctalString(jint i) throw ()
 {
 	char tmp[13];
 
@@ -87,15 +69,10 @@ const String& Integer::toOctalString(javaint i) throw ()
 	sprintf(tmp, "%lo", i);
 	#endif
 
-	if (result)
-		delete result;
-
-	result = new String(tmp);
-
-	return *result;
+	return String(tmp);
 }
 
-javaint Integer::parseInteger(const String& s) throw (NumberFormatException)
+jint Integer::parseInteger(const String& s) throw (NumberFormatException)
 {
 	UErrorCode status = U_ZERO_ERROR;
 
@@ -105,12 +82,12 @@ javaint Integer::parseInteger(const String& s) throw (NumberFormatException)
 	{
 		Formattable fmt((int32_t) 0);
 
-		nf->parse(s, fmt, status);
+		nf->parse(s.toUnicodeString(), fmt, status);
 
 		delete nf;
 
 		if (U_FAILURE(status))
-			throw NumberFormatException("unable to parse string to javaint value");
+			throw NumberFormatException("unable to parse string to jint value");
 
 		return fmt.getLong();
 	}
@@ -118,37 +95,40 @@ javaint Integer::parseInteger(const String& s) throw (NumberFormatException)
 		throw RuntimeException("unable to create ICU NumberFormat instance");
 }
 
-Integer::Integer(javaint value)
+Integer::Integer(jint value) throw () : _val(value)
 {
-	_val = value;
 }
 
-Integer::Integer(const String& s) throw (NumberFormatException)
+Integer::Integer(const String& s) throw (NumberFormatException) : _val(parseInteger(s))
 {
-	_val = parseInteger(s);
 }
 
-javabyte Integer::byteValue() const throw ()
-{
-	return (javabyte) _val;
-}
-
-javashort Integer::shortValue() const throw ()
-{
-	return (javashort) _val;
-}
-
-javaint Integer::intValue() const throw ()
+jint Integer::hashCode() const throw ()
 {
 	return _val;
 }
 
-javalong Integer::longValue() const throw ()
+jbyte Integer::byteValue() const throw ()
 {
-	return (javalong) _val;
+	return (jbyte) _val;
 }
 
-int Integer::compareTo(const Integer& i) const throw ()
+jshort Integer::shortValue() const throw ()
+{
+	return (jshort) _val;
+}
+
+jint Integer::intValue() const throw ()
+{
+	return _val;
+}
+
+jlong Integer::longValue() const throw ()
+{
+	return (jlong) _val;
+}
+
+jint Integer::compareTo(const Integer& i) const throw ()
 {
 	if (_val == i._val)
 		return 0;
@@ -156,4 +136,17 @@ int Integer::compareTo(const Integer& i) const throw ()
 		return -1;
 	else
 		return 1;
+}
+
+String Integer::toString() const throw ()
+{
+	char tmp[12];
+
+	#if SIZE_LONG == 4
+	sprintf(tmp, "%d", _val);
+	#else
+	sprintf(tmp, "%ld", _val);
+	#endif
+
+	return String(tmp);
 }

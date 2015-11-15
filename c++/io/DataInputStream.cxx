@@ -63,7 +63,7 @@ DataInputStream::~DataInputStream()
 
 bool DataInputStream::readBoolean() throw (IOException)
 {
-	register int b = _pin->read();
+	register jint b = _pin->read();
 
 	if (b < 0)
 		throw EOFException();
@@ -71,19 +71,19 @@ bool DataInputStream::readBoolean() throw (IOException)
 	return (b != 0);
 }
 
-javabyte DataInputStream::readByte() throw (IOException)
+jbyte DataInputStream::readByte() throw (IOException)
 {
-	register int b = _pin->read();
+	register jint b = _pin->read();
 
 	if (b < 0)
 		throw EOFException();
 
-	return static_cast<javabyte>(b);
+	return static_cast<jbyte>(b);
 }
 
-int DataInputStream::readUnsignedByte() throw (IOException)
+jint DataInputStream::readUnsignedByte() throw (IOException)
 {
-	register int b = _pin->read();
+	register jint b = _pin->read();
 
 	if (b < 0)
 		throw EOFException();
@@ -91,10 +91,10 @@ int DataInputStream::readUnsignedByte() throw (IOException)
 	return b;
 }
 
-javashort DataInputStream::readShort() throw (IOException)
+jshort DataInputStream::readShort() throw (IOException)
 {
-	register javashort tmp = 0;
-	register int rc;
+	register jshort tmp = 0;
+	register jint rc;
 
 	for (register unsigned i = 0; i < 2; i++)
 	{
@@ -107,9 +107,9 @@ javashort DataInputStream::readShort() throw (IOException)
 	return tmp;
 }
 
-int DataInputStream::readUnsignedShort() throw (IOException)
+jint DataInputStream::readUnsignedShort() throw (IOException)
 {
-	register int tmp = 0, rc;
+	register jint tmp = 0, rc;
 
 	for (register unsigned i = 0; i < 2; i++)
 	{
@@ -122,10 +122,10 @@ int DataInputStream::readUnsignedShort() throw (IOException)
 	return tmp;
 }
 
-javachar DataInputStream::readChar() throw (IOException)
+jchar DataInputStream::readChar() throw (IOException)
 {
-	register javachar tmp = 0;
-	register int rc;
+	register jchar tmp = 0;
+	register jint rc;
 
 	for (register unsigned i = 0; i < 2; i++)
 	{
@@ -138,10 +138,10 @@ javachar DataInputStream::readChar() throw (IOException)
 	return tmp;
 }
 
-javaint DataInputStream::readInt() throw (IOException)
+jint DataInputStream::readInt() throw (IOException)
 {
-	register javaint tmp = 0;
-	register int rc;
+	register jint tmp = 0;
+	register jint rc;
 
 	for (register unsigned i = 0; i < 4; i++)
 	{
@@ -154,10 +154,10 @@ javaint DataInputStream::readInt() throw (IOException)
 	return tmp;
 }
 
-javalong DataInputStream::readLong() throw (IOException)
+jlong DataInputStream::readLong() throw (IOException)
 {
-	register javalong tmp = 0;
-	register int rc;
+	register jlong tmp = 0;
+	register jint rc;
 
 	for (register unsigned i = 0; i < 8; i++)
 	{
@@ -170,7 +170,7 @@ javalong DataInputStream::readLong() throw (IOException)
 	return tmp;
 }
 
-void DataInputStream::readUTF(String& str) throw (IOException)
+String DataInputStream::readUTF() throw (IOException)
 {
 	UErrorCode status = U_ZERO_ERROR;
 
@@ -182,7 +182,7 @@ void DataInputStream::readUTF(String& str) throw (IOException)
 			throw IOException("unable to open ICU UTF-8 converter");
 	}
 
-	int utflen = readUnsignedShort();
+	jint utflen = readUnsignedShort();
 
 	if (utflen > 0)
 	{
@@ -191,63 +191,34 @@ void DataInputStream::readUTF(String& str) throw (IOException)
 		readFully(data, 0, utflen);
 
 		status = U_ZERO_ERROR;
-		size_t ulen = ucnv_toUChars(_utf, 0, 0, (const char*) data, (size_t) utflen, &status);
+		jint ulen = ucnv_toUChars(_utf, 0, 0, (const char*) data, (jint) utflen, &status);
 		if (status != U_BUFFER_OVERFLOW_ERROR)
 		{
 			delete[] data;
-			throw "error in ucnv_toUChars";
+			throw IOException("ucnv_toUChars failed");
 		}
 
-		UChar* buffer = str.getBuffer(ulen+1);
+		jchar* buffer = new jchar[ulen+1];
 
-		if (buffer)
-		{
-			status = U_ZERO_ERROR;
-			ucnv_toUChars(_utf, buffer, ulen+1, (const char*) data, (size_t) utflen, &status);
+		status = U_ZERO_ERROR;
+		ucnv_toUChars(_utf, buffer, ulen+1, (const char*) data, (jint) utflen, &status);
 
-			delete[] data;
+		delete[] data;
 
-			if (status != U_ZERO_ERROR)
-				throw "error in ucnv_toUChars";
+		if (status != U_ZERO_ERROR)
+			throw IOException("error in ucnv_toUChars");
 
-			str.releaseBuffer(ulen);
-		}
-		else
-		{
-			delete[] data;
-			throw "error in String::getBuffer(size_t)";
-		}
+		String result(buffer, 0, ulen);
+
+		delete[] buffer;
+
+		return result;
 	}
+	else
+		return String();
 }
 
-String* DataInputStream::readUTF() throw (IOException)
-{
-	String* str = new String();
-
-	try
-	{
-		readUTF(*str);
-	}
-	catch (IOException ex)
-	{
-		/* cleanup str */
-		delete str;
-		/* re-throw exception */
-		throw ex;
-	}
-	return str;
-}
-
-String* DataInputStream::readLine() throw (IOException)
-{
-	String* result = new String();
-
-	readLine(*result);
-
-	return result;
-}
-
-void DataInputStream::readLine(String& line) throw (IOException)
+String DataInputStream::readLine() throw (IOException)
 {
 	UErrorCode status = U_ZERO_ERROR;
 
@@ -259,19 +230,17 @@ void DataInputStream::readLine(String& line) throw (IOException)
 			throw IOException("unable to open ICU default locale converter");
 	}
 
-	      UChar  target_buffer[1];
-	      UChar* target = target_buffer;
-	const UChar* target_limit = target_buffer+1;
+	array<jchar> target_buffer(80);
+	jint         target_offset = 0;
+	      UChar* target = target_buffer.data();
+	const UChar* target_limit = target+1;
 	      char  source_buffer[MAX_BYTES_PER_CHARACTER];
 	const char* source = source_buffer;
 	      char* source_limit = source_buffer;
 
 	bool cr = false;
 
-	int ch;
-
-	// clear the line
-	line.remove();
+	jint ch;
 
 	do
 	{
@@ -285,12 +254,10 @@ void DataInputStream::readLine(String& line) throw (IOException)
 			*(source_limit++) = (byte) ch;
 		}
 
-		status = U_ZERO_ERROR;
 		// use the default locale converter; flush if ch == -1
 		ucnv_toUnicode(_loc, &target, target_limit, &source, source_limit, NULL, (UBool) (ch == -1), &status);
-
 		if (U_FAILURE(status))
-			throw IOException("error in ucnv_toUnicode");
+			throw IOException("ucnv_toUnicode failed");
 
 		if (target == target_limit)
 		{
@@ -298,7 +265,7 @@ void DataInputStream::readLine(String& line) throw (IOException)
 			if (cr)
 			{
 				// last character read was ASCII <CR>; is this one a <LF>?
-				if (target_buffer[0] != 0x0A)
+				if (target[-1] != 0x0A)
 				{
 					// unread the right number of bytes 
 					PushbackInputStream* p = dynamic_cast<PushbackInputStream*>(_pin);
@@ -312,11 +279,11 @@ void DataInputStream::readLine(String& line) throw (IOException)
 			}
 
 			// did we get an ASCII <LF>?
-			if (target_buffer[0] == 0x0A)
+			if (target[-1] == 0x0A)
 				break;
 
 			// did we get an ASCII <CR>?
-			if (target_buffer[0] == 0x0D)
+			if (target[-1] == 0x0D)
 			{
 				cr = true;
 
@@ -330,24 +297,34 @@ void DataInputStream::readLine(String& line) throw (IOException)
 			}
 			else
 			{
-				// append character to string and reset pointers
+				// reset source pointers
 				source = source_limit = source_buffer;
-				line.append(*(target = target_buffer));
+				// advance target_limit and target_offset
+				target_limit++;
+				target_offset++;
+				// check if we have room left in the buffer
+				if (target_offset == target_buffer.size())
+				{
+					// no; double the size
+					target_buffer.resize(target_buffer.size() * 2);
+				}
 			}
 		}
 	} while (ch >= 0);
+
+	return String(target_buffer.data(), 0, target_offset);
 }
 
-void DataInputStream::readFully(byte* data, size_t offset, size_t length) throw (IOException)
+void DataInputStream::readFully(byte* data, jint offset, jint length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();
 
-	size_t total = 0;
+	jint total = 0;
 
 	while (total < length)
 	{
-		int rc = _pin->read(data, offset+total, length-total);
+		jint rc = _pin->read(data, offset+total, length-total);
 		if (rc < 0)
 			throw EOFException();
 		total += rc;
@@ -359,9 +336,9 @@ void DataInputStream::readFully(bytearray& b) throw (IOException)
 	readFully(b.data(), 0, b.size());
 }
 
-off_t DataInputStream::skipBytes(off_t n) throw (IOException)
+jint DataInputStream::skipBytes(jint n) throw (IOException)
 {
-	off_t total = 0, rc;
+	jint total = 0, rc;
 
 	while ((total < n) && ((rc = _pin->skip(n - total)) > 0))
 		total += rc;

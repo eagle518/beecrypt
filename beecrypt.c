@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000, 2001, 2002, 2004 Beeyond Software Holding BV
+ * Copyright (c) 1999, 2000, 2001, 2002, 2004 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
 
 /*!\file beecrypt.c
  * \brief BeeCrypt API.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup ES_m PRNG_m HASH_m HMAC_m BC_m
  */
 
@@ -35,14 +35,21 @@
 #include "beecrypt/fips186.h"
 #include "beecrypt/mtprng.h"
 
+#include "beecrypt/md4.h"
 #include "beecrypt/md5.h"
+#include "beecrypt/ripemd128.h"
+#include "beecrypt/ripemd160.h"
+#include "beecrypt/ripemd256.h"
+#include "beecrypt/ripemd320.h"
 #include "beecrypt/sha1.h"
+#include "beecrypt/sha224.h"
 #include "beecrypt/sha256.h"
 #include "beecrypt/sha384.h"
 #include "beecrypt/sha512.h"
 
 #include "beecrypt/hmacmd5.h"
 #include "beecrypt/hmacsha1.h"
+#include "beecrypt/hmacsha224.h"
 #include "beecrypt/hmacsha256.h"
 #include "beecrypt/hmacsha384.h"
 #include "beecrypt/hmacsha512.h"
@@ -244,8 +251,14 @@ int randomGeneratorContextSeed(randomGeneratorContext* ctxt, const byte* data, s
 
 static const hashFunction* hashFunctionList[] =
 {
+	&md4,
 	&md5,
+	&ripemd128,
+	&ripemd160,
+	&ripemd256,
+	&ripemd320,
 	&sha1,
+	&sha224,
 	&sha256,
 	&sha384,
 	&sha512
@@ -384,13 +397,13 @@ int hashFunctionContextUpdateMP(hashFunctionContext* ctxt, const mpnumber* n)
 		int rc;
 
 		/* get the number of significant bits in the number */
-		size_t sig = mpbits(n->size, n->data);
+		size_t sigbits = mpbits(n->size, n->data);
 
 		/* calculate how many bytes we need for a java-style encoding;
 		 * if the most significant bit of the most significant byte
 		 * is set, then we need to prefix a zero byte.
 		 */
-		size_t req = ((sig+7) >> 3) + (((sig&7) == 0) ? 1 : 0);
+		size_t req = ((sigbits+8) >> 3);
 
 		byte* tmp = (byte*) malloc(req);
 
@@ -480,6 +493,7 @@ static const keyedHashFunction* keyedHashFunctionList[] =
 {
 	&hmacmd5,
 	&hmacsha1,
+	&hmacsha224,
 	&hmacsha256,
 	&hmacsha384,
 	&hmacsha512
@@ -638,13 +652,13 @@ int keyedHashFunctionContextUpdateMP(keyedHashFunctionContext* ctxt, const mpnum
 		int rc;
 
 		/* get the number of significant bits in the number */
-		size_t sig = mpbits(n->size, n->data);
+		size_t sigbits = mpbits(n->size, n->data);
 
 		/* calculate how many bytes we need a java-style encoding; if the
 		 * most significant bit of the most significant byte is set, then
 		 * we need to prefix a zero byte.
 		 */
-		size_t req = ((sig+7) >> 3) + (((sig&7) == 0) ? 1 : 0);
+		size_t req = ((sigbits+8) >> 3);
 
 		byte* tmp = (byte*) malloc(req);
 
@@ -827,6 +841,20 @@ int blockCipherContextSetIV(blockCipherContext* ctxt, const byte* iv)
 	return ctxt->algo->setiv(ctxt->param, iv);
 }
 
+int blockCipherContextSetCTR(blockCipherContext* ctxt, const byte* nivz, size_t counter)
+{
+	if (ctxt == (blockCipherContext*) 0)
+		return -1;
+
+	if (ctxt->algo == (blockCipher*) 0)
+		return -1;
+
+	if (ctxt->param == (blockCipherParam*) 0)
+		return -1;
+
+	return ctxt->algo->setctr(ctxt->param, nivz, counter);
+}
+
 int blockCipherContextFree(blockCipherContext* ctxt)
 {
 	if (ctxt == (blockCipherContext*) 0)
@@ -890,6 +918,22 @@ int blockCipherContextCBC(blockCipherContext* ctxt, uint32_t* dst, const uint32_
 		return (ctxt->algo->cbc.decrypt) ?
 			ctxt->algo->cbc.decrypt(ctxt->param, dst, src, nblocks) :
 			blockDecryptCBC(ctxt->algo, ctxt->param, dst, src, nblocks);
+	}
+	return -1;
+}
+
+int blockCipherContextCTR(blockCipherContext* ctxt, uint32_t* dst, const uint32_t* src, int nblocks)
+{
+	switch (ctxt->op)
+	{
+	case NOCRYPT:
+		memcpy(dst, src, nblocks * ctxt->algo->blocksize);
+		return 0;
+	case ENCRYPT:
+	case DECRYPT: /* encrypt and decrypt are the same operation in ctr mode */
+		return (ctxt->algo->ctr.encrypt) ? 
+			ctxt->algo->ctr.encrypt(ctxt->param, dst, src, nblocks) :
+			blockEncryptCTR(ctxt->algo, ctxt->param, dst, src, nblocks);
 	}
 	return -1;
 }

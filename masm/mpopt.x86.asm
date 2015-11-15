@@ -86,17 +86,17 @@ mpaddw proc c export
 	mov edi,dword ptr [esp+12]
 	mov eax,dword ptr [esp+16]
 
+	xor edx,edx
 	lea edi,dword ptr [edi+ecx*4-4]
 	add dword ptr [edi],eax
 	dec ecx
 	jz @mpaddw_end
-	sub edi,4
-	xor edx,edx
+	lea edi, dword ptr[edi-4]
 
 	align 4
 @mpaddw_loop:
 	adc dword ptr [edi],edx
-	sub edi,4
+	lea edi, dword ptr[edi-4]
 	dec ecx
 	jnz @mpaddw_loop
 @mpaddw_end:
@@ -116,17 +116,17 @@ mpsubw proc c export
 	mov edi,dword ptr [esp+12]
 	mov eax,dword ptr [esp+16]
 
+	xor edx,edx
 	lea edi,dword ptr [edi+ecx*4-4]
 	sub dword ptr [edi],eax
 	dec ecx
 	jz @mpsubw_end
-	sub edi,4
-	xor edx,edx
+	lea edi,dword ptr [edi-4]
 
 	align 4
 @mpsubw_loop:
 	sbb dword ptr [edi],edx
-	sub edi,4
+	lea edi,dword ptr [edi-4]
 	dec ecx
 	jnz @mpsubw_loop
 @mpsubw_end:

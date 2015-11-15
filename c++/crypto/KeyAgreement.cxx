@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/crypto/KeyAgreement.h"
 #include "beecrypt/c++/security/Security.h"
 using beecrypt::security::Security;
@@ -48,9 +44,7 @@ KeyAgreement* KeyAgreement::getInstance(const String& algorithm) throw (NoSuchAl
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyAgreement");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyAgreementSpi*>((KeyAgreementSpi*) tmp->cspi));
-	#endif
 
 	KeyAgreement* result = new KeyAgreement((KeyAgreementSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -63,9 +57,7 @@ KeyAgreement* KeyAgreement::getInstance(const String& algorithm, const String& p
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyAgreement", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyAgreementSpi*>((KeyAgreementSpi*) tmp->cspi));
-	#endif
 
 	KeyAgreement* result = new KeyAgreement((KeyAgreementSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -78,9 +70,7 @@ KeyAgreement* KeyAgreement::getInstance(const String& algorithm, const Provider&
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "KeyAgreement", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<KeyAgreementSpi*>((KeyAgreementSpi*) tmp->cspi));
-	#endif
 
 	KeyAgreement* result = new KeyAgreement((KeyAgreementSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -109,7 +99,7 @@ bytearray* KeyAgreement::generateSecret() throw (IllegalStateException)
 	return _kspi->engineGenerateSecret();
 }
 
-size_t KeyAgreement::generateSecret(bytearray& sharedSecret, size_t offset) throw (IllegalStateException, ShortBufferException)
+int KeyAgreement::generateSecret(bytearray& sharedSecret, int offset) throw (IllegalStateException, ShortBufferException)
 {
 	return _kspi->engineGenerateSecret(sharedSecret, offset);
 }

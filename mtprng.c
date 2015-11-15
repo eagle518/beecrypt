@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2001 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
  * \warning This generator has a very long period, passes statistical test and
  *          is very fast, but is not recommended for use in cryptography.
  * 
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup PRNG_m
  */
 

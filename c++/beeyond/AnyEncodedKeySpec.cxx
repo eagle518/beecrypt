@@ -18,19 +18,19 @@
 
 #define BEECRYPT_CXX_DLL_EXPORT
 
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "beecrypt/c++/beeyond/AnyEncodedKeySpec.h"
 
 using namespace beecrypt::beeyond;
 
-AnyEncodedKeySpec::AnyEncodedKeySpec(const String& format, const byte* data, size_t size) : EncodedKeySpec(data, size), _format(format)
+AnyEncodedKeySpec::AnyEncodedKeySpec(const String& format, const byte* data, int size) : EncodedKeySpec(data, size), _format(format)
 {
 }
 
 AnyEncodedKeySpec::AnyEncodedKeySpec(const String& format, const bytearray& copy) : EncodedKeySpec(copy), _format(format)
-{
-}
-
-AnyEncodedKeySpec::~AnyEncodedKeySpec()
 {
 }
 

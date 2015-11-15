@@ -45,7 +45,7 @@ int MacInputStream::read() throw (IOException)
 	return rc;
 }
 
-int MacInputStream::read(byte *data, size_t offset, size_t length) throw (IOException)
+int MacInputStream::read(byte *data, int offset, int length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();

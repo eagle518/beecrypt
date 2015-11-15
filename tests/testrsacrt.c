@@ -19,14 +19,14 @@
 
 /*!\file testrsa.c
  * \brief Unit test program for the RSA algorithm.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "beecrypt.h"
-#include "rsa.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/rsa.h"
 
 static const char* rsa_n  = "91e0fc15be36c499f2e2e36d77619c646cacf0cf6657fa136fea748b8e153f1d0cc4d38104da5273655c771282c77fd63061f360d8031406f5c9899f5ca590a19ba07d0bb3cf28c21d6d5fbf27149d2f817353c875f171a4eca9fd427feb4fc9e5f073cd68208423936ed0c3e71ada976fbec43b435dcaa3cfa7fafd973d2eaf";
 static const char* rsa_d = "54d7a9456c0fa66073270a66cc1bf53d63076236fdab0542f0c0477032fea06a60d6c8bc2cfa5d21c83df2f2cd250270ac4b0ba5b37c76d565760598ade58d2bcaefb61845002c5557911603cb13db23abd21a4b1981e49d74d4f37fe0d1ee83b98bca722e11aac9d268c014bbf18b276343d7a63ae8275fa21a43be76c241a1";

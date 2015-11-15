@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2003 Bob Deblier
+ * Copyright (c) 2002, 2003, 2009 Bob Deblier
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
  * The table lookup method was inspired by Brian Gladman's AES implementation,
  * which is much more readable than the standard code.
  *
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup BC_aes_m BC_m
  */
 
@@ -31,6 +31,10 @@
 
 #if HAVE_CONFIG_H
 # include "config.h"
+#endif
+
+#ifdef OPTIMIZE_MMX
+# include <mmintrin.h>
 #endif
 
 #include "beecrypt/aes.h"
@@ -55,39 +59,77 @@ extern int aesEncryptECB(aesParam*, uint32_t*, const uint32_t*, unsigned int);
 extern int aesDecryptECB(aesParam*, uint32_t*, const uint32_t*, unsigned int);
 #endif
 
+#ifdef ASM_AESENCRYPTCBC
+extern int aesEncryptCBC(aesParam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_AESDECRYPTCBC
+extern int aesDecryptCBC(aesParam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_AESENCRYPTCTR
+extern int aesEncryptCTR(aesParam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_AESDECRYPTCTR
+extern int aesDecryptCTR(aesParam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
 const blockCipher aes = {
-	"AES",
-	sizeof(aesParam),
-	16,
-	128,
-	256,
-	64,
-	(blockCipherSetup) aesSetup,
-	(blockCipherSetIV) aesSetIV,
-	/* raw */
+	.name = "AES",
+	.paramsize = sizeof(aesParam),
+	.blocksize = 16,
+	.keybitsmin = 128,
+	.keybitsmax = 256,
+	.keybitsinc = 64,
+	.setup = (blockCipherSetup) aesSetup,
+	.setiv = (blockCipherSetIV) aesSetIV,
+	.setctr = (blockCipherSetCTR) aesSetCTR,
+	.getfb = (blockCipherFeedback) aesFeedback,
+	.raw =
 	{
-		(blockCipherRawcrypt) aesEncrypt,
-		(blockCipherRawcrypt) aesDecrypt
+		.encrypt = (blockCipherRawcrypt) aesEncrypt,
+		.decrypt = (blockCipherRawcrypt) aesDecrypt
 	},
-	/* ecb */
+	.ecb =
 	{
 		#ifdef ASM_AESENCRYPTECB
-		(blockCipherModcrypt) aesEncryptECB,
+		.encrypt = (blockCipherModcrypt) aesEncryptECB,
 		#else
-		(blockCipherModcrypt) 0,
+		.encrypt = (blockCipherModcrypt) 0,
 		#endif
 		#ifdef ASM_AESDECRYPTECB
-		(blockCipherModcrypt) aesDecryptECB,
+		.decrypt = (blockCipherModcrypt) aesDecryptECB,
 		#else
-		(blockCipherModcrypt) 0,
+		.decrypt = (blockCipherModcrypt) 0,
 		#endif
 	},
-	/* cbc */
+	.cbc =
 	{
-		(blockCipherModcrypt) 0,
-		(blockCipherModcrypt) 0
+		#ifdef ASM_AESENCRYPTCBC
+		.encrypt = (blockCipherModcrypt) aesEncryptCBC,
+		#else
+		.encrypt = (blockCipherModcrypt) 0,
+		#endif
+		#ifdef ASM_AESDECRYPTCBC
+		.decrypt = (blockCipherModcrypt) aesDecryptCBC,
+		#else
+		.decrypt = (blockCipherModcrypt) 0
+		#endif
 	},
-	(blockCipherFeedback) aesFeedback
+	.ctr =
+	{
+		#ifdef ASM_AESENCRYPTCTR
+		.encrypt = (blockCipherModcrypt) aesEncryptCTR,
+		#else
+		.encrypt = (blockCipherModcrypt) 0,
+		#endif
+		#ifdef ASM_AESDECRYPTCTR
+		.decrypt = (blockCipherModcrypt) aesDecryptCTR,
+		#else
+		.decrypt = (blockCipherModcrypt) 0
+		#endif
+	}
 };
 
 int aesSetup(aesParam* ap, const byte* key, size_t keybits, cipherOperation op)
@@ -288,17 +330,50 @@ int aesSetIV(aesParam* ap, const byte* iv)
 }
 #endif
 
+#ifndef ASM_AESSETCTR
+int aesSetCTR(aesParam* ap, const byte* nivz, size_t counter)
+{
+	unsigned int blockwords = MP_BYTES_TO_WORDS(16);
+
+	if (nivz)
+	{
+		mpw tmp[MP_BYTES_TO_WORDS(16)];
+
+		os2ip((mpw*) ap->fdback, blockwords, nivz, 16);
+		mpsetws(blockwords, tmp, counter);
+		mpadd(blockwords, (mpw*) ap->fdback, tmp);
+	}
+	else
+		mpsetws(blockwords, (mpw*) ap->fdback, counter);
+
+	return 0;
+}
+#endif
+
 #ifndef ASM_AESENCRYPT
 int aesEncrypt(aesParam* ap, uint32_t* dst, const uint32_t* src)
 {
+	#if defined (OPTIMIZE_MMX) && (defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686))
+	register __m64 s0, s1, s2, s3;
+	register __m64 t0, t1, t2, t3;
+	register uint32_t i0, i1, i2, i3;
+	#else
 	register uint32_t s0, s1, s2, s3;
 	register uint32_t t0, t1, t2, t3;
+	#endif
 	register uint32_t* rk = ap->k;
 
+	#if defined (OPTIMIZE_MMX) && (defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686))
+	s0 = _mm_cvtsi32_si64(src[0] ^ rk[0]);
+	s1 = _mm_cvtsi32_si64(src[1] ^ rk[1]);
+	s2 = _mm_cvtsi32_si64(src[2] ^ rk[2]);
+	s3 = _mm_cvtsi32_si64(src[3] ^ rk[3]);
+	#else
 	s0 = src[0] ^ rk[0];
 	s1 = src[1] ^ rk[1];
 	s2 = src[2] ^ rk[2];
 	s3 = src[3] ^ rk[3];
+	#endif
 
 	etfs(4);		/* round 1 */
 	esft(8);		/* round 2 */
@@ -325,10 +400,17 @@ int aesEncrypt(aesParam* ap, uint32_t* dst, const uint32_t* src)
 
 	elr(); /* last round */
 
+	#if defined(OPTIMIZE_MMX) && (defined(OPTIMIZE_I586) || defined(OPTIMIZE_I686))
+	dst[0] = _mm_cvtsi64_si32(s0);
+	dst[1] = _mm_cvtsi64_si32(s1);
+	dst[2] = _mm_cvtsi64_si32(s2);
+	dst[3] = _mm_cvtsi64_si32(s3);
+	#else
 	dst[0] = s0;
 	dst[1] = s1;
 	dst[2] = s2;
 	dst[3] = s3;
+	#endif
 
 	return 0;
 }

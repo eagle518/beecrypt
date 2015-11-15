@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2001 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file endianness.c
  * \brief Endian-dependant encoding/decoding.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  */
 
 #define BEECRYPT_DLL_EXPORT

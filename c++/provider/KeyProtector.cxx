@@ -45,13 +45,16 @@ using beecrypt::lang::NullPointerException;
 #include "beecrypt/c++/security/KeyFactory.h"
 using beecrypt::security::KeyFactory;
 
+#include <memory>
+using std::auto_ptr;
+
 using namespace beecrypt::provider;
 
 namespace {
 	/* eventually these will be moved to a different location */
-	void pkcs5_pad(size_t blockbytes, bytearray& b)
+	void pkcs5_pad(int blockbytes, bytearray& b)
 	{
-		size_t unpadded_size = b.size();
+		int unpadded_size = b.size();
 
 		byte padvalue = blockbytes - (unpadded_size % blockbytes);
 
@@ -60,14 +63,14 @@ namespace {
 		memset(b.data() + unpadded_size, padvalue, padvalue);
 	}
 
-	void pkcs5_unpad(size_t blockbytes, bytearray& b) throw (BadPaddingException)
+	void pkcs5_unpad(int blockbytes, bytearray& b) throw (BadPaddingException)
 	{
 		byte padvalue = b[b.size() - 1];
 
 		if (padvalue > blockbytes)
 			throw BadPaddingException();
 
-		for (size_t i = (b.size() - padvalue); i < (b.size() - 1); i++)
+		for (int i = (b.size() - padvalue); i < (b.size() - 1); i++)
 			if (b[i] != padvalue)
 				throw BadPaddingException();
 
@@ -78,7 +81,7 @@ namespace {
 KeyProtector::KeyProtector(PBEKey& key) throw (InvalidKeyException)
 {
 	bytearray _rawk, _salt;
-	size_t _iter;
+	int _iter;
 
 	if (key.getEncoded())
 		_rawk = *(key.getEncoded());
@@ -156,20 +159,20 @@ bytearray* KeyProtector::protect(const PrivateKey& pri) throw ()
 		// Return the concatenation of the two bytearrays
 		return new bytearray(ciphertext + mac);
 	}
-	catch (IOException)
+	catch (IOException&)
 	{
 	}
 	
 	return 0;
 }
 
-PrivateKey* KeyProtector::recover(const byte* data, size_t size) throw (NoSuchAlgorithmException, UnrecoverableKeyException)
+PrivateKey* KeyProtector::recover(const byte* data, int size) throw (NoSuchAlgorithmException, UnrecoverableKeyException)
 {
 	// If we don't have at least enough data for the digest then bail out
 	if (size <= hmacsha256.digestsize)
 		throw UnrecoverableKeyException("encrypted key data way too short");
 
-	size_t ciphertext_size = size - hmacsha256.digestsize;
+	int ciphertext_size = size - hmacsha256.digestsize;
 
 	// Check if we have a whole number of blocks in the data
 	if ((ciphertext_size % aes.blocksize) != 0)
@@ -187,7 +190,7 @@ PrivateKey* KeyProtector::recover(const byte* data, size_t size) throw (NoSuchAl
 	{
 		pkcs5_unpad(aes.blocksize, cleartext);
 	}
-	catch (BadPaddingException)
+	catch (BadPaddingException&)
 	{
 		// Corrupted data, most likely due to bad password
 		throw UnrecoverableKeyException("bad padding");
@@ -203,7 +206,7 @@ PrivateKey* KeyProtector::recover(const byte* data, size_t size) throw (NoSuchAl
 
 	// Compare the two MACs and bail out if they're different
 	if (memcmp(data + ciphertext_size, mac.data(), hmacsha256.digestsize))
-		return 0;
+		throw UnrecoverableKeyException("mac of decrypted key didn't match");
 
 	// Now we're sure the password was correct, and we have the decrypted data
 
@@ -212,42 +215,33 @@ PrivateKey* KeyProtector::recover(const byte* data, size_t size) throw (NoSuchAl
 
 	try
 	{
-		String algorithm, format;
-		bytearray enc;
+		String algorithm = dis.readUTF();
+		String format = dis.readUTF();
 
-		dis.readUTF(algorithm);
-		dis.readUTF(format);
-
-		javaint encsize = dis.readInt();
+		jint encsize = dis.readInt();
 		if (encsize <= 0)
 			throw IOException();
 
-		enc.resize(encsize);
+		bytearray enc(encsize);
 
 		dis.readFully(enc);
 
 		AnyEncodedKeySpec spec(format, enc);
-		KeyFactory* kf;
-		PrivateKey* pri;
 
 		try
 		{
-			kf = KeyFactory::getInstance(algorithm);
-			pri = kf->generatePrivate(spec);
+			auto_ptr<KeyFactory> kf(KeyFactory::getInstance(algorithm));
 
-			delete kf;
-
-			return pri;
+			return kf->generatePrivate(spec);
 		}
-		catch (InvalidKeySpecException)
+		catch (InvalidKeySpecException&)
 		{
-			delete kf;
 		}
-		catch (NoSuchAlgorithmException)
+		catch (NoSuchAlgorithmException&)
 		{
 		}
 	}
-	catch (IOException)
+	catch (IOException&)
 	{
 	}
 	throw UnrecoverableKeyException("parsing error in decrypted key");

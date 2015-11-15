@@ -21,9 +21,17 @@
 #endif
 
 #include "beecrypt/c++/provider/DSAPrivateKeyImpl.h"
-#include "beecrypt/c++/provider/BeeKeyFactory.h"
+#include "beecrypt/c++/io/ByteArrayOutputStream.h"
+using beecrypt::io::ByteArrayOutputStream;
+#include "beecrypt/c++/beeyond/BeeOutputStream.h"
+using beecrypt::beeyond::BeeOutputStream;
 
 using namespace beecrypt::provider;
+
+namespace {
+	const String FORMAT_BEE("BEE");
+	const String ALGORITHM_DSA("DSA");
+}
 
 DSAPrivateKeyImpl::DSAPrivateKeyImpl(const DSAPrivateKey& copy)
 {
@@ -39,33 +47,28 @@ DSAPrivateKeyImpl::DSAPrivateKeyImpl(const DSAPrivateKeyImpl& copy)
 	_enc = 0;
 }
 
-DSAPrivateKeyImpl::DSAPrivateKeyImpl(const DSAParams& params, const mpnumber& x)
+DSAPrivateKeyImpl::DSAPrivateKeyImpl(const DSAParams& params, const BigInteger& x) : _x(x)
 {
 	_params = new DSAParameterSpec(params.getP(), params.getQ(), params.getG());
-	_x = x;
 	_enc = 0;
 }
 
-DSAPrivateKeyImpl::DSAPrivateKeyImpl(const dsaparam& params, const mpnumber& x)
+DSAPrivateKeyImpl::DSAPrivateKeyImpl(const dsaparam& params, const mpnumber& x) : _x(x)
 {
-	_params = new DSAParameterSpec(params.p, params.q, params.g);
-	_x = x;
+	_params = new DSAParameterSpec(BigInteger(params.p), BigInteger(params.q), BigInteger(params.g));
 	_enc = 0;
 }
 
-DSAPrivateKeyImpl::DSAPrivateKeyImpl(const mpbarrett& p, const mpbarrett& q, const mpnumber& g, const mpnumber& x)
+DSAPrivateKeyImpl::DSAPrivateKeyImpl(const BigInteger& p, const BigInteger& q, const BigInteger& g, const BigInteger& x) : _x(x)
 {
 	_params = new DSAParameterSpec(p, q, g);
-	_x = x;
 	_enc = 0;
 }
 
 DSAPrivateKeyImpl::~DSAPrivateKeyImpl()
 {
 	delete _params;
-	_x.wipe();
-	if (_enc)
-		delete _enc;
+	delete _enc;
 }
 
 DSAPrivateKeyImpl* DSAPrivateKeyImpl::clone() const throw ()
@@ -73,27 +76,30 @@ DSAPrivateKeyImpl* DSAPrivateKeyImpl::clone() const throw ()
 	return new DSAPrivateKeyImpl(*this);
 }
 
-bool DSAPrivateKeyImpl::equals(const Object& compare) const throw ()
+bool DSAPrivateKeyImpl::equals(const Object* obj) const throw ()
 {
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const DSAPrivateKey* pri = dynamic_cast<const DSAPrivateKey*>(&compare);
-	if (pri)
+	if (obj)
 	{
-		if (pri->getParams().getP() != _params->getP())
-			return false;
+		const DSAPrivateKey* pri = dynamic_cast<const DSAPrivateKey*>(obj);
+		if (pri)
+		{
+			if (pri->getParams().getP() != _params->getP())
+				return false;
 
-		if (pri->getParams().getQ() != _params->getQ())
-			return false;
+			if (pri->getParams().getQ() != _params->getQ())
+				return false;
 
-		if (pri->getParams().getG() != _params->getG())
-			return false;
+			if (pri->getParams().getG() != _params->getG())
+				return false;
 
-		if (pri->getX() != _x)
-			return false;
+			if (pri->getX() != _x)
+				return false;
 
-		return true;
+			return true;
+		}
 	}
 
 	return false;
@@ -104,27 +110,42 @@ const DSAParams& DSAPrivateKeyImpl::getParams() const throw ()
 	return *_params;
 }
 
-const mpnumber& DSAPrivateKeyImpl::getX() const throw ()
+const BigInteger& DSAPrivateKeyImpl::getX() const throw ()
 {
 	return _x;
 }
 
-const bytearray* DSAPrivateKeyImpl::getEncoded() const
+const bytearray* DSAPrivateKeyImpl::getEncoded() const throw ()
 {
 	if (!_enc)
-		_enc = BeeKeyFactory::encode(*this);
+	{
+		try
+		{
+			ByteArrayOutputStream bos;
+			BeeOutputStream bee(bos);
+
+			bee.writeBigInteger(_params->getP());
+			bee.writeBigInteger(_params->getQ());
+			bee.writeBigInteger(_params->getG());
+			bee.writeBigInteger(_x);
+			bee.close();
+
+			_enc = bos.toByteArray();
+		}
+		catch (IOException&)
+		{
+		}
+	}
 
 	return _enc;
 }
 
 const String& DSAPrivateKeyImpl::getAlgorithm() const throw ()
 {
-	static const String ALGORITHM = UNICODE_STRING_SIMPLE("DSA");
-	return ALGORITHM;
+	return ALGORITHM_DSA;
 }
 
 const String* DSAPrivateKeyImpl::getFormat() const throw ()
 {
-	static const String FORMAT = UNICODE_STRING_SIMPLE("BEE");
-	return &FORMAT;
+	return &FORMAT_BEE;
 }

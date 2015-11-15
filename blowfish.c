@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2000, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 1999, 2000, 2002, 2005 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file blowfish.c
  * \brief Blowfish block cipher.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup BC_m BC_blowfish_m
  */
 
@@ -30,11 +30,6 @@
 #endif
 
 #include "beecrypt/blowfish.h"
-
-#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
-# include <endian.h>
-#endif
-
 #include "beecrypt/endianness.h"
 
 #ifdef ASM_BLOWFISHENCRYPTECB
@@ -43,6 +38,22 @@ extern int blowfishEncryptECB(blowfishparam*, uint32_t*, const uint32_t*, unsign
 
 #ifdef ASM_BLOWFISHDECRYPTECB
 extern int blowfishDecryptECB(blowfishparam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_BLOWFISHENCRYPTCBC
+extern int blowfishEncryptCBC(blowfishparam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_BLOWFISHDECRYPTCBC
+extern int blowfishDecryptCBC(blowfishparam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_BLOWFISHENCRYPTCTR
+extern int blowfishEncryptCTR(blowfishparam*, uint32_t*, const uint32_t*, unsigned int);
+#endif
+
+#ifdef ASM_BLOWFISHDECRYPTCTR
+extern int blowfishDecryptCTR(blowfishparam*, uint32_t*, const uint32_t*, unsigned int);
 #endif
 
 static uint32_t _bf_p[BLOWFISHPSIZE] = {
@@ -316,38 +327,60 @@ static uint32_t _bf_s[1024] = {
 #define DROUND(l,r) l ^= *(p--); r ^= ((s[((l>>24)&0xff)+0x000]+s[((l>>16)&0xff)+0x100])^s[((l>>8)&0xff)+0x200])+s[((l>>0)&0xff)+0x300]
 
 const blockCipher blowfish = {
-	"Blowfish",
-	sizeof(blowfishParam),
-	8,
-	64,
-	448,
-	32,
-	(blockCipherSetup) blowfishSetup,
-	(blockCipherSetIV) blowfishSetIV,
-	/* raw */
+	.name = "Blowfish",
+	.paramsize = sizeof(blowfishParam),
+	.blocksize = 8,
+	.keybitsmin = 64,
+	.keybitsmax = 448,
+	.keybitsinc = 32,
+	.setup = (blockCipherSetup) blowfishSetup,
+	.setiv = (blockCipherSetIV) blowfishSetIV,
+	.setctr = (blockCipherSetCTR) blowfishSetCTR,
+	.getfb = (blockCipherFeedback) blowfishFeedback,
+	.raw =
 	{
-		(blockCipherRawcrypt) blowfishEncrypt,
-		(blockCipherRawcrypt) blowfishDecrypt
+		.encrypt = (blockCipherRawcrypt) blowfishEncrypt,
+		.decrypt = (blockCipherRawcrypt) blowfishDecrypt
 	},
-	/* ecb */
+	.ecb =
 	{
 		#ifdef AES_BLOWFISHENCRYPTECB
-		(blockCipherModcrypt) blowfishEncryptECB,
+		.encrypt = (blockCipherModcrypt) blowfishEncryptECB,
 		#else
-		(blockCipherModcrypt) 0,
+		.encrypt = (blockCipherModcrypt) 0,
 		#endif
 		#ifdef AES_BLOWFISHENCRYPTECB
-		(blockCipherModcrypt) blowfishDecryptECB,
+		.decrypt = (blockCipherModcrypt) blowfishDecryptECB,
 		#else
-		(blockCipherModcrypt) 0
+		.decrypt = (blockCipherModcrypt) 0
 		#endif
 	},
-	/* cbc */
+	.cbc =
 	{
-		(blockCipherModcrypt) 0,
-		(blockCipherModcrypt) 0
+		#ifdef AES_BLOWFISHENCRYPTCBC
+		.encrypt = (blockCipherModcrypt) blowfishEncryptCBC,
+		#else
+		.encrypt = (blockCipherModcrypt) 0,
+		#endif
+		#ifdef AES_BLOWFISHENCRYPTCBC
+		.decrypt = (blockCipherModcrypt) blowfishDecryptCBC,
+		#else
+		.decrypt = (blockCipherModcrypt) 0
+		#endif
 	},
-	(blockCipherFeedback) blowfishFeedback
+	.ctr =
+	{
+		#ifdef AES_BLOWFISHENCRYPTCTR
+		.encrypt = (blockCipherModcrypt) blowfishEncryptCTR,
+		#else
+		.encrypt = (blockCipherModcrypt) 0,
+		#endif
+		#ifdef AES_BLOWFISHENCRYPTCTR
+		.decrypt = (blockCipherModcrypt) blowfishDecryptCTR,
+		#else
+		.decrypt = (blockCipherModcrypt) 0
+		#endif
+	},
 };
 
 int blowfishSetup(blowfishParam* bp, const byte* key, size_t keybits, cipherOperation op)
@@ -425,19 +458,25 @@ int blowfishSetIV(blowfishParam* bp, const byte* iv)
 }
 #endif
 
-int blowfishBlowit(blowfishParam* bp, uint32_t* dst, const uint32_t* src)
+#ifndef ASM_BLOWFISHSETCTR
+int blowfishSetCTR(blowfishParam* bp, const byte* nivz, size_t counter)
 {
-	register uint32_t xl = src[0], xr = src[1];
-	register uint32_t* p = bp->p;
-	register uint32_t* s = bp->s;
+	unsigned int blockwords = MP_BYTES_TO_WORDS(8);
 
-	EROUND(xl, xr); EROUND(xr, xl);
+	if (nivz)
+	{
+		mpw tmp[MP_BYTES_TO_WORDS(8)];
 
-	dst[1] = xr;
-	dst[0] = xl;
+		os2ip((mpw*) bp->fdback, blockwords, nivz, 8);
+		mpsetws(blockwords, tmp, counter);
+		mpadd(blockwords, (mpw*) bp->fdback, tmp);
+	}
+	else
+		mpsetws(blockwords, (mpw*) bp->fdback, counter);
 
 	return 0;
 }
+#endif
 
 #ifndef ASM_BLOWFISHENCRYPT
 int blowfishEncrypt(blowfishParam* bp, uint32_t* dst, const uint32_t* src)

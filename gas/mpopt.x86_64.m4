@@ -2,7 +2,7 @@ dnl  mpopt.x86_64.m4
 dnl
 dnl  Copyright (c) 2003 Bob Deblier
 dnl 
-dnl  Author: Bob Deblier <bob.deblier@pandora.be>
+dnl  Author: Bob Deblier <bob.deblier@telenet.be>
 dnl 
 dnl  This library is free software; you can redistribute it and/or
 dnl  modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@ C_FUNCTION_BEGIN(mpzero)
 	movq %rdi,%rcx
 	movq %rsi,%rdi
 	xorq %rax,%rax
-	repz stosq
+	rep stosq
 	ret
 C_FUNCTION_END(mpzero)
 
@@ -35,7 +35,7 @@ C_FUNCTION_BEGIN(mpfill)
 	movq %rdi,%rcx
 	movq %rsi,%rdi
 	movq %rdx,%rax
-	repz stosq
+	rep stosq
 	ret
 C_FUNCTION_END(mpfill)
 

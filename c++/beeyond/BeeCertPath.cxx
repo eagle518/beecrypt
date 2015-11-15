@@ -26,34 +26,31 @@
 
 using namespace beecrypt::beeyond;
 
-BeeCertPath::BeeCertPath(const BeeCertificate& cert) : CertPath("BEE")
+BeeCertPath::BeeCertPath(const BeeCertificate& cert) : CertPath("BEE"), _cert(1)
 {
-	_cert.push_back(&cert);
+	_cert.add(cert.clone());
 }
 
-BeeCertPath::~BeeCertPath()
+bool BeeCertPath::equals(const Object* obj) const throw ()
 {
-}
-
-bool BeeCertPath::equals(const Object& compare) const throw ()
-{
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const BeeCertPath* cmp = dynamic_cast<const BeeCertPath*>(&compare);
-	if (cmp)
+	if (obj)
 	{
-		return _cert[0]->equals(*(cmp->_cert[0]));
+		const BeeCertPath* cmp = dynamic_cast<const BeeCertPath*>(obj);
+		if (cmp)
+			return _cert.equals(&cmp->_cert);
 	}
 	return false;
 }
 
-const vector<const Certificate*>& BeeCertPath::getCertificates() const
+const List<Certificate>& BeeCertPath::getCertificates() const
 {
 	return _cert;
 }
 
 const bytearray& BeeCertPath::getEncoded() const
 {
-	return _cert[0]->getEncoded();
+	return _cert.get(0)->getEncoded();
 }

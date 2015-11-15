@@ -28,7 +28,7 @@ using beecrypt::lang::UnsupportedOperationException;
 
 using namespace beecrypt::crypto;
 
-size_t CipherSpi::engineGetKeySize(const Key& key) const throw (InvalidKeyException)
+int CipherSpi::engineGetKeySize(const Key& key) const throw (InvalidKeyException)
 {
 	throw UnsupportedOperationException();
 }

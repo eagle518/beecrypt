@@ -27,6 +27,8 @@
 #endif
 
 #include "beecrypt/c++/io/FileOutputStream.h"
+#include "beecrypt/c++/lang/String.h"
+using beecrypt::lang::String;
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
 
@@ -47,7 +49,7 @@ void FileOutputStream::close() throw (IOException)
 	{
 		if (fclose(_f))
 			#if HAVE_ERRNO_H
-			throw IOException(strerror(errno));
+			throw IOException(::strerror(errno));
 			#else
 			throw IOException("fclose failed");
 			#endif
@@ -63,7 +65,7 @@ void FileOutputStream::flush() throw (IOException)
 
 	if (fflush(_f))
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("fflush failed");
 		#endif
@@ -74,17 +76,17 @@ void FileOutputStream::write(byte b) throw (IOException)
 	if (!_f)
 		throw IOException("no valid file handle to write");
 
-	size_t rc = fwrite(&b, 1, 1, _f);
+	int rc = fwrite(&b, 1, 1, _f);
 
 	if (rc < 1)
 		#if HAVE_ERRNO_H
-		throw IOException(strerror(errno));
+		throw IOException(::strerror(errno));
 		#else
 		throw IOException("incomplete fwrite");
 		#endif
 }
 
-void FileOutputStream::write(const byte* data, size_t offset, size_t length) throw (IOException)
+void FileOutputStream::write(const byte* data, int offset, int length) throw (IOException)
 {
 	if (length)
 	{
@@ -94,11 +96,11 @@ void FileOutputStream::write(const byte* data, size_t offset, size_t length) thr
 		if (!_f)
 			throw IOException("no valid file handle to write");
 
-		size_t rc = fwrite(data+offset, 1, length, _f);
+		int rc = fwrite(data+offset, 1, length, _f);
 
 		if (rc < length)
 			#if HAVE_ERRNO_H
-			throw IOException(strerror(errno));
+			throw IOException(::strerror(errno));
 			#else
 			throw IOException("incomplete fwrite");
 			#endif

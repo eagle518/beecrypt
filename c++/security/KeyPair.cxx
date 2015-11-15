@@ -28,16 +28,9 @@ using beecrypt::lang::NullPointerException;
 
 using namespace beecrypt::security;
 
-KeyPair::KeyPair(PublicKey* pub, PrivateKey* pri)
+KeyPair::KeyPair(PublicKey* pub, PrivateKey* pri) : _pub(pub), _pri(pri)
 {
-	if (pub)
-		_pub = pub;
-	else
-		throw NullPointerException();
-
-	if (pri)
-		_pri = pri;
-	else
+	if (_pub == 0 || _pri == 0)
 		throw NullPointerException();
 }
 

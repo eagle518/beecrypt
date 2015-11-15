@@ -19,14 +19,14 @@
 
 /*!\file testmpinv.c
  * \brief Unit test program for the multi-precision modular inverse.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "beecrypt.h"
-#include "mpnumber.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/mpnumber.h"
 
 struct vector
 {

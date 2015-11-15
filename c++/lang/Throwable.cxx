@@ -23,23 +23,58 @@
 #endif
 
 #include "beecrypt/c++/lang/Throwable.h"
+#include "beecrypt/c++/lang/String.h"
+#include "beecrypt/c++/lang/IllegalStateException.h"
 using namespace beecrypt::lang;
 
-Throwable::Throwable() throw ()
+Throwable::Throwable()
+{
+	_cause = this;
+}
+
+Throwable::Throwable(const char* message) : _msg(message ? new String(message) : 0)
+{
+	_cause = this;
+}
+
+Throwable::Throwable(const String& message) : _msg(new String(message))
+{
+	_cause = this;
+}
+
+Throwable::Throwable(const String* message, const Throwable* cause) : _msg(message ? new String(*message) : 0), _cause(cause)
 {
 }
 
-Throwable::Throwable(const String& message) throw ()
+Throwable::Throwable(const Throwable* cause) : _cause(cause)
 {
-	_msg = message;
+	if (_cause && _cause->_msg)
+		_msg = new String(*_cause->_msg);
+	else
+		_msg = 0;
 }
 
-Throwable::Throwable(const Throwable& copy) throw ()
+Throwable::~Throwable()
 {
-	_msg = copy._msg;
+	delete _msg;
 }
 
-const String& Throwable::getMessage() const throw ()
+const String* Throwable::getMessage() const throw ()
 {
 	return _msg;
+}
+
+const Throwable* Throwable::getCause() const throw ()
+{
+	return _cause;
+}
+
+Throwable& Throwable::initCause(const Throwable& cause)
+{
+	if (_cause)
+		throw IllegalStateException("cause was already specified");
+
+	_cause = &cause;
+
+	return *this;
 }

@@ -42,7 +42,7 @@ namespace {
 	const char* P_1024 = "fd7f53811d75122952df4a9c2eece4e7f611b7523cef4400c31e3f80b6512669455d402251fb593d8d58fabfc5f5ba30f6cb9b556cd7813b801d346ff26660b76b9950a5a49f9fe8047b1022c24fbba9d7feb7c61bf83b57e7c6a8a6150f04fb83f6d3c51ec3023554135a169132f675f3ae2b61d72aeff22203199dd14801c7";
 	const char* Q_1024 = "9760508f15230bccb292b982a2eb840bf0581cf5";
 	const char* G_1024 = "f7e1a085d69b3ddecbbcab5c36b857b97994afbbfa3aea82f9574c0b3d0782675159578ebad4594fe67107108180b449167123e84c281613b7cf09328cc8a6e13c167a8b547c8d28e0a3ae1e2bb3a675916ea37f0bfa213562f1fb627a01243bcca4f1bea8519089a883dfe15ae59f06928b665e807b552564014c3bfecf492a";
-};
+}
 
 using namespace beecrypt::provider;
 
@@ -55,13 +55,7 @@ DSAKeyPairGenerator::DSAKeyPairGenerator()
 
 DSAKeyPairGenerator::~DSAKeyPairGenerator()
 {
-	_size = 0;
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
-	_srng = 0;
+	delete _spec;
 }
 
 KeyPair* DSAKeyPairGenerator::genpair(randomGeneratorContext* rngc)
@@ -72,9 +66,9 @@ KeyPair* DSAKeyPairGenerator::genpair(randomGeneratorContext* rngc)
 
 	if (_spec)
 	{
-		param.p = _spec->getP();
-		param.q = _spec->getQ();
-		param.g = _spec->getG();
+		transform(param.p, _spec->getP());
+		transform(param.q, _spec->getQ());
+		transform(param.g, _spec->getG());
 	}
 	else
 	{
@@ -135,8 +129,7 @@ void DSAKeyPairGenerator::engineInitialize(const AlgorithmParameterSpec& spec, S
 
 	if (dsaspec)
 	{
-		if (_spec)
-			delete _spec;
+		delete _spec;
 
 		_spec = new DSAParameterSpec(*dsaspec);
 		_srng = random;
@@ -145,16 +138,14 @@ void DSAKeyPairGenerator::engineInitialize(const AlgorithmParameterSpec& spec, S
 		throw InvalidAlgorithmParameterException("not a DSAParameterSpec");
 }
 
-void DSAKeyPairGenerator::engineInitialize(size_t keysize, SecureRandom* random) throw (InvalidParameterException)
+void DSAKeyPairGenerator::engineInitialize(int keysize, SecureRandom* random) throw (InvalidParameterException)
 {
 	if ((keysize < 512) || (keysize > 1024) || ((keysize & 0x3f) != 0))
 		throw InvalidParameterException("Prime size must range from 512 to 1024 bits and be a multiple of 64");
 
+	delete _spec;
+
 	_size = keysize;
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	_spec = 0;
 	_srng = random;
 }

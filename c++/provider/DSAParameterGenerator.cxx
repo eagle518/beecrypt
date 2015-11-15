@@ -20,6 +20,8 @@
 # include "config.h"
 #endif
 
+#include "beecrypt/dsa.h"
+
 #include "beecrypt/c++/adapter.h"
 using beecrypt::randomGeneratorContextAdapter;
 #include "beecrypt/c++/provider/DSAParameterGenerator.h"
@@ -39,13 +41,7 @@ DSAParameterGenerator::DSAParameterGenerator()
  
 DSAParameterGenerator::~DSAParameterGenerator()
 {
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
-	_size = 0;
-	_srng = 0;
+	delete _spec;
 }
 
 AlgorithmParameters* DSAParameterGenerator::engineGenerateParameters()
@@ -67,7 +63,7 @@ AlgorithmParameters* DSAParameterGenerator::engineGenerateParameters()
 				throw "unexpected error in dsaparamMake";
 		}
 
-		_spec = new DSAParameterSpec(param.p, param.q, param.g);
+		_spec = new DSAParameterSpec(BigInteger(param.p), BigInteger(param.q), BigInteger(param.g));
 	}
 
 	try
@@ -78,10 +74,8 @@ AlgorithmParameters* DSAParameterGenerator::engineGenerateParameters()
 
 		return param;
 	}
-	catch (Exception* ex)
+	catch (Exception&)
 	{
-		// shouldn't happen
-		delete ex;
 	}
 
 	return 0;
@@ -93,30 +87,23 @@ void DSAParameterGenerator::engineInit(const AlgorithmParameterSpec& spec, Secur
 
 	if (dsaspec)
 	{
-		if (_spec)
-		{
-			delete _spec;
-			_spec = 0;
-		}
+		delete _spec;
 
 		_spec = new DSAParameterSpec(*dsaspec);
-
 		_srng = random;
 	}
 	else
 		throw InvalidAlgorithmParameterException("expected DSAParameterSpec");
 }
 
-void DSAParameterGenerator::engineInit(size_t keysize, SecureRandom* random) throw (InvalidParameterException)
+void DSAParameterGenerator::engineInit(int keysize, SecureRandom* random) throw (InvalidParameterException)
 {
 	if ((keysize < 512) || (keysize > 1024) || ((keysize & 0x3f) != 0))
 		throw InvalidParameterException("Prime size must range from 512 to 1024 bits and be a multiple of 64");
 
+	delete _spec;
+
 	_size = keysize;
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	_spec = 0;
 	_srng = random;
 }

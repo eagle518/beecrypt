@@ -23,12 +23,14 @@
 #endif
 
 #include "beecrypt/c++/io/InputStream.h"
+#include "beecrypt/c++/lang/String.h"
+using beecrypt::lang::String;
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
 
 using namespace beecrypt::io;
 
-off_t InputStream::available() throw (IOException)
+jint InputStream::available() throw (IOException)
 {
 	return 0;
 }
@@ -37,7 +39,7 @@ void InputStream::close() throw (IOException)
 {
 }
 
-void InputStream::mark(off_t readlimit) throw ()
+void InputStream::mark(jint readlimit) throw ()
 {
 }
 
@@ -46,23 +48,23 @@ bool InputStream::markSupported() throw ()
 	return false;
 }
 
-int InputStream::read(bytearray& b) throw (IOException)
+jint InputStream::read(bytearray& b) throw (IOException)
 {
 	return read(b.data(), 0, b.size());
 }
 
-int InputStream::read(byte* data, size_t offset, size_t length) throw (IOException)
+jint InputStream::read(byte* data, jint offset, jint length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();
 
-	int b = read();
+	jint b = read();
 	if (b < 0)
 		return -1;
 
 	data[offset] = (byte) b;
 
-	size_t i = 1;
+	jint i = 1;
 	try
 	{
 		while (i < length)
@@ -73,22 +75,22 @@ int InputStream::read(byte* data, size_t offset, size_t length) throw (IOExcepti
 			data[offset+i++] = (byte) b;
 		}
 	}
-	catch (IOException)
+	catch (IOException&)
 	{
 		// ignore
 	}
 	return i;
 }
 
-off_t InputStream::skip(off_t n) throw (IOException)
+jint InputStream::skip(jint n) throw (IOException)
 {
-	off_t remaining = n;
+	jint remaining = n;
 
 	byte skip[2048];
 
 	while (remaining > 0)
 	{
-		int rc = read(skip, 0, remaining > 2048 ? 2048 : remaining);
+		jint rc = read(skip, 0, remaining > 2048 ? 2048 : remaining);
 		if (rc < 0)
 			break;
 		remaining -= rc;

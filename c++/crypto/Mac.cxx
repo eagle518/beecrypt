@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/crypto/Mac.h"
 #include "beecrypt/c++/lang/IllegalArgumentException.h"
 using beecrypt::lang::IllegalArgumentException;
@@ -51,9 +47,7 @@ Mac* Mac::getInstance(const String& algorithm) throw (NoSuchAlgorithmException)
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Mac");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<MacSpi*>((MacSpi*) tmp->cspi));
-	#endif
 
 	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -66,9 +60,7 @@ Mac* Mac::getInstance(const String& algorithm, const String& provider) throw (No
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Mac", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<MacSpi*>((MacSpi*) tmp->cspi));
-	#endif
 
 	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -81,9 +73,7 @@ Mac* Mac::getInstance(const String& algorithm, const Provider& provider) throw (
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Mac", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<MacSpi*>((MacSpi*) tmp->cspi));
-	#endif
 
 	Mac* result = new Mac((MacSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -119,7 +109,7 @@ const bytearray& Mac::doFinal(const bytearray& b) throw (IllegalStateException)
 	return _mspi->engineDoFinal();
 }
 
-size_t Mac::doFinal(byte* data, size_t offset, size_t length) throw (IllegalStateException, ShortBufferException)
+int Mac::doFinal(byte* data, int offset, int length) throw (IllegalStateException, ShortBufferException)
 {
 	if (!_init)
 		throw IllegalStateException();
@@ -127,7 +117,7 @@ size_t Mac::doFinal(byte* data, size_t offset, size_t length) throw (IllegalStat
 	return _mspi->engineDoFinal(data, offset, length);
 }
 
-size_t Mac::getMacLength()
+int Mac::getMacLength()
 {
 	return _mspi->engineGetMacLength();
 }
@@ -138,7 +128,7 @@ void Mac::init(const Key& key) throw (InvalidKeyException)
 	{
 		_mspi->engineInit(key, 0);
 	}
-	catch (InvalidAlgorithmParameterException)
+	catch (InvalidAlgorithmParameterException&)
 	{
 		throw IllegalArgumentException("Mac apparently requires an AlgorithmParameterSpec");
 	}
@@ -172,7 +162,7 @@ void Mac::update(const bytearray& b) throw (IllegalStateException)
 	_mspi->engineUpdate(b.data(), 0, b.size());
 }
 
-void Mac::update(const byte* data, size_t offset, size_t length) throw (IllegalStateException)
+void Mac::update(const byte* data, int offset, int length) throw (IllegalStateException)
 {
 	if (!_init)
 		throw IllegalStateException();

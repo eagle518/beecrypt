@@ -55,7 +55,7 @@ const bytearray& SHA256Digest::engineDigest()
 	return _digest;
 }
 
-size_t SHA256Digest::engineDigest(byte* data, size_t offset, size_t length) throw (ShortBufferException)
+int SHA256Digest::engineDigest(byte* data, int offset, int length) throw (ShortBufferException)
 {
 	if (!data)
 		throw NullPointerException();
@@ -69,7 +69,7 @@ size_t SHA256Digest::engineDigest(byte* data, size_t offset, size_t length) thro
 	return 32;
 }
 
-size_t SHA256Digest::engineGetDigestLength()
+int SHA256Digest::engineGetDigestLength()
 {
 	return 32;
 }
@@ -86,7 +86,7 @@ void SHA256Digest::engineUpdate(byte b)
 		throw ProviderException("BeeCrypt internal error in sha256Update");
 }
 
-void SHA256Digest::engineUpdate(const byte* data, size_t offset, size_t length)
+void SHA256Digest::engineUpdate(const byte* data, int offset, int length)
 {
 	if (sha256Update(&_param, data+offset, length))
 		throw ProviderException("BeeCrypt internal error in sha256Update");

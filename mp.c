@@ -19,7 +19,7 @@
 
 /*!\file mp.c
  * \brief Multi-precision integer routines.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup MP_m
  */
 
@@ -284,6 +284,47 @@ int mplex(size_t xsize, const mpw* xdata, size_t ysize, const mpw* ydata)
 }
 #endif
 
+#ifndef ASM_MPCMP
+int mpcmp(size_t size, const mpw* xdata, const mpw* ydata)
+{
+	while (size--)
+	{
+		if (*xdata < *ydata)
+			return -1;
+		else if (*xdata > *ydata)
+			return 1;
+
+		xdata++;
+		ydata++;
+	}
+	return 0;
+}
+#endif
+
+#ifndef ASM_MPCMPX
+int mpcmpx(size_t xsize, const mpw* xdata, size_t ysize, const mpw* ydata)
+{
+	if (xsize > ysize)
+	{
+		register size_t diff = xsize - ysize;
+		if (mpnz(diff, xdata))
+			return 1;
+
+		xsize -= diff;
+		xdata += diff;
+	}
+	else if (xsize < ysize)
+	{
+		register size_t diff = ysize - xsize;
+		if (mpnz(diff, ydata))
+			return -1;
+
+		ydata += diff;
+	}
+	return mpcmp(xsize, xdata, ydata);
+}
+#endif
+
 #ifndef ASM_MPISONE
 int mpisone(size_t size, const mpw* data)
 {
@@ -427,6 +468,21 @@ void mpsetw(size_t size, mpw* xdata, mpw y)
 	while (--size)
 		*(xdata++) = 0;
 	*(xdata++) = y;
+}
+#endif
+
+#ifndef ASM_MPSETWS
+void mpsetws(size_t size, mpw* xdata, size_t y)
+{
+	while (size--)
+	{
+		xdata[size] = (mpw) y;
+		#if (MP_WBYTES > SIZEOF_SIZE_T)
+		y >>= MP_WBITS;
+		#else
+		y = 0;
+		#endif
+	}
 }
 #endif
 
@@ -1265,7 +1321,7 @@ mpw mppndiv(mpw xhi, mpw xlo, mpw y)
 #ifndef ASM_MPMOD
 void mpmod(mpw* result, size_t xsize, const mpw* xdata, size_t ysize, const mpw* ydata, mpw* workspace)
 {
-	/* result size xsize, workspace size 2*ysize+1 */
+	/* result size ysize, workspace size 2*ysize+1 */
 	mpw q, msw;
 	mpw* rdata = result;
 	mpw* ynorm = workspace+ysize+1;
@@ -1429,7 +1485,7 @@ int i2osp(byte *osdata, size_t ossize, const mpw* idata, size_t isize)
 			{
 				osdata[--significant_bytes] = (byte)(w >> shift);
 				shift += 8;
-				if (shift == MP_WBITS)
+				if ((shift == MP_WBITS) && isize)
 				{
 					shift = 0;
 					w = idata[--isize];
@@ -1465,7 +1521,7 @@ int os2ip(mpw* idata, size_t isize, const byte* osdata, size_t ossize)
 		/* adjust counter so that the loop will start by skipping the proper
 		 * amount of leading bytes in the first significant word
 		 */
-		byte b = (ossize % MP_WBYTES);
+		byte b = (byte) (ossize % MP_WBYTES);
 
 		if (isize > required)
 		{	/* fill initials words with zero */

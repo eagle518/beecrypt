@@ -23,12 +23,14 @@
 #endif
 
 #include "beecrypt/c++/io/PushbackInputStream.h"
+#include "beecrypt/c++/lang/String.h"
+using beecrypt::lang::String;
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
 
 using namespace beecrypt::io;
 
-PushbackInputStream::PushbackInputStream(InputStream& in, size_t size) : FilterInputStream(in), buf(size)
+PushbackInputStream::PushbackInputStream(InputStream& in, int size) : FilterInputStream(in), buf(size)
 {
 	_closed = false;
 	pos = 0;
@@ -38,7 +40,7 @@ PushbackInputStream::~PushbackInputStream()
 {
 }
 
-off_t PushbackInputStream::available() throw (IOException)
+int PushbackInputStream::available() throw (IOException)
 {
 	if (_closed)
 		throw IOException("Stream closed");
@@ -71,7 +73,7 @@ bool PushbackInputStream::markSupported() throw ()
 	return false;
 }
 
-int PushbackInputStream::read(byte* data, size_t offset, size_t length) throw (IOException)
+int PushbackInputStream::read(byte* data, int offset, int length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();
@@ -82,7 +84,7 @@ int PushbackInputStream::read(byte* data, size_t offset, size_t length) throw (I
 	if (length == 0)
 		return 0;
 
-	size_t buffered = buf.size() - pos;
+	int buffered = buf.size() - pos;
 
 	if (buffered > 0)
 	{
@@ -111,7 +113,7 @@ int PushbackInputStream::read(byte* data, size_t offset, size_t length) throw (I
 	return buffered; // everything was in buffer
 }
 
-off_t PushbackInputStream::skip(off_t n) throw (IOException)
+int PushbackInputStream::skip(int n) throw (IOException)
 {
 	if (_closed)
 		throw IOException("Stream closed");
@@ -119,7 +121,7 @@ off_t PushbackInputStream::skip(off_t n) throw (IOException)
 	if (n == 0)
 		return 0;
 
-	size_t canskip = buf.size() - pos;
+	int canskip = buf.size() - pos;
 
 	if (canskip > 0)
 	{
@@ -157,7 +159,7 @@ void PushbackInputStream::unread(const bytearray& b) throw (IOException)
 	unread(b.data(), 0, b.size());
 }
 
-void PushbackInputStream::unread(const byte* data, size_t offset, size_t length) throw (IOException)
+void PushbackInputStream::unread(const byte* data, int offset, int length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();

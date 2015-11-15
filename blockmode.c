@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2002, 2005 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file blockmode.c
  * \brief Blockcipher operation modes.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup BC_m
  */
 
@@ -128,6 +128,51 @@ int blockDecryptCBC(const blockCipher* bc, blockCipherParam* bp, uint32_t* dst, 
 			src += blockwords;
 
 			nblocks--;
+		}
+		free(buf);
+		return 0;
+	}
+
+	return -1;
+}
+
+int blockEncryptCTR(const blockCipher* bc, blockCipherParam* bp, uint32_t* dst, const uint32_t* src, unsigned int nblocks)
+{
+	/* host-endian counter is kept in fdback;
+	 * swap to big-endian buffer;
+	 * encrypt buffer;
+	 * src ^ ciphertext -> dst
+	 * increment fdback (as mpi) by one inlined;
+	 */
+
+	register const unsigned int blockwords = bc->blocksize >> 2;
+	register uint32_t* fdback = bc->getfb(bp);
+	register uint32_t* buf = (uint32_t*) malloc(blockwords * sizeof(uint32_t));
+
+	if (buf)
+	{
+		while (nblocks > 0)
+		{
+			unsigned int i, j;
+
+			#if WORDS_BIGENDIAN
+			bc->raw.encrypt(bp, buf, fdback);
+			#else
+			for (i = 0, j = blockwords-1; i < blockwords; i++, j--)
+				buf[i] = swapu32(fdback[j]);
+			bc->raw.encrypt(bp, buf, buf);
+			#endif
+
+			for (i = 0; i < blockwords; i++)
+				dst[i] = src[i] ^ buf[i];
+
+			dst += blockwords;
+			src += blockwords;
+
+			nblocks--;
+
+			/* increment counter */
+			mpaddw((blockwords >> 1), (mpw*) fdback, 1);
 		}
 		free(buf);
 		return 0;

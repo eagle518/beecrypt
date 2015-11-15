@@ -32,10 +32,6 @@ PKCS12KeyFactory::PKCS12KeyFactory()
 {
 }
 
-PKCS12KeyFactory::~PKCS12KeyFactory()
-{
-}
-
 SecretKey* PKCS12KeyFactory::engineGenerateSecret(const KeySpec& spec) throw (InvalidKeySpecException)
 {
 	const PBEKeySpec* pbe = dynamic_cast<const PBEKeySpec*>(&spec);

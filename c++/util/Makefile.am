@@ -1,24 +1,24 @@
-INCLUDES = -I$(top_srcdir)/..
+INCLUDES = -I$(top_srcdir)/include
 
-AUTOMAKE_OPTIONS = gnu no-dependencies
+AUTOMAKE_OPTIONS = gnu
+
+SUBDIRS = concurrent .
 
 noinst_LTLIBRARIES = libcxxutil.la
 cxxutildir= $(pkgincludedir)/c++/util
 
 libcxxutil_la_SOURCES =\
 Date.cxx \
-NoSuchElementException.cxx \
 Properties.cxx
 
-cxxutil_HEADERS =\
-Date.h \
-Enumeration.h \
-NoSuchElementException.h \
-Properties.h
+libcxxutil_la_LIBADD = concurrent/libcxxutilconcurrent.la
 
-TESTS = testdate testprop
+TESTS = testlist testdate testprop
 
-check_PROGRAMS = testdate testprop
+check_PROGRAMS = testlist testdate testprop
+
+testlist_SOURCES = testlist.cxx
+testlist_LDADD = ../libbeecrypt_cxx.la
 
 testdate_SOURCES = testdate.cxx
 testdate_LDADD = ../libbeecrypt_cxx.la

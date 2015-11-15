@@ -26,34 +26,26 @@
 
 using namespace beecrypt::security::spec;
 
-DSAPublicKeySpec::DSAPublicKeySpec(const mpbarrett& p, const mpbarrett& q, const mpnumber& g, const mpnumber& y)
-{
-	_p = p;
-	_q = q;
-	_g = g;
-	_y = y;
-}
-
-DSAPublicKeySpec::~DSAPublicKeySpec()
+DSAPublicKeySpec::DSAPublicKeySpec(const BigInteger& y, const BigInteger& p, const BigInteger& q, const BigInteger& g) : _p(p), _q(q), _g(g), _y(y)
 {
 }
 
-const mpbarrett& DSAPublicKeySpec::getP() const throw ()
+const BigInteger& DSAPublicKeySpec::getP() const throw ()
 {
 	return _p;
 }
 
-const mpbarrett& DSAPublicKeySpec::getQ() const throw ()
+const BigInteger& DSAPublicKeySpec::getQ() const throw ()
 {
 	return _q;
 }
 
-const mpnumber& DSAPublicKeySpec::getG() const throw ()
+const BigInteger& DSAPublicKeySpec::getG() const throw ()
 {
 	return _g;
 }
 
-const mpnumber& DSAPublicKeySpec::getY() const throw ()
+const BigInteger& DSAPublicKeySpec::getY() const throw ()
 {
 	return _y;
 }

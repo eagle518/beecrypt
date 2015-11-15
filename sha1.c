@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 1998, 1999, 2000, 2001 Virtual Unlimited B.V.
+ * Copyright (c) 1997, 1998, 1999, 2000, 2001 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file sha1.c
  * \brief SHA-1 hash function, as specified by NIST FIPS 180-1.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup HASH_m HASH_sha1_m
  */
  
@@ -30,11 +30,6 @@
 #endif
 
 #include "beecrypt/sha1.h"
-
-#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
-# include <endian.h>
-#endif
-
 #include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_sha1_m
@@ -46,13 +41,13 @@ static const uint32_t k[4] = { 0x5a827999U, 0x6ed9eba1U, 0x8f1bbcdcU, 0xca62c1d6
 static const uint32_t hinit[5] = { 0x67452301U, 0xefcdab89U, 0x98badcfeU, 0x10325476U, 0xc3d2e1f0U };
 
 const hashFunction sha1 = {
-	"SHA-1",
-	sizeof(sha1Param),
-	64,
-	20,
-	(hashFunctionReset) sha1Reset,
-	(hashFunctionUpdate) sha1Update,
-	(hashFunctionDigest) sha1Digest
+	.name = "SHA-1",
+	.paramsize = sizeof(sha1Param),
+	.blocksize = 64,
+	.digestsize = 20,
+	.reset = (hashFunctionReset) sha1Reset,
+	.update = (hashFunctionUpdate) sha1Update,
+	.digest = (hashFunctionDigest) sha1Digest
 };
 
 int sha1Reset(register sha1Param* p)
@@ -213,12 +208,12 @@ int sha1Update(sha1Param* sp, const byte* data, size_t size)
 	mpw add[1];
 	mpsetw(1, add, size);
 	mplshift(1, add, 3);
-	mpadd(1, sp->length, add);
+	(void) mpadd(1, sp->length, add);
 	#elif (MP_WBITS == 32)
 	mpw add[2];
 	mpsetw(2, add, size);
 	mplshift(2, add, 3);
-	mpadd(2, sp->length, add);
+	(void) mpadd(2, sp->length, add);
 	#else
 	# error
 	#endif
@@ -231,7 +226,7 @@ int sha1Update(sha1Param* sp, const byte* data, size_t size)
 		data += proclength;
 		sp->offset += proclength;
 
-		if (sp->offset == 64)
+		if (sp->offset == 64U)
 		{
 			sha1Process(sp);
 			sp->offset = 0;

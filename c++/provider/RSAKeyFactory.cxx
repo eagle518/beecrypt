@@ -24,26 +24,83 @@
 #include "beecrypt/c++/provider/RSAPrivateKeyImpl.h"
 #include "beecrypt/c++/provider/RSAPrivateCrtKeyImpl.h"
 #include "beecrypt/c++/provider/RSAPublicKeyImpl.h"
+#include "beecrypt/c++/io/ByteArrayInputStream.h"
+using beecrypt::io::ByteArrayInputStream;
 #include "beecrypt/c++/security/KeyFactory.h"
 using beecrypt::security::KeyFactory;
-#include "beecrypt/c++/security/spec/EncodedKeySpec.h"
-using beecrypt::security::spec::EncodedKeySpec;
 #include "beecrypt/c++/security/spec/RSAPrivateKeySpec.h"
 using beecrypt::security::spec::RSAPrivateKeySpec;
 #include "beecrypt/c++/security/spec/RSAPrivateCrtKeySpec.h"
 using beecrypt::security::spec::RSAPrivateCrtKeySpec;
 #include "beecrypt/c++/security/spec/RSAPublicKeySpec.h"
 using beecrypt::security::spec::RSAPublicKeySpec;
-
-using beecrypt::security::NoSuchAlgorithmException;
+#include "beecrypt/c++/beeyond/AnyEncodedKeySpec.h"
+using beecrypt::beeyond::AnyEncodedKeySpec;
+#include "beecrypt/c++/beeyond/BeeInputStream.h"
+using beecrypt::beeyond::BeeInputStream;
 
 using namespace beecrypt::provider;
 
-RSAKeyFactory::RSAKeyFactory()
-{
+namespace {
+    const String FORMAT_BEE("BEE");
+    const String ALGORITHM_RSA("RSA");
+
+	RSAPrivateKey* generatePrivate(const bytearray& enc) throw (InvalidKeySpecException)
+	{
+		try
+		{
+			ByteArrayInputStream bis(enc);
+			BeeInputStream bee(bis);
+
+			BigInteger n, d;
+
+			n = bee.readBigInteger();
+			d = bee.readBigInteger();
+
+			if (bee.available() > 0)
+			{
+				BigInteger e, p, q, dp, dq, qi;
+
+				e = bee.readBigInteger();
+				p = bee.readBigInteger();
+				q = bee.readBigInteger();
+				dp = bee.readBigInteger();
+				dq = bee.readBigInteger();
+				qi = bee.readBigInteger();
+
+				return new RSAPrivateCrtKeyImpl(n, e, d, p, q, dp, dq, qi);
+			}
+
+			return new RSAPrivateKeyImpl(n, d);
+		}
+		catch (IOException&)
+		{
+			throw InvalidKeySpecException("Invalid KeySpec encoding");
+		}
+	}
+
+	RSAPublicKey* generatePublic(const bytearray& enc) throw (InvalidKeySpecException)
+	{
+		try
+		{
+			ByteArrayInputStream bis(enc);
+			BeeInputStream bee(bis);
+
+			BigInteger n, e;
+
+			n = bee.readBigInteger();
+			e = bee.readBigInteger();
+
+			return new RSAPublicKeyImpl(n, e);
+		}
+		catch (IOException&)
+		{
+			throw InvalidKeySpecException("Invalid KeySpec encoding");
+		}
+	}
 }
 
-RSAKeyFactory::~RSAKeyFactory()
+RSAKeyFactory::RSAKeyFactory()
 {
 }
 
@@ -62,25 +119,11 @@ PrivateKey* RSAKeyFactory::engineGeneratePrivate(const KeySpec& spec) throw (Inv
 	const EncodedKeySpec* enc = dynamic_cast<const EncodedKeySpec*>(&spec);
 	if (enc)
 	{
-		try
+		if (enc->getFormat().equals(FORMAT_BEE))
 		{
-			KeyFactory* kf = KeyFactory::getInstance(enc->getFormat());
-			try
-			{
-				PrivateKey* pri = kf->generatePrivate(*enc);
-				delete kf;
-				return pri;
-			}
-			catch (...)
-			{
-				delete kf;
-				throw;
-			}
-		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw InvalidKeySpecException("Unsupported KeySpec encoding format");
-		}
+			return generatePrivate(enc->getEncoded());
+        }
+        throw InvalidKeySpecException("Unsupported KeySpec format");
 	}
 	throw InvalidKeySpecException("Unsupported KeySpec type");
 }
@@ -88,7 +131,6 @@ PrivateKey* RSAKeyFactory::engineGeneratePrivate(const KeySpec& spec) throw (Inv
 PublicKey* RSAKeyFactory::engineGeneratePublic(const KeySpec& spec) throw (InvalidKeySpecException)
 {
 	const RSAPublicKeySpec* rsa = dynamic_cast<const RSAPublicKeySpec*>(&spec);
-
 	if (rsa)
 	{
 		return new RSAPublicKeyImpl(rsa->getModulus(), rsa->getPublicExponent());
@@ -97,25 +139,11 @@ PublicKey* RSAKeyFactory::engineGeneratePublic(const KeySpec& spec) throw (Inval
 	const EncodedKeySpec* enc = dynamic_cast<const EncodedKeySpec*>(&spec);
 	if (enc)
 	{
-		try
+		if (enc->getFormat().equals(FORMAT_BEE))
 		{
-			KeyFactory* kf = KeyFactory::getInstance(enc->getFormat());
-			try
-			{
-				PublicKey* pub = kf->generatePublic(*enc);
-				delete kf;
-				return pub;
-			}
-			catch (...)
-			{
-				delete kf;
-				throw;
-			}
-		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw InvalidKeySpecException("Unsupported KeySpec encoding format");
-		}
+			return generatePublic(enc->getEncoded());
+        }
+        throw InvalidKeySpecException("Unsupported KeySpec format");
 	}
 	throw InvalidKeySpecException("Unsupported KeySpec type");
 }
@@ -123,51 +151,61 @@ PublicKey* RSAKeyFactory::engineGeneratePublic(const KeySpec& spec) throw (Inval
 KeySpec* RSAKeyFactory::engineGetKeySpec(const Key& key, const type_info& info) throw (InvalidKeySpecException)
 {
 	const RSAPublicKey* pub = dynamic_cast<const RSAPublicKey*>(&key);
-
 	if (pub)
 	{
 		if (info == typeid(KeySpec) || info == typeid(RSAPublicKeySpec))
 		{
 			return new RSAPublicKeySpec(pub->getModulus(), pub->getPublicExponent());
 		}
-		/* todo:
 		if (info == typeid(EncodedKeySpec))
 		{
+			const String* format = pub->getFormat();
+			if (format)
+			{
+				const bytearray* enc = pub->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
+			}
 		}
-		*/
 
 		throw InvalidKeySpecException("Unsupported KeySpec type");
 	}
 
-	const RSAPrivateKey* pri = dynamic_cast<const RSAPrivateKey*>(&key);
+	const RSAPrivateCrtKey* crt = dynamic_cast<const RSAPrivateCrtKey*>(&key);
+	if (crt)
+	{
+		if (info == typeid(KeySpec) || info == typeid(RSAPrivateCrtKeySpec))
+		{
+			return new RSAPrivateCrtKeySpec(crt->getModulus(), crt->getPublicExponent(), crt->getPrivateExponent(), crt->getPrimeP(), crt->getPrimeQ(), crt->getPrimeExponentP(), crt->getPrimeExponentQ(), crt->getCrtCoefficient());
+		}
+		if (info == typeid(EncodedKeySpec))
+		{
+			const String* format = pub->getFormat();
+			if (format)
+			{
+				const bytearray* enc = pub->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
+			}
+		}
+	}
 
+	const RSAPrivateKey* pri = dynamic_cast<const RSAPrivateKey*>(&key);
 	if (pri)
 	{
-		const RSAPrivateCrtKey* crt = dynamic_cast<const RSAPrivateCrtKey*>(pri);
-
-		if (crt)
+		if (info == typeid(KeySpec) || info == typeid(RSAPrivateKeySpec))
 		{
-			if (info == typeid(KeySpec) || info == typeid(RSAPrivateCrtKeySpec))
-			{
-				return new RSAPrivateCrtKeySpec(crt->getModulus(), crt->getPublicExponent(), crt->getPrivateExponent(), crt->getPrimeP(), crt->getPrimeQ(), crt->getPrimeExponentP(), crt->getPrimeExponentQ(), crt->getCrtCoefficient());
-			}
-			/* todo:
-			if (info == typeid(EncodedKeySpec))
-			{
-			}
-			*/
+			return new RSAPrivateKeySpec(pri->getModulus(), pri->getPrivateExponent());
 		}
-		else
+		if (info == typeid(EncodedKeySpec))
 		{
-			if (info == typeid(KeySpec) || info == typeid(RSAPrivateKeySpec))
+			const String* format = pub->getFormat();
+			if (format)
 			{
-				return new RSAPrivateKeySpec(pri->getModulus(), pri->getPrivateExponent());
+				const bytearray* enc = pub->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
 			}
-			/* todo:
-			if (info == typeid(EncodedKeySpec))
-			{
-			}
-			*/
 		}
 
 		throw InvalidKeySpecException("Unsupported KeySpec type");

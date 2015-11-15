@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file md5.c
  * \brief MD5 hash function
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup HASH_m HASH_md5_m
  */
 
@@ -30,11 +30,6 @@
 #endif
 
 #include "beecrypt/md5.h"
-
-#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
-# include <endian.h>
-#endif
-
 #include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_md5_m
@@ -44,13 +39,13 @@
 static uint32_t md5hinit[4] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
 
 const hashFunction md5 = {
-	"MD5",
-	sizeof(md5Param),
-	64,
-	16,
-	(hashFunctionReset) md5Reset,
-	(hashFunctionUpdate) md5Update,
-	(hashFunctionDigest) md5Digest
+	.name = "MD5",
+	.paramsize = sizeof(md5Param),
+	.blocksize = 64,
+	.digestsize = 16,
+	.reset = (hashFunctionReset) md5Reset,
+	.update = (hashFunctionUpdate) md5Update,
+	.digest = (hashFunctionDigest) md5Digest
 };
 
 int md5Reset(register md5Param* mp)
@@ -69,24 +64,16 @@ int md5Reset(register md5Param* mp)
 }
 
 #define FF(a, b, c, d, w, s, t)	\
-	a += ((b&(c^d))^d) + w + t;	\
-	a = ROTL32(a, s);	\
-	a += b;
+	a = ROTL32(((b&(c^d))^d) + a + w + t, s) + b;
 
 #define GG(a, b, c, d, w, s, t)	\
-	a += ((d&(b^c))^c) + w + t;	\
-	a = ROTL32(a, s);	\
-	a += b;
+	a = ROTL32(((d&(b^c))^c) + a + w + t, s) + b;
 
 #define HH(a, b, c, d, w, s, t)	\
-	a += (b^c^d) + w + t;	\
-	a = ROTL32(a, s);	\
-	a += b;
+	a = ROTL32((b^c^d) + a + w + t, s) + b;
 
 #define II(a, b, c, d, w, s, t)	\
-	a += (c^(b|~d)) + w + t;	\
-	a = ROTL32(a, s);	\
-	a += b;
+	a = ROTL32((c^(b|~d)) + a + w + t, s) + b;
 
 #ifndef ASM_MD5PROCESS
 void md5Process(md5Param* mp)
@@ -196,7 +183,7 @@ int md5Update(md5Param* mp, const byte* data, size_t size)
 	mpadd(1, mp->length, add);
 	#elif (MP_WBITS == 32)
 	mpw add[2];
-	mpsetw(2, add, size);
+	mpsetws(2, add, size);
 	mplshift(2, add, 3);
 	mpadd(2, mp->length, add);
 	#else

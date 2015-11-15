@@ -34,42 +34,15 @@ BeeInputStream::~BeeInputStream()
 {
 }
 
-void BeeInputStream::read(mpnumber& n) throw (IOException)
+BigInteger BeeInputStream::readBigInteger() throw (IOException)
 {
 	int size = readInt();
-	byte* data = new byte[size];
+	if (size <= 0)
+		throw IOException("invalid BigInteger size");
 
-	try
-	{
-		readFully(data, 0, size);
-		mpnsetbin(&n, data, size);
-		delete[] data;
-	}
-	catch (IOException)
-	{
-		// free buffer
-		delete[] data;
-		// re-throw exception
-		throw;
-	}
-}
+	bytearray data(size);
 
-void BeeInputStream::read(mpbarrett& b) throw (IOException)
-{
-	int size = readInt();
-	byte* data = new byte[size];
+	readFully(data);
 
-	try
-	{
-		readFully(data, 0, size);
-		mpbsetbin(&b, data, size);
-		delete[] data;
-	}
-	catch (IOException)
-	{
-		// free buffer
-		delete[] data;
-		// re-throw exception
-		throw;
-	}
+	return BigInteger(data);
 }

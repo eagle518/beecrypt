@@ -3,7 +3,7 @@
  *
  * Unit test program for SHA-256; it implements the test vectors from the draft FIPS document.
  *
- * Copyright (c) 2002, 2003 Bob Deblier <bob.deblier@pandora.be>
+ * Copyright (c) 2002, 2003 Bob Deblier <bob.deblier@telenet.be>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 
-#include "sha256.h"
+#include "beecrypt/sha256.h"
 
 struct vector
 {

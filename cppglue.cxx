@@ -47,6 +47,11 @@ mpnumber::mpnumber(unsigned int value)
 	mpnsetw(this, value);
 }
 
+mpnumber::mpnumber(size_t size, const mpw* data)
+{
+	mpninit(this, size, data);
+}
+
 mpnumber::mpnumber(const mpnumber& copy)
 {
 	mpnzero(this);
@@ -64,22 +69,12 @@ const mpnumber& mpnumber::operator=(const mpnumber& copy)
 	return *this;
 }
 
-bool mpnumber::operator==(const mpnumber& cmp) const throw ()
-{
-	return mpeqx(size, data, cmp.size, cmp.data);
-}
-
-bool mpnumber::operator!=(const mpnumber& cmp) const throw ()
-{
-	return mpnex(size, data, cmp.size, cmp.data);
-}
-
 void mpnumber::wipe()
 {
 	mpnwipe(this);
 }
 
-size_t mpnumber::bitlength() const throw ()
+size_t mpnumber::bitlength() const
 {
 	return mpbits(size, data);
 }
@@ -95,12 +90,6 @@ std::ostream& operator<<(std::ostream& stream, const mpnumber& n)
 
 	return stream;
 }
-
-/*
-std::istream& operator>>(std:istream& stream, mpnumber& n)
-{
-}
-*/
 
 mpbarrett::mpbarrett()
 {
@@ -124,22 +113,12 @@ const mpbarrett& mpbarrett::operator=(const mpbarrett& copy)
 	return *this;
 }
 
-bool mpbarrett::operator==(const mpbarrett& cmp) const throw ()
-{
-	return mpeqx(size, modl, cmp.size, cmp.modl);
-}
-
-bool mpbarrett::operator!=(const mpbarrett& cmp) const throw ()
-{
-	return mpnex(size, modl, cmp.size, cmp.modl);
-}
-
 void mpbarrett::wipe()
 {
 	mpbwipe(this);
 }
 
-size_t mpbarrett::bitlength() const throw ()
+size_t mpbarrett::bitlength() const
 {
 	return mpbits(size, modl);
 }

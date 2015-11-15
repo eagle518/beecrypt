@@ -26,7 +26,7 @@
 
 using namespace beecrypt::security::spec;
 
-EncodedKeySpec::EncodedKeySpec(const byte* data, size_t size) : _encoded(data, size)
+EncodedKeySpec::EncodedKeySpec(const byte* data, int size) : _encoded(data, size)
 {
 }
 

@@ -6,13 +6,9 @@
 
 #include "beecrypt/c++/beeyond/PKCS12PBEKey.h"
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 using namespace beecrypt::beeyond;
 
-PKCS12PBEKey::PKCS12PBEKey(const array<javachar>& password, const bytearray* salt, size_t iterationCount) : _pswd(password)
+PKCS12PBEKey::PKCS12PBEKey(const array<jchar>& password, const bytearray* salt, int iterationCount) : _pswd(password)
 {
 	if (salt)
 		_salt = new bytearray(*salt);
@@ -24,8 +20,7 @@ PKCS12PBEKey::PKCS12PBEKey(const array<javachar>& password, const bytearray* sal
 
 PKCS12PBEKey::~PKCS12PBEKey()
 {
-	if (_salt)
-		delete _salt;
+	delete _salt;
 }
 
 bool PKCS12PBEKey::operator==(const Key& compare) const throw ()
@@ -57,9 +52,9 @@ PKCS12PBEKey* PKCS12PBEKey::clone() const
 	return new PKCS12PBEKey(_pswd, _salt, _iter);
 }
 
-bytearray* PKCS12PBEKey::encode(const array<javachar>& password, const bytearray* salt, size_t iterationCount)
+bytearray* PKCS12PBEKey::encode(const array<jchar>& password)
 {
-	size_t i;
+	int i;
 
 	bytearray* result = new bytearray((password.size() + 1) * 2);
 
@@ -74,12 +69,12 @@ bytearray* PKCS12PBEKey::encode(const array<javachar>& password, const bytearray
 	return result;
 }
 
-size_t PKCS12PBEKey::getIterationCount() const throw ()
+int PKCS12PBEKey::getIterationCount() const throw ()
 {
 	return _iter;
 }
 
-const array<javachar>& PKCS12PBEKey::getPassword() const throw ()
+const array<jchar>& PKCS12PBEKey::getPassword() const throw ()
 {
 	return _pswd;
 }
@@ -89,22 +84,22 @@ const bytearray* PKCS12PBEKey::getSalt() const throw ()
 	return _salt;
 }
 
-const bytearray* PKCS12PBEKey::getEncoded() const
+const bytearray* PKCS12PBEKey::getEncoded() const throw ()
 {
 	if (!_enc)
-		_enc = encode(_pswd, _salt, _iter);
+		_enc = encode(_pswd);
 
 	return _enc;
 }
 
 const String& PKCS12PBEKey::getAlgorithm() const throw ()
 {
-	static const String ALGORITHM = UNICODE_STRING_SIMPLE("PKCS#12/PBE");
+	static const String ALGORITHM("PKCS#12/PBE");
 	return ALGORITHM;
 }
 
 const String* PKCS12PBEKey::getFormat() const throw ()
 {
-	static const String FORMAT = UNICODE_STRING_SIMPLE("RAW");
+	static const String FORMAT("RAW");
 	return &FORMAT;
 }

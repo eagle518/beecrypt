@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file hmacsha512.c
  * \brief HMAC-SHA-512 message digest algorithm.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup HMAC_m HMAC_sha512_m
  */
 

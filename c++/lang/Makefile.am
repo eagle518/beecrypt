@@ -1,47 +1,32 @@
-INCLUDES = -I$(top_srcdir)/..
+INCLUDES = -I$(top_srcdir)/include
 
-AUTOMAKE_OPTIONS = gnu no-dependencies
+AUTOMAKE_OPTIONS = gnu
 
 noinst_LTLIBRARIES = libcxxlang.la
 
 cxxlangdir=$(pkgincludedir)/c++/lang
 
 libcxxlang_la_SOURCES = \
-ClassCastException.cxx \
-CloneNotSupportedException.cxx \
-Error.cxx \
-Exception.cxx \
-IllegalArgumentException.cxx \
-IllegalStateException.cxx \
+Character.cxx \
 Integer.cxx \
 Long.cxx \
-NullPointerException.cxx \
-NumberFormatException.cxx \
 Object.cxx \
-OutOfMemoryError.cxx \
-RuntimeException.cxx \
+String.cxx \
+StringBuffer.cxx \
+StringBuilder.cxx \
 System.cxx \
-Throwable.cxx \
-UnsupportedOperationException.cxx
+Thread.cxx \
+Throwable.cxx
 
-cxxlang_HEADERS = \
-ClassCastException.h \
-Cloneable.h \
-CloneNotSupportedException.h \
-Comparable.h \
-Error.h \
-Exception.h \
-IllegalArgumentException.h \
-IllegalStateException.h \
-Integer.h \
-Long.h \
-NullPointerException.h \
-Number.h \
-NumberFormatException.h \
-Object.h \
-OutOfMemoryError.h \
-RuntimeException.h \
-String.h \
-System.h \
-Throwable.h \
-UnsupportedOperationException.h
+TESTS = teststring testthread testnotify
+
+check_PROGRAMS = teststring testthread testnotify
+
+teststring_SOURCES = teststring.cxx
+teststring_LDADD = ../libbeecrypt_cxx.la
+
+testthread_SOURCES = testthread.cxx
+testthread_LDADD = ../libbeecrypt_cxx.la
+
+testnotify_SOURCES = testnotify.cxx
+testnotify_LDADD = ../libbeecrypt_cxx.la

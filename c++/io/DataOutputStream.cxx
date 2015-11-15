@@ -31,39 +31,39 @@ using namespace beecrypt::io;
 
 DataOutputStream::DataOutputStream(OutputStream& out) : FilterOutputStream(out)
 {
-	_lock.init();
 	_utf = 0;
 	written = 0;
 }
 
 DataOutputStream::~DataOutputStream()
 {
-	_lock.destroy();
 	if (_utf)
 		ucnv_close(_utf);
 }
 
-size_t DataOutputStream::size() const throw ()
+jint DataOutputStream::size() const throw ()
 {
 	return written;
 }
 
 void DataOutputStream::write(byte b) throw (IOException)
 {
-	_lock.lock();
-	out.write(b);
-	written++;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write(b);
+		written++;
+	}
 }
 
-void DataOutputStream::write(const byte* data, size_t offset, size_t length) throw (IOException)
+void DataOutputStream::write(const byte* data, jint offset, jint length) throw (IOException)
 {
 	if (length)
 	{
-		_lock.lock();
-		out.write(data, offset, length);
-		written += length;
-		_lock.unlock();
+		synchronized (this)
+		{
+			out.write(data, offset, length);
+			written += length;
+		}
 	}
 }
 
@@ -74,77 +74,102 @@ void DataOutputStream::write(const bytearray& b) throw (IOException)
 
 void DataOutputStream::writeBoolean(bool b) throw (IOException)
 {
-	_lock.lock();
-	out.write(b ? 1 : 0);
-	written++;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write(b ? 1 : 0);
+		written++;
+	}
 }
 
 void DataOutputStream::writeByte(byte b) throw (IOException)
 {
-	_lock.lock();
-	out.write(b);
-	written++;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write(b);
+		written++;
+	}
 }
 
-void DataOutputStream::writeShort(javashort s) throw (IOException)
+void DataOutputStream::writeShort(jshort s) throw (IOException)
 {
-	_lock.lock();
-	out.write((s >>  8)       );
-	out.write((s      ) & 0xff);
-	written += 2;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write((s >>  8)       );
+		written++;
+		out.write((s      ) & 0xff);
+		written++;
+	}
 }
 
-void DataOutputStream::writeInt(javaint i) throw (IOException)
+void DataOutputStream::writeInt(jint i) throw (IOException)
 {
-	_lock.lock();
-	out.write((i >> 24)       );
-	out.write((i >> 16) & 0xff);
-	out.write((i >>  8) & 0xff);
-	out.write((i      ) & 0xff);
-	written += 4;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write((i >> 24)       );
+		written++;
+		out.write((i >> 16) & 0xff);
+		written++;
+		out.write((i >>  8) & 0xff);
+		written++;
+		out.write((i      ) & 0xff);
+		written++;
+	}
 }
 
-void DataOutputStream::writeLong(javalong l) throw (IOException)
+#if defined(_MSC_VER)
+# pragma optimize("",off)
+#endif
+void DataOutputStream::writeLong(jlong l) throw (IOException)
 {
-	_lock.lock();
-	out.write((l >> 56)       );
-	out.write((l >> 48) & 0xff);
-	out.write((l >> 40) & 0xff);
-	out.write((l >> 32) & 0xff);
-	out.write((l >> 24) & 0xff);
-	out.write((l >> 16) & 0xff);
-	out.write((l >>  8) & 0xff);
-	out.write((l      ) & 0xff);
-	written += 8;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write((l >> 56)       );
+		written++;
+		out.write((l >> 48) & 0xff);
+		written++;
+		out.write((l >> 40) & 0xff);
+		written++;
+		out.write((l >> 32) & 0xff);
+		written++;
+		out.write((l >> 24) & 0xff);
+		written++;
+		out.write((l >> 16) & 0xff);
+		written++;
+		out.write((l >>  8) & 0xff);
+		written++;
+		out.write((l      ) & 0xff);
+		written++;
+	}
 }
+#if defined(_MSC_VER)
+# pragma optimize("",on)
+#endif
 
-void DataOutputStream::writeChar(javaint v) throw (IOException)
+void DataOutputStream::writeChar(jint v) throw (IOException)
 {
-	_lock.lock();
-	out.write((v >> 8) && 0xff);
-	out.write((v     ) && 0xff);
-	written += 2;
-	_lock.unlock();
+	synchronized (this)
+	{
+		out.write((v >> 8) && 0xff);
+		written++;
+		out.write((v     ) && 0xff);
+		written++;
+	}
 }
 
 void DataOutputStream::writeChars(const String& str) throw (IOException)
 {
-	const UChar* buffer = str.getBuffer();
-	size_t len = str.length();
+	const array<jchar>& src = str.toCharArray();
 
-	_lock.lock();
-	for (size_t i = 0; i < len; i++)
+	synchronized (this)
 	{
-		out.write((buffer[i] >> 8) & 0xff);
-		out.write((buffer[i]     ) & 0xff);
+		for (jint i = 0; i < src.size(); i++)
+		{
+			out.write((src[i] >> 8) & 0xff);
+			written++;
+			out.write((src[i]     ) & 0xff);
+			written++;
+		}
 	}
-	written += (len << 1);
-	_lock.unlock();
 }
 
 void DataOutputStream::writeUTF(const String& str) throw (IOException)
@@ -159,15 +184,13 @@ void DataOutputStream::writeUTF(const String& str) throw (IOException)
 			throw IOException("unable to open ICU UTF-8 converter");
 	}
 
+	const array<jchar>& src = str.toCharArray();
+
 	// the expected status code here is U_BUFFER_OVERFLOW_ERROR
-	size_t need = ucnv_fromUChars(_utf, 0, 0, str.getBuffer(), str.length(), &status);
+	jint need = ucnv_fromUChars(_utf, 0, 0, src.data(), src.size(), &status);
 	if (U_FAILURE(status))
 		if (status != U_BUFFER_OVERFLOW_ERROR)
-		{
-			std::cout << "Error converting [" << str << "]" << std::endl;
-
-			throw IOException("unexpected error in ucnv_fromUChars");
-		}
+			throw IOException("ucnv_fromUChars failed");
 
 	if (need > 0xffff)
 		throw IOException("String length >= 64K");
@@ -177,28 +200,28 @@ void DataOutputStream::writeUTF(const String& str) throw (IOException)
 	status = U_ZERO_ERROR;
 
 	// the expected status code here is U_STRING_NOT_TERMINATED_WARNING
-	ucnv_fromUChars(_utf, (char*) buffer, need, str.getBuffer(), str.length(), &status);
+	ucnv_fromUChars(_utf, (char*) buffer, need, src.data(), src.size(), &status);
 	if (status != U_STRING_NOT_TERMINATED_WARNING)
 	{
 		delete[] buffer;
-		throw IOException("error in ucnv_fromUChars");
+		throw IOException("ucnv_fromUChars failed");
 	}
 
 	// everything ready for the critical section
-	_lock.lock();
 	try
 	{
-		out.write((need >>  8) & 0xff);
-		out.write((need      ) & 0xff);
-		out.write(buffer, 0, need);
-		written += 2 + need;
-		_lock.unlock();
-
-		delete[] buffer;
+		synchronized (this)
+		{
+			out.write((need >>  8) & 0xff);
+			written++;
+			out.write((need      ) & 0xff);
+			written++;
+			out.write(buffer, 0, need);
+			written += need;
+		}
 	}
-	catch (IOException)
+	catch (IOException&)
 	{
-		_lock.unlock();
 		delete[] buffer;
 		throw;
 	}

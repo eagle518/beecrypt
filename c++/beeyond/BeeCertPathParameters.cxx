@@ -25,6 +25,8 @@
 #include "beecrypt/c++/beeyond/BeeCertPathParameters.h"
 #include "beecrypt/c++/beeyond/BeeCertificate.h"
 
+#include "beecrypt/c++/util/ArrayList.h"
+
 using namespace beecrypt::beeyond;
 
 BeeCertPathParameters::BeeCertPathParameters()
@@ -33,11 +35,11 @@ BeeCertPathParameters::BeeCertPathParameters()
 
 BeeCertPathParameters::BeeCertPathParameters(KeyStore& keystore) throw (KeyStoreException, InvalidAlgorithmParameterException)
 {
-	Enumeration* aliases = keystore.aliases();
+	Enumeration<const String>* aliases = keystore.aliases();
 
 	while (aliases->hasMoreElements())
 	{
-		const String* alias = (const String*) aliases->nextElement();
+		const String* alias = aliases->nextElement();
 
 		if (keystore.isCertificateEntry(*alias))
 		{
@@ -45,15 +47,17 @@ BeeCertPathParameters::BeeCertPathParameters(KeyStore& keystore) throw (KeyStore
 			const BeeCertificate* beecert = dynamic_cast<const BeeCertificate*>(keystore.getCertificate(*alias));
 
 			if (beecert)
-				_cert.push_back(beecert);
+				_cert.add(beecert->clone());
 		}
 	}
+
+	delete aliases;
 
 	if (_cert.size() == 0)
 		throw InvalidAlgorithmParameterException("KeyStore doesn't contain any trusted BeeCertificates");
 }
 
-const vector<const Certificate*>& BeeCertPathParameters::getTrustedCertificates() const
+const List<Certificate>& BeeCertPathParameters::getTrustedCertificates() const
 {
 	return _cert;
 }
@@ -62,8 +66,7 @@ BeeCertPathParameters* BeeCertPathParameters::clone() const throw ()
 {
 	BeeCertPathParameters* tmp = new BeeCertPathParameters();
 
-	for (vector<const Certificate*>::const_iterator it = _cert.begin(); it != _cert.end(); it++)
-		tmp->_cert.push_back(*it);
+	tmp->_cert.addAll(_cert);
 
 	return tmp;
 }

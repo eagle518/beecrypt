@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/crypto/SecretKeyFactory.h"
 #include "beecrypt/c++/security/Security.h"
 using beecrypt::security::Security;
@@ -48,9 +44,7 @@ SecretKeyFactory* SecretKeyFactory::getInstance(const String& algorithm) throw (
 {
     Security::spi* tmp = Security::getSpi(algorithm, "SecretKeyFactory");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecretKeyFactorySpi*>((SecretKeyFactorySpi*) tmp->cspi));
-	#endif
 
     SecretKeyFactory* result = new SecretKeyFactory((SecretKeyFactorySpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -63,9 +57,7 @@ SecretKeyFactory* SecretKeyFactory::getInstance(const String& algorithm, const S
 {
     Security::spi* tmp = Security::getSpi(algorithm, "SecretKeyFactory", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecretKeyFactorySpi*>((SecretKeyFactorySpi*) tmp->cspi));
-	#endif
 
     SecretKeyFactory* result = new SecretKeyFactory((SecretKeyFactorySpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -78,9 +70,7 @@ SecretKeyFactory* SecretKeyFactory::getInstance(const String& algorithm, const P
 {
     Security::spi* tmp = Security::getSpi(algorithm, "SecretKeyFactory", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecretKeyFactorySpi*>((SecretKeyFactorySpi*) tmp->cspi));
-	#endif
 
     SecretKeyFactory* result = new SecretKeyFactory((SecretKeyFactorySpi*) tmp->cspi, tmp->prov, tmp->name);
 

@@ -42,7 +42,7 @@ namespace {
 	const asn1error DER_CONVERSION_ERROR = -5;
 
 	/* compute the size of a DER length encoding */
-	size_t asn1_der_length(size_t length) throw ()
+	int asn1_der_length(int length) throw ()
 	{
 		if (length < 0x80)
 			return 1;
@@ -56,16 +56,16 @@ namespace {
 			return 5;
 	}
 
-	size_t asn1_der_length_of(const mpnumber& n) throw ()
+	int asn1_der_length_of(const mpnumber& n) throw ()
 	{
-		size_t sigbits = mpbits(n.size, n.data);
+		int sigbits = mpbits(n.size, n.data);
 
 		return ((sigbits + 7) >> 3) + (((sigbits & 7) == 0) ? 1 : 0);
 	}
 
-	size_t asn1_der_length_of_rssig(const mpnumber& r, const mpnumber& s) throw ()
+	int asn1_der_length_of_rssig(const mpnumber& r, const mpnumber& s) throw ()
 	{
-		size_t intlen, seqlen = 0;
+		int intlen, seqlen = 0;
 
 		intlen = asn1_der_length_of(r);
 
@@ -78,7 +78,7 @@ namespace {
 		return 1 + asn1_der_length(seqlen) + seqlen;
 	}
 
-	size_t asn1_der_encode_length(byte* data, size_t length) throw ()
+	int asn1_der_encode_length(byte* data, int length) throw ()
 	{
 		if (length < 0x80)
 		{
@@ -117,9 +117,9 @@ namespace {
 		}
 	}
 
-	size_t asn1_der_decode_length(const byte* data, size_t size, size_t* length) throw (asn1error)
+	int asn1_der_decode_length(const byte* data, int size, int* length) throw (asn1error)
 	{
-		size_t length_bytes;
+		int length_bytes;
 		byte tmp;
 
 		if (size == 0)
@@ -142,10 +142,10 @@ namespace {
 			if (length_bytes >= size)
 				throw DER_NOT_ENOUGH_DATA;
 				
-			if (length_bytes > sizeof(size_t))
+			if (length_bytes > sizeof(int))
 				throw DER_TAG_TOO_LONG;
 
-			size_t temp = 0;
+			int temp = 0;
 	                                                                                                    
 			for (byte i = 0; i < length_bytes; i++)
 			{
@@ -159,9 +159,9 @@ namespace {
 		return 1 + length_bytes;
 	}
 
-	size_t asn1_der_encode(byte* data, const mpnumber& n) throw ()
+	int asn1_der_encode(byte* data, const mpnumber& n) throw ()
 	{
-		size_t offset = 1, length = asn1_der_length_of(n);
+		int offset = 1, length = asn1_der_length_of(n);
 
 		data[0] = TAG_INTEGER;
 
@@ -174,9 +174,9 @@ namespace {
 		return offset;
 	}
 
-	size_t asn1_der_decode(const byte* data, size_t size, mpnumber& n) throw (asn1error)
+	int asn1_der_decode(const byte* data, int size, mpnumber& n) throw (asn1error)
 	{
-		size_t length, offset = 1;
+		int length, offset = 1;
 
 		if (size < 2)
 			throw DER_NOT_ENOUGH_DATA;
@@ -197,9 +197,9 @@ namespace {
 		return offset;
 	}
 
-	size_t asn1_der_encode_rssig(byte* data, const mpnumber& r, const mpnumber& s) throw ()
+	int asn1_der_encode_rssig(byte* data, const mpnumber& r, const mpnumber& s) throw ()
 	{
-		size_t intlen, seqlen = 0;
+		int intlen, seqlen = 0;
 
 		intlen = asn1_der_length_of(r);
 		seqlen += 1 + asn1_der_length(intlen) + intlen;
@@ -215,9 +215,9 @@ namespace {
 		return 1 + asn1_der_length(seqlen) + seqlen;
 	}
 
-	size_t asn1_der_decode_rssig(const byte* data, size_t size, mpnumber& r, mpnumber& s) throw (asn1error)
+	int asn1_der_decode_rssig(const byte* data, int size, mpnumber& r, mpnumber& s) throw (asn1error)
 	{
-		size_t tmp, length, offset = 1;
+		int tmp, length, offset = 1;
 
 		if (size < 2)
 			throw DER_NOT_ENOUGH_DATA;
@@ -253,10 +253,6 @@ SHA1withDSASignature::SHA1withDSASignature()
 {
 }
 
-SHA1withDSASignature::~SHA1withDSASignature()
-{
-}
-
 AlgorithmParameters* SHA1withDSASignature::engineGetParameters() const
 {
 	return 0;
@@ -273,10 +269,10 @@ void SHA1withDSASignature::engineInitSign(const PrivateKey& key, SecureRandom* r
 	if (dsa)
 	{
 		/* copy key information */
-		_params.p = dsa->getParams().getP();
-		_params.q = dsa->getParams().getQ();
-		_params.g = dsa->getParams().getG();
-		_x = dsa->getX();
+		transform(_params.p, dsa->getParams().getP());
+		transform(_params.q, dsa->getParams().getQ());
+		transform(_params.g, dsa->getParams().getG());
+		transform(_x, dsa->getX());
 
 		/* reset the hash function */
 		sha1Reset(&_sp);
@@ -293,10 +289,10 @@ void SHA1withDSASignature::engineInitVerify(const PublicKey& key) throw (Invalid
 	if (dsa)
 	{
 		/* copy key information */
-		_params.p = dsa->getParams().getP();
-		_params.q = dsa->getParams().getQ();
-		_params.g = dsa->getParams().getG();
-		_y = dsa->getY();
+		transform(_params.p, dsa->getParams().getP());
+		transform(_params.q, dsa->getParams().getQ());
+		transform(_params.g, dsa->getParams().getG());
+		transform(_y, dsa->getY());
 
 		/* reset the hash function */
 		sha1Reset(&_sp);
@@ -312,7 +308,7 @@ void SHA1withDSASignature::engineUpdate(byte b)
 	sha1Update(&_sp, &b, 1);
 }
 
-void SHA1withDSASignature::engineUpdate(const byte* data, size_t offset, size_t len)
+void SHA1withDSASignature::engineUpdate(const byte* data, int offset, int len)
 {
 	sha1Update(&_sp, data+offset, len);
 }
@@ -363,7 +359,7 @@ bytearray* SHA1withDSASignature::engineSign() throw (SignatureException)
 	return signature;
 }
 
-size_t SHA1withDSASignature::engineSign(byte* signature, size_t offset, size_t len) throw (ShortBufferException, SignatureException)
+int SHA1withDSASignature::engineSign(byte* signature, int offset, int len) throw (ShortBufferException, SignatureException)
 {
 	if (!signature)
 		throw NullPointerException();
@@ -378,7 +374,7 @@ size_t SHA1withDSASignature::engineSign(byte* signature, size_t offset, size_t l
 	return asn1_der_encode_rssig(signature+offset, r, s);
 }
 
-size_t SHA1withDSASignature::engineSign(bytearray& signature) throw (SignatureException)
+int SHA1withDSASignature::engineSign(bytearray& signature) throw (SignatureException)
 {
 	mpnumber r, s;
 
@@ -389,7 +385,7 @@ size_t SHA1withDSASignature::engineSign(bytearray& signature) throw (SignatureEx
 	return asn1_der_encode_rssig(signature.data(), r, s);
 }
 
-bool SHA1withDSASignature::engineVerify(const byte* signature, size_t offset, size_t len) throw (SignatureException)
+bool SHA1withDSASignature::engineVerify(const byte* signature, int offset, int len) throw (SignatureException)
 {
 	if (!signature)
 		throw NullPointerException();
@@ -400,7 +396,7 @@ bool SHA1withDSASignature::engineVerify(const byte* signature, size_t offset, si
 	{
 		asn1_der_decode_rssig(signature+offset, len-offset, r, s);
 	}
-	catch (asn1error ae)
+	catch (asn1error&)
 	{
 		throw SignatureException("invalid signature");
 	}

@@ -44,7 +44,7 @@ void MacOutputStream::write(byte b) throw (IOException)
 		mac.update(b);
 }
 
-void MacOutputStream::write(const byte *data, size_t offset, size_t length) throw (IOException)
+void MacOutputStream::write(const byte *data, int offset, int length) throw (IOException)
 {
 	if (length)
 	{

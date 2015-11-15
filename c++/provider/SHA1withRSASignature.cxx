@@ -28,7 +28,3 @@ using namespace beecrypt::provider;
 SHA1withRSASignature::SHA1withRSASignature() : PKCS1RSASignature(&sha1)
 {
 }
-
-SHA1withRSASignature::~SHA1withRSASignature()
-{
-}

@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 		if (!sig->verify(*tmp))
 			failures++;
 
-		KeyFactory* kf = KeyFactory::getInstance("BEE");
+		KeyFactory* kf = KeyFactory::getInstance(pair->getPublic().getAlgorithm());
 
 		KeySpec* spec = kf->getKeySpec(pair->getPublic(), typeid(EncodedKeySpec));
 

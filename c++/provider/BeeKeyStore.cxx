@@ -20,10 +20,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/aes.h"
 #include "beecrypt/pkcs12.h"
 #include "beecrypt/sha256.h"
@@ -54,39 +50,64 @@ using beecrypt::beeyond::PKCS12PBEKey;
 using beecrypt::provider::KeyProtector;
 #include "beecrypt/c++/provider/BeeKeyStore.h"
 
+#include <memory>
+using std::auto_ptr;
+
 using namespace beecrypt::provider;
 
 namespace {
-	const array<javachar> EMPTY_PASSWORD;
+	const array<jchar> EMPTY_PASSWORD;
 }
 
-#define BKS_MAGIC				((javaint) 0xbeecceec)
-#define BKS_VERSION_1			((javaint) 0x1)
-#define BKS_PRIVATEKEY_ENTRY	((javaint) 0x1)
-#define BKS_CERTIFICATE_ENTRY	((javaint) 0x2)
+#define BKS_MAGIC				((jint) 0xbeecceec)
+#define BKS_VERSION_1			((jint) 0x1)
+#define BKS_PRIVATEKEY_ENTRY	((jint) 0x1)
+#define BKS_CERTIFICATE_ENTRY	((jint) 0x2)
 
-BeeKeyStore::Entry::~Entry() throw ()
+BeeKeyStore::Names::Names(Hashtable<String,Entry>& h) : _list(h.size())
 {
+	Iterator<class Map<String,Entry>::Entry>* it = h.entrySet().iterator();
+	assert(it != 0);
+	_pos = 0;
+	while (it->hasNext())
+	{
+		_list[_pos++] = new String(*it->next()->getKey());
+	}
+	_pos = 0;
+}
+
+BeeKeyStore::Names::~Names()
+{
+	for (int i = 0; i < _list.size(); i++)
+		delete _list[i];
+}
+
+bool BeeKeyStore::Names::hasMoreElements() throw ()
+{
+	return _pos < _list.size();
+}
+
+const String* BeeKeyStore::Names::nextElement() throw (NoSuchElementException)
+{
+	if (_pos >= _list.size())
+		throw NoSuchElementException();
+
+	return _list[_pos++];
 }
 
 BeeKeyStore::KeyEntry::KeyEntry() throw ()
 {
 }
 
-BeeKeyStore::KeyEntry::KeyEntry(const bytearray& b, const vector<Certificate*>& c) throw (CloneNotSupportedException)
+BeeKeyStore::KeyEntry::KeyEntry(const bytearray& b, const array<Certificate*>& c) throw (CloneNotSupportedException) : chain(c)
 {
 	encryptedkey = b;
-
-	for (vector<Certificate*>::const_iterator it = c.begin(); it != c.end(); it++)
-	{
-		chain.push_back(BeeCertificate::cloneCertificate(*(*it)));
-	}
 }
 
-BeeKeyStore::KeyEntry::~KeyEntry() throw ()
+BeeKeyStore::KeyEntry::~KeyEntry()
 {
 	// delete all the certificates in the chain
-	for (size_t i = 0; i < chain.size(); i++)
+	for (int i = 0; i < chain.size(); i++)
 		delete chain[i];
 }
 
@@ -100,107 +121,41 @@ BeeKeyStore::CertEntry::CertEntry(const Certificate& c) throw (CloneNotSupported
 	cert = BeeCertificate::cloneCertificate(c);
 }
 
-BeeKeyStore::CertEntry::~CertEntry() throw ()
+BeeKeyStore::CertEntry::~CertEntry()
 {
-	if (cert)
-	{
-		delete cert;
-		cert = 0;
-	}
+	delete cert;
 }
 
 BeeKeyStore::BeeKeyStore()
 {
-	_lock.init();
 }
 
-BeeKeyStore::~BeeKeyStore()
+Enumeration<const String>* BeeKeyStore::engineAliases()
 {
-	_lock.lock();
-	clearall();
-	_lock.unlock();
-	_lock.destroy();
-}
-
-BeeKeyStore::AliasEnum::AliasEnum(const BeeKeyStore::entry_map& map)
-{
-	_it = map.begin();
-	_end = map.end();
-}
-
-BeeKeyStore::AliasEnum::~AliasEnum() throw ()
-{
-}
-
-bool BeeKeyStore::AliasEnum::hasMoreElements() throw ()
-{
-	return _it != _end;
-}
-
-const void* BeeKeyStore::AliasEnum::nextElement() throw (NoSuchElementException)
-{
-	if (_it == _end)
-		throw NoSuchElementException();
-
-	return (const void*) &((_it++)->first);
-}
-
-void BeeKeyStore::clearall()
-{
-	keyfactory_map::iterator kit = _keyfactories.begin();
-	while (kit != _keyfactories.end())
-	{
-		delete kit->second;
-		_keyfactories.erase(kit++);
-	}
-
-	certfactory_map::iterator cit = _certfactories.begin();
-	while (cit != _certfactories.end())
-	{
-		delete cit->second;
-		_certfactories.erase(cit++);
-	}
-
-	entry_map::iterator eit = _entries.begin();
-	while (eit != _entries.end())
-	{
-		delete eit->second;
-		_entries.erase(eit++);
-	}
-}
-
-Enumeration* BeeKeyStore::engineAliases()
-{
-	return new AliasEnum(_entries);
+	return new Names(_entries);
 }
 
 bool BeeKeyStore::engineContainsAlias(const String& alias)
 {
-	return (_entries[alias] != 0);
+	return _entries.containsKey(&alias);
 }
 
 void BeeKeyStore::engineDeleteEntry(const String& alias) throw (KeyStoreException)
 {
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-
-	if (it != _entries.end())
-	{
-		delete it->second;
-		_entries.erase(it);
-	}
-	_lock.unlock();
+	delete _entries.remove(&alias);
 }
 
 const Date* BeeKeyStore::engineGetCreationDate(const String& alias)
 {
 	const Date* result = 0;
 
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-	if (it != _entries.end())
-		result =  &(it->second->date);
-	_lock.unlock();
+	synchronized (this)
+	{
+		Entry* e = _entries.get(&alias);
+		if (e)
+			result = &e->date;
+	}
+
 	return result;
 }
 
@@ -208,21 +163,25 @@ const Certificate* BeeKeyStore::engineGetCertificate(const String& alias)
 {
 	const Certificate* result = 0;
 
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-	if (it != _entries.end())
+	synchronized (this)
 	{
-		CertEntry* ce = dynamic_cast<CertEntry*>(it->second);
-		if (ce)
-			result = ce->cert;
-		else
+		Entry* e = _entries.get(&alias);
+		if (e)
 		{
-			KeyEntry* ke = dynamic_cast<KeyEntry*>(it->second);
-			if (ke)
-				result = ke->chain[0];
+			CertEntry* ce = dynamic_cast<CertEntry*>(e);
+			if (ce)
+			{
+				result = ce->cert;
+			}
+			else
+			{
+				KeyEntry* ke = dynamic_cast<KeyEntry*>(e);
+				if (ke)
+					result = ke->chain[0];
+			}
 		}
 	}
-	_lock.unlock();
+
 	return result;
 }
 
@@ -230,190 +189,164 @@ const String* BeeKeyStore::engineGetCertificateAlias(const Certificate& cert)
 {
 	const String* result = 0;
 
-	_lock.lock();
-	for (entry_map::const_iterator it = _entries.begin(); it != _entries.end(); ++it)
+	synchronized (this)
 	{
-		const CertEntry* ce = dynamic_cast<const CertEntry*>(it->second);
-		if (ce)
+		Iterator<class Map<String,Entry>::Entry>* it = _entries.entrySet().iterator();
+		assert(it != 0);
+		while (it->hasNext())
 		{
-			if (cert.equals(*(ce->cert)))
+			class Map<String,Entry>::Entry* e = it->next();
+
+			const CertEntry* ce = dynamic_cast<const CertEntry*>(e->getValue());
+			if (ce)
 			{
-				result = &(it->first);
-				break;
+				if (cert.equals(ce->cert))
+				{
+					result = e->getKey();
+					break;
+				}
 			}
 		}
+		delete it;
 	}
-	_lock.unlock();
+
 	return result;
 }
 
-const vector<Certificate*>* BeeKeyStore::engineGetCertificateChain(const String& alias)
+const array<Certificate*>* BeeKeyStore::engineGetCertificateChain(const String& alias)
 {
-	const vector<Certificate*>* result = 0;
+	const array<Certificate*>* result = 0;
 
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-	if (it != _entries.end())
+	synchronized (this)
 	{
-		KeyEntry* ke = dynamic_cast<KeyEntry*>(it->second);
+		KeyEntry* ke = dynamic_cast<KeyEntry*>(_entries.get(&alias));
 		if (ke)
-			result = const_cast<vector<Certificate*>*>(&ke->chain);
+			result = &ke->chain;
 	}
-	_lock.unlock();
+
 	return result;
 }
 
 bool BeeKeyStore::engineIsCertificateEntry(const String& alias)
 {
-	bool result = false;
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-	if (it != _entries.end())
-		result = (dynamic_cast<CertEntry*>(it->second) != 0);
-	_lock.unlock();
-	return result;
+	return dynamic_cast<CertEntry*>(_entries.get(&alias)) != 0;
 }
 
 void BeeKeyStore::engineSetCertificateEntry(const String& alias, const Certificate& cert) throw (KeyStoreException)
 {
-	_entries[alias] = new CertEntry(cert);
+	delete _entries.put(new String(alias), new CertEntry(cert));
 }
 
-Key* BeeKeyStore::engineGetKey(const String& alias, const array<javachar>& password) throw (NoSuchAlgorithmException, UnrecoverableKeyException)
+Key* BeeKeyStore::engineGetKey(const String& alias, const array<jchar>& password) throw (NoSuchAlgorithmException, UnrecoverableKeyException)
 {
 	Key* result = 0;
 
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-	if (it != _entries.end())
+	synchronized (this)
 	{
-		KeyEntry* ke = dynamic_cast<KeyEntry*>(it->second);
-		if (ke)
+		Entry* e = _entries.get(&alias);
+		if (e)
 		{
-			PKCS12PBEKey pbekey(password, &_salt, _iter);
+			KeyEntry* ke = dynamic_cast<KeyEntry*>(e);
+			if (ke)
+			{
+				PKCS12PBEKey pbekey(password, &_salt, _iter);
 
-			try
-			{
-				KeyProtector p(pbekey);
+				try
+				{
+					KeyProtector p(pbekey);
 
-				result = p.recover(ke->encryptedkey);
-			}
-			catch (InvalidKeyException e)
-			{
-				_lock.unlock();
-				throw KeyStoreException(e.getMessage());
-			}
-			catch (...)
-			{
-				_lock.unlock();
-				throw;
+					result = p.recover(ke->encryptedkey);
+				}
+				catch (InvalidKeyException& e)
+				{
+					throw UnrecoverableKeyException().initCause(e);
+				}
 			}
 		}
 	}
-	_lock.unlock();
 
 	return result;
 }
 
 bool BeeKeyStore::engineIsKeyEntry(const String& alias)
 {
-	bool result = false;
-	_lock.lock();
-	entry_map::iterator it = _entries.find(alias);
-	if (it != _entries.end())
-		result = (dynamic_cast<KeyEntry*>(it->second) != 0);
-	_lock.unlock();
-	return result;
+	return dynamic_cast<KeyEntry*>(_entries.get(&alias)) != 0;
 }
 
-void BeeKeyStore::engineSetKeyEntry(const String& alias, const bytearray& key, const vector<Certificate*>& chain) throw (KeyStoreException)
+void BeeKeyStore::engineSetKeyEntry(const String& alias, const bytearray& key, const array<Certificate*>& chain) throw (KeyStoreException)
 {
-	_lock.lock();
-	_entries[alias] = new KeyEntry(key, chain);
-	_lock.unlock();
+	delete _entries.put(new String(alias), new KeyEntry(key, chain));
 }
 
-void BeeKeyStore::engineSetKeyEntry(const String& alias, const Key& key, const array<javachar>& password, const vector<Certificate*>& chain) throw (KeyStoreException)
+void BeeKeyStore::engineSetKeyEntry(const String& alias, const Key& key, const array<jchar>& password, const array<Certificate*>& chain) throw (KeyStoreException)
 {
-	PKCS12PBEKey pbekey(password, &_salt, _iter);
-
-	try
+	const PrivateKey* pri = dynamic_cast<const PrivateKey*>(&key);
+	if (pri)
 	{
-		const PrivateKey* pri = dynamic_cast<const PrivateKey*>(&key);
-		if (pri)
+		PKCS12PBEKey pbekey(password, &_salt, _iter);
+		KeyProtector p(pbekey);
+
+		bytearray* tmp = p.protect(*pri);
+		if (tmp)
 		{
-			KeyProtector p(pbekey);
-
-			bytearray *tmp = p.protect(*pri);
-
-			if (tmp)
-				engineSetKeyEntry(alias, *tmp, chain);
-			else
-				throw KeyStoreException("Failed to protect key");
+			engineSetKeyEntry(alias, *tmp, chain);
+			delete tmp;
 		}
 		else
+			throw KeyStoreException("BeeKeyStore failed to protect key");
+	}
+	else
 			throw KeyStoreException("BeeKeyStore only supports storing of PrivateKey objects");
-	}
-	catch (InvalidKeyException e)
-	{
-		throw KeyStoreException(e.getMessage());
-	}
 }
 
-size_t BeeKeyStore::engineSize() const
+int BeeKeyStore::engineSize() const
 {
 	return _entries.size();
 }
 
-void BeeKeyStore::engineLoad(InputStream* in, const array<javachar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException)
+void BeeKeyStore::engineLoad(InputStream* in, const array<jchar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException)
 {
-	_lock.lock();
-
-	if (!in)
+	synchronized (this)
 	{
-		randomGeneratorContext rngc;
+		if (!in)
+		{
+			randomGeneratorContext rngc;
 
-		/* salt size default is 64 bytes */
-		_salt.resize(64);
-		/* generate a new salt */
-		randomGeneratorContextNext(&rngc, _salt.data(), _salt.size());
-		/* set default iteration count */
-		_iter = 1024;
+			/* salt size default is 64 bytes */
+			_salt.resize(64);
+			/* generate a new salt */
+			randomGeneratorContextNext(&rngc, _salt.data(), _salt.size());
+			/* set default iteration count */
+			_iter = 1024;
 
-		_lock.unlock();
+			return;
+		}
 
-		return;
-	}
+		auto_ptr<Mac> m(Mac::getInstance("HMAC-SHA-256"));
 
-	Mac* m = 0;
-
-	try
-	{
-		m = Mac::getInstance("HMAC-SHA-256");
-
-		MacInputStream mis(*in, *m);
+		MacInputStream mis(*in, *m.get());
 		DataInputStream dis(mis);
 
 		mis.on(false);
 
-		javaint magic = dis.readInt();
-		javaint version = dis.readInt();
+		jint magic = dis.readInt();
+		jint version = dis.readInt();
 
 		if (magic != BKS_MAGIC || version != BKS_VERSION_1)
-			throw IOException("Invalid KeyStore format");
+			throw IOException("invalid BeeKeyStore format");
 
-		clearall();
+		_entries.clear();
 
-		javaint saltsize = dis.readInt();
+		jint saltsize = dis.readInt();
 		if (saltsize <= 0)
-			throw IOException("Invalid KeyStore salt size");
+			throw IOException("invalid BeeKeyStore salt size");
 
 		_salt.resize(saltsize);
 		dis.readFully(_salt);
 
 		_iter = dis.readInt();
 		if (_iter <= 0)
-			throw IOException("Invalid KeyStore iteration count");
+			throw IOException("invalid BeeKeyStore iteration count");
 
 		PKCS12PBEKey pbekey(password ? *password : EMPTY_PASSWORD, &_salt, _iter);
 
@@ -421,12 +354,12 @@ void BeeKeyStore::engineLoad(InputStream* in, const array<javachar>* password) t
 
 		mis.on(true);
 
-		javaint entrycount = dis.readInt();
+		jint entrycount = dis.readInt();
 
 		if (entrycount <= 0)
-			throw IOException("Invalid KeyStore entry count");
+			throw IOException("invalid BeeKeyStore entry count");
 
-		for (javaint i = 0; i < entrycount; i++)
+		for (jint i = 0; i < entrycount; i++)
 		{
 			String alias;
 
@@ -434,113 +367,83 @@ void BeeKeyStore::engineLoad(InputStream* in, const array<javachar>* password) t
 			{
 			case BKS_PRIVATEKEY_ENTRY:
 				{
-					dis.readUTF(alias);
+					alias = dis.readUTF();
 
-					KeyEntry* e = new KeyEntry;
+					auto_ptr<KeyEntry> e(new KeyEntry);
 
-					try
+					e->date.setTime(dis.readLong());
+
+					jint keysize = dis.readInt();
+
+					if (keysize <= 0)
+						throw IOException("invalid BeeKeyStore key length");
+
+					e->encryptedkey.resize((int) keysize);
+
+					dis.readFully(e->encryptedkey);
+
+					jint certcount = dis.readInt();
+
+					if (certcount <= 0)
+						throw IOException("invalid BeeKeyStore certificate count");
+
+					e->chain.resize(certcount);
+
+					for (jint j = 0; j < certcount; j++)
 					{
-						e->date.setTime(dis.readLong());
+						String type = dis.readUTF();
 
-						javaint keysize = dis.readInt();
+						auto_ptr<CertificateFactory> cf(CertificateFactory::getInstance(type));
 
-						if (keysize <= 0)
-							throw IOException("Invalid KeyStore key length");
-
-						e->encryptedkey.resize((size_t) keysize);
-
-						dis.readFully(e->encryptedkey);
-
-						javaint certcount = dis.readInt();
-
-						if (certcount <= 0)
-							throw IOException("Invalid KeyStore certificate count");
-
-						for (javaint j = 0; j < certcount; j++)
-						{
-							String type;
-
-							dis.readUTF(type);
-
-							// see if we have a CertificateFactory of this type available
-							CertificateFactory* cf = _certfactories[type];
-							if (!cf)
-							{
-								// apparently not; get a new one and cache it
-								_certfactories[type] = cf = CertificateFactory::getInstance(type);
-							}
-
-							javaint certsize = dis.readInt();
-
-							if (certsize <= 0)
-								throw IOException("Invalid KeyStore certificate size");
-						
-							bytearray cert(certsize);
-
-							dis.readFully(cert);
-
-							ByteArrayInputStream bis(cert);
-
-							e->chain.push_back(cf->generateCertificate(bis));
-						}
-
-						_entries[alias] = e;
-					}
-					catch (...)
-					{
-						delete e;
-						throw;
-					}
-				}
-				break;
-
-			case BKS_CERTIFICATE_ENTRY:
-				{
-					dis.readUTF(alias);
-
-					CertEntry* e = new CertEntry;
-
-					try
-					{
-						e->date.setTime(dis.readLong());
-
-						String type;
-
-						dis.readUTF(type);
-
-						// see if we have a CertificateFactory of this type available
-						CertificateFactory* cf = _certfactories[type];
-						if (!cf)
-						{
-							// apparently not; get a new one and cache it
-							_certfactories[type] = cf = CertificateFactory::getInstance(type);
-						}
-
-						javaint certsize = dis.readInt();
+						jint certsize = dis.readInt();
 
 						if (certsize <= 0)
-							throw IOException("Invalid KeyStore certificate size");
-
+							throw IOException("invalid BeeKeyStore certificate size");
+					
 						bytearray cert(certsize);
 
 						dis.readFully(cert);
 
 						ByteArrayInputStream bis(cert);
 
-						e->cert = cf->generateCertificate(bis);
+						e->chain[j] = cf->generateCertificate(bis);
+					}
 
-						_entries[alias] = e;
-					}
-					catch (...)
-					{
-						delete e;
-						throw;
-					}
+					delete _entries.put(new String(alias), e.release());
+				}
+				break;
+
+			case BKS_CERTIFICATE_ENTRY:
+				{
+					alias = dis.readUTF();
+
+					auto_ptr<CertEntry> e(new CertEntry);
+
+					e->date.setTime(dis.readLong());
+
+					String type = dis.readUTF();
+
+					auto_ptr<CertificateFactory> cf(CertificateFactory::getInstance(type));
+
+					jint certsize = dis.readInt();
+
+					if (certsize <= 0)
+						throw IOException("invalid BeeKeyStore certificate size");
+
+					bytearray cert(certsize);
+
+					dis.readFully(cert);
+
+					ByteArrayInputStream bis(cert);
+
+					e->cert = cf->generateCertificate(bis);
+
+					delete _entries.put(new String(alias), e.release());
 				}
 				break;
 
 			default:
-				throw IOException("Invalid KeyStore entry tag");
+				throw IOException("invalid BeeKeyStore entry tag");
 			}
 		}
 
@@ -548,49 +451,34 @@ void BeeKeyStore::engineLoad(InputStream* in, const array<javachar>* password) t
 
 		mis.on(false);
 
-		javaint macsize = dis.available();
+		jint macsize = dis.available();
 		if (macsize <= 0)
-			throw IOException("Invalid KeyStore MAC size");
+			throw IOException("invalid BeeKeyStore MAC size");
 
 		computed_mac = m->doFinal();
+		// we can safely cast, since we've excluded negative numbers
 		if (macsize != computed_mac.size())
-			throw KeyStoreException("KeyStore has been tampered with, or password was incorrect");
+			throw IOException("BeeKeyStore has been tampered with, or password was incorrect; incorrect mac size");
 
 		original_mac.resize(macsize);
 		dis.readFully(original_mac);
 
 		if (computed_mac != original_mac)
-			throw KeyStoreException("KeyStore has been tampered with, or password was incorrect");
-
-		delete m;
+			throw IOException("BeeKeyStore has been tampered with, or password was incorrect; incorrect mac");
 	}
-	catch (...)
-	{
-		if (m)
-			delete m;
-
-		_lock.unlock();
-		throw;
-	}
-
-	_lock.unlock();
 }
 
-void BeeKeyStore::engineStore(OutputStream& out, const array<javachar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException)
+void BeeKeyStore::engineStore(OutputStream& out, const array<jchar>* password) throw (IOException, CertificateException, NoSuchAlgorithmException)
 {
-	_lock.lock();
-
-	Mac* m = 0;
-
-	try
+	synchronized (this)
 	{
-		m = Mac::getInstance("HMAC-SHA-256");
+		auto_ptr<Mac> m(Mac::getInstance("HMAC-SHA-256"));
 
 		PKCS12PBEKey pbekey(password ? *password : EMPTY_PASSWORD, &_salt, _iter);
 
 		m->init(pbekey);
 
-		MacOutputStream mos(out, *m);
+		MacOutputStream mos(out, *m.get());
 		DataOutputStream dos(mos);
 
 		mos.on(false);
@@ -602,21 +490,25 @@ void BeeKeyStore::engineStore(OutputStream& out, const array<javachar>* password
 		mos.on(true);
 		dos.writeInt(_entries.size());
 
-		for (entry_map::const_iterator it = _entries.begin(); it != _entries.end(); ++it)
+		Iterator<class Map<String,Entry>::Entry>* it = _entries.entrySet().iterator();
+		assert(it != 0);
+		while (it->hasNext())
 		{
-			const KeyEntry* ke = dynamic_cast<const KeyEntry*>(it->second);
+			class Map<String,Entry>::Entry* e = it->next();
+
+			const KeyEntry* ke = dynamic_cast<const KeyEntry*>(e->getValue());
 			if (ke)
 			{
 				dos.writeInt(BKS_PRIVATEKEY_ENTRY);
-				dos.writeUTF(it->first);
+				dos.writeUTF(*e->getKey());
 				dos.writeLong(ke->date.getTime());
 				dos.writeInt(ke->encryptedkey.size());
 				dos.write(ke->encryptedkey);
 				/* next do all the certificates for this key */
 				dos.writeInt(ke->chain.size());
-				for (vector<Certificate*>::const_iterator cit = ke->chain.begin(); cit != ke->chain.end(); ++cit)
+				for (int i = 0; i < ke->chain.size(); i++)
 				{
-					const Certificate* cert = *cit;
+					const Certificate* cert = ke->chain[i];
 
 					dos.writeUTF(cert->getType());
 					dos.writeInt(cert->getEncoded().size());
@@ -625,11 +517,11 @@ void BeeKeyStore::engineStore(OutputStream& out, const array<javachar>* password
 				continue;
 			}
 
-			const CertEntry* ce = dynamic_cast<const CertEntry*>(it->second);
+			const CertEntry* ce = dynamic_cast<const CertEntry*>(e->getValue());
 			if (ce)
 			{
 				dos.writeInt(BKS_CERTIFICATE_ENTRY);
-				dos.writeUTF(it->first);
+				dos.writeUTF(*e->getKey());
 				dos.writeLong(ce->date.getTime());
 				dos.writeUTF(ce->cert->getType());
 				dos.writeInt(ce->cert->getEncoded().size());
@@ -639,6 +531,7 @@ void BeeKeyStore::engineStore(OutputStream& out, const array<javachar>* password
 
 			throw ProviderException("entry is neither KeyEntry nor CertEntry");
 		}
+
 		/* don't call close on a FilterOutputStream because the
 		 * underlying stream still has to write data!
 		 */
@@ -647,12 +540,5 @@ void BeeKeyStore::engineStore(OutputStream& out, const array<javachar>* password
 
 		out.write(m->doFinal());
 		out.close();
-
-		_lock.unlock();
-	}
-	catch (...)
-	{
-		_lock.unlock();
-		throw;
 	}
 }

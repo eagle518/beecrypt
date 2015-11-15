@@ -40,12 +40,12 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		array<javachar> password(4);
+		array<jchar> password(4);
 
-		password[0] = (javachar) 't';
-		password[1] = (javachar) 'e';
-		password[2] = (javachar) 's';
-		password[3] = (javachar) 't';
+		password[0] = (jchar) 't';
+		password[1] = (jchar) 'e';
+		password[2] = (jchar) 's';
+		password[3] = (jchar) 't';
 
 		KeyStore* ks = KeyStore::getInstance(KeyStore::getDefaultType());
 
@@ -69,9 +69,9 @@ int main(int argc, char* argv[])
 
 			KeyPair* pair = kpg->generateKeyPair();
 
-			vector<Certificate*> chain;
+			array<Certificate*> chain(1);
 
-			chain.push_back(BeeCertificate::self(pair->getPublic(), pair->getPrivate(), "SHA1withRSA"));
+			chain[0] = BeeCertificate::self(pair->getPublic(), pair->getPrivate(), "SHA1withRSA");
 
 			FileOutputStream fos(fopen("keystore", "wb"));
 
@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
 	}
 	catch (Exception e)
 	{
-		cout << "Exception: " + e.getMessage() << endl;
+		if (e.getMessage())
+			cout << "Exception: " + *e.getMessage() << endl;
 	}
 }

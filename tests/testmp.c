@@ -1,19 +1,20 @@
 #include <stdio.h>
 
-#include "beecrypt.h"
-#include "mp.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/mp.h"
 
 #define INIT	0xdeadbeefU;
 
 static const mpw Z[4] = { 0U, 0U, 0U, 0U };
 static const mpw F[4] = { MP_ALLMASK, MP_ALLMASK, MP_ALLMASK, MP_ALLMASK};
 static const mpw P[8] = { MP_ALLMASK, MP_ALLMASK, MP_ALLMASK, MP_ALLMASK-1U, 0U, 0U, 0U, 1U };
+static const mpw SM[5] = { MP_ALLMASK-1U, MP_ALLMASK, MP_ALLMASK, MP_ALLMASK, 1U };
 
 int main()
 {
 	int i, carry;
 	mpw x[4];
-	mpw y[4];
+/*	mpw y[4]; */
 	mpw r[8];
 
 	for (i = 0; i < 4; i++)
@@ -83,6 +84,22 @@ int main()
 	if (!carry || mpne(4, x, F))
 	{
 		printf("mpsubw failed");
+		return 1;
+	}
+
+	mpzero(5, r);
+	r[0] = mpsetmul(4, r+1, F, MP_ALLMASK);
+	if (!mpeq(5, r, SM))
+	{
+		printf("mpsetmul failed");
+		return 1;
+	}
+
+	mpzero(5, r);
+	r[0] = mpaddmul(4, r+1, F, MP_ALLMASK);
+	if (!mpeq(5, r, SM))
+	{
+		printf("mpaddmul failed");
 		return 1;
 	}
 

@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/beeyond/BeeCertificate.h"
 #include "beecrypt/c++/beeyond/AnyEncodedKeySpec.h"
 #include "beecrypt/c++/io/ByteArrayInputStream.h"
@@ -38,6 +34,8 @@ using beecrypt::lang::ClassCastException;
 using beecrypt::lang::Cloneable;
 #include "beecrypt/c++/lang/Long.h"
 using beecrypt::lang::Long;
+#include "beecrypt/c++/lang/StringBuilder.h"
+using beecrypt::lang::StringBuilder;
 #include "beecrypt/c++/lang/NullPointerException.h"
 using beecrypt::lang::NullPointerException;
 #include "beecrypt/c++/security/KeyFactory.h"
@@ -46,6 +44,9 @@ using beecrypt::security::KeyFactory;
 using beecrypt::security::Signature;
 #include "beecrypt/c++/security/cert/CertificateFactory.h"
 using beecrypt::security::cert::CertificateFactory;
+
+#include <memory>
+using std::auto_ptr;
 
 using namespace beecrypt::beeyond;
 
@@ -60,28 +61,19 @@ Certificate* BeeCertificate::cloneCertificate(const Certificate& cert) throw (Cl
 	{
 		ByteArrayInputStream bis(cert.getEncoded());
 
-		CertificateFactory* cf;
-
 		try
 		{
-			Certificate* tmp;
+			auto_ptr<CertificateFactory> cf(CertificateFactory::getInstance(cert.getType()));
 
-			cf = CertificateFactory::getInstance(cert.getType());
-
-			tmp = cf->generateCertificate(bis);
-
-			delete cf;
-
-			return tmp;
+			return cf->generateCertificate(bis);
 		}
-		catch (NoSuchAlgorithmException)
+		catch (CertificateException&)
+		{
+			throw CloneNotSupportedException("Unable to clone Certificate through its encoding");
+		}
+		catch (NoSuchAlgorithmException&)
 		{
 			throw CloneNotSupportedException("Unable to clone Certificate through CertificateFactory of type " + cert.getType());
-		}
-		catch (CertificateException)
-		{
-			delete cf;
-			throw CloneNotSupportedException("Unable to clone Certificate through its encoding");
 		}
 	}
 }
@@ -95,38 +87,26 @@ PublicKey* BeeCertificate::clonePublicKey(const PublicKey& key) throw (CloneNotS
 	}
 	else
 	{
-		PublicKey* p;
-		KeyFactory* kf;
-
 		try
 		{
-			kf = KeyFactory::getInstance(key.getAlgorithm());
+			auto_ptr<KeyFactory> kf(KeyFactory::getInstance(key.getAlgorithm()));
 
-			p = dynamic_cast<PublicKey*>(kf->translateKey(key));
-
-			delete kf;
+			PublicKey* p = dynamic_cast<PublicKey*>(kf->translateKey(key));
 
 			if (p)
-			{
 				return p;
-			}
 			else
 				throw ClassCastException("KeyFactory didn't translate key into PublicKey");
 		}
-		catch (NoSuchAlgorithmException)
+		catch (NoSuchAlgorithmException&)
 		{
 			throw CloneNotSupportedException("Unable to clone key through KeyFactory of type " + key.getAlgorithm());
 		}
-		catch (InvalidKeyException)
+		catch (InvalidKeyException&)
 		{
-			delete kf;
 			throw CloneNotSupportedException("Unable to clone PublicKey because KeyFactory says it's invalid");
 		}
 	}
-}
-
-BeeCertificate::Field::~Field() throw ()
-{
 }
 
 BeeCertificate::UnknownField::UnknownField() throw ()
@@ -136,10 +116,6 @@ BeeCertificate::UnknownField::UnknownField() throw ()
 BeeCertificate::UnknownField::UnknownField(const UnknownField& copy) throw () : encoding(copy.encoding)
 {
 	type = copy.type;
-}
-
-BeeCertificate::UnknownField::~UnknownField() throw ()
-{
 }
 
 BeeCertificate::Field* BeeCertificate::UnknownField::clone() const throw ()
@@ -159,7 +135,7 @@ void BeeCertificate::UnknownField::encode(DataOutputStream& out) const throw (IO
 	out.write(encoding);
 }
 
-const javaint BeeCertificate::PublicKeyField::FIELD_TYPE = 0x5055424b; // 'PUBK'
+const jint BeeCertificate::PublicKeyField::FIELD_TYPE = 0x5055424b; // 'PUBK'
 
 BeeCertificate::PublicKeyField::PublicKeyField() throw ()
 {
@@ -173,7 +149,7 @@ BeeCertificate::PublicKeyField::PublicKeyField(const PublicKey& key) throw (Clon
 	pub = clonePublicKey(key);
 }
 
-BeeCertificate::PublicKeyField::~PublicKeyField() throw ()
+BeeCertificate::PublicKeyField::~PublicKeyField()
 {
 	delete pub;
 }
@@ -185,43 +161,42 @@ BeeCertificate::Field* BeeCertificate::PublicKeyField::clone() const throw (Clon
 
 void BeeCertificate::PublicKeyField::decode(DataInputStream& in) throw (IOException)
 {
-	String format;
+	String algorithm = in.readUTF();
+	String format = in.readUTF();
 
-	in.readUTF(format);
+	jint encsize = in.readInt();
 
-	// no need for a try-catch around this; calling function is expecting a thrown NoSuchAlgorithmException
-	KeyFactory* kf = KeyFactory::getInstance(format);
+	if (encsize <= 0)
+		throw IOException("Invalid key encoding size");
+
+	bytearray enc(encsize);
+
+	in.readFully(enc);
+
+	AnyEncodedKeySpec spec(format, enc);
 
 	try
 	{
-		javaint encsize = in.readInt();
-
-		if (encsize <= 0)
-			throw IOException("Invalid key encoding size");
-
-		bytearray enc(encsize);
-
-		in.readFully(enc);
-
-		AnyEncodedKeySpec spec(format, enc);
+		auto_ptr<KeyFactory> kf(KeyFactory::getInstance(algorithm));
 
 		pub = kf->generatePublic(spec);
-
-		delete kf;
 	}
-	catch (...)
+	catch (InvalidKeySpecException&)
 	{
-		delete kf;
-		throw;
+		throw IOException("Invalid key spec");
+	}
+	catch (NoSuchAlgorithmException&)
+	{
+		throw IOException("Invalid key format");
 	}
 }
 
 void BeeCertificate::PublicKeyField::encode(DataOutputStream& out) const throw (IOException)
 {
+	out.writeUTF(pub->getAlgorithm());
 	out.writeUTF(*pub->getFormat());
 
 	const bytearray* pubenc = pub->getEncoded();
-
 	if (!pubenc)
 		throw NullPointerException("PublicKey has no encoding");
 
@@ -229,7 +204,7 @@ void BeeCertificate::PublicKeyField::encode(DataOutputStream& out) const throw (
 	out.write(*pubenc);
 }
 
-const javaint BeeCertificate::ParentCertificateField::FIELD_TYPE = 0x43455254; // 'CERT'
+const jint BeeCertificate::ParentCertificateField::FIELD_TYPE = 0x43455254; // 'CERT'
 
 BeeCertificate::ParentCertificateField::ParentCertificateField() throw ()
 {
@@ -246,46 +221,10 @@ BeeCertificate::ParentCertificateField::ParentCertificateField(Certificate* cert
 BeeCertificate::ParentCertificateField::ParentCertificateField(const Certificate& cert) throw (CloneNotSupportedException)
 {
 	type = BeeCertificate::ParentCertificateField::FIELD_TYPE;
-
-	const Cloneable* c = dynamic_cast<const Cloneable*>(&cert);
-	if (c)
-	{
-		// Cloneable certificate
-		Object* clone = c->clone();
-
-		parent = dynamic_cast<Certificate*>(clone);
-
-		if (!parent)
-			throw ClassCastException();
-	}
-	else
-	{
-		// Non-Cloneable certificate; let's try a CertificateFactory
-		ByteArrayInputStream bis(cert.getEncoded());
-
-		CertificateFactory* cf;
-
-		try
-		{
-			cf = CertificateFactory::getInstance(cert.getType());
-
-			parent = cf->generateCertificate(bis);
-
-			delete cf;
-		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw CloneNotSupportedException("Unable to clone Certificate through CertificateFactory of type " + cert.getType());
-		}
-		catch (CertificateException)
-		{
-			delete cf;
-			throw CloneNotSupportedException("Unable to clone Certificate through its encoding");
-		}
-	}
+	parent = cloneCertificate(cert);
 }
 
-BeeCertificate::ParentCertificateField::~ParentCertificateField() throw ()
+BeeCertificate::ParentCertificateField::~ParentCertificateField()
 {
 	delete parent;
 }
@@ -297,33 +236,32 @@ BeeCertificate::Field* BeeCertificate::ParentCertificateField::clone() const thr
 
 void BeeCertificate::ParentCertificateField::decode(DataInputStream& in) throw (IOException)
 {
-	String type;
+	String type = in.readUTF();
 
-	in.readUTF(type);
+	jint encsize = in.readInt();
 
-	CertificateFactory* cf = CertificateFactory::getInstance(type);
+	if (encsize <= 0)
+		throw IOException("Invalid certificate encoding size");
+
+	bytearray enc(encsize);
+
+	in.readFully(enc);
+
+	ByteArrayInputStream bin(enc);
 
 	try
 	{
-		javaint encsize = in.readInt();
-
-		if (encsize <= 0)
-			throw IOException("Invalid certificate encoding size");
-
-		bytearray enc(encsize);
-
-		in.readFully(enc);
-
-		ByteArrayInputStream bin(enc);
+		auto_ptr<CertificateFactory> cf(CertificateFactory::getInstance(type));
 
 		parent = cf->generateCertificate(bin);
-
-		delete cf;
 	}
-	catch (...)
+	catch (CertificateException&)
 	{
-		delete cf;
-		throw;
+		throw IOException("Invalid certificate encoding");
+	}
+	catch (NoSuchAlgorithmException&)
+	{
+		throw IOException("Invalid certificate type");
 	}
 }
 
@@ -331,13 +269,20 @@ void BeeCertificate::ParentCertificateField::encode(DataOutputStream& out) const
 {
 	out.writeUTF(parent->getType());
 
-	const bytearray& parentenc = parent->getEncoded();
-	
-	out.writeInt(parentenc.size());
-	out.write(parentenc);
+	try
+	{
+		const bytearray& parentenc = parent->getEncoded();
+			
+		out.writeInt(parentenc.size());
+		out.write(parentenc);
+	}
+	catch (CertificateEncodingException&)
+	{
+		throw IOException("Couldn't encoding certificate");
+	}
 }
 
-BeeCertificate::Field* BeeCertificate::instantiateField(javaint type)
+BeeCertificate::Field* BeeCertificate::instantiateField(jint type)
 {
 	switch (type)
 	{
@@ -357,34 +302,33 @@ const Date BeeCertificate::FOREVER(Long::MAX_VALUE);
 BeeCertificate::BeeCertificate() : Certificate("BEE")
 {
 	enc = 0;
-	str = 0;
 }
 
 BeeCertificate::BeeCertificate(InputStream& in) throw (IOException) : Certificate("BEE")
 {
 	enc = 0;
-	str = 0;
 
 	DataInputStream dis(in);
 
-	dis.readUTF(issuer);
-	dis.readUTF(subject);
+	issuer = dis.readUTF();
+	subject = dis.readUTF();
 
 	created.setTime(dis.readLong());
 	expires.setTime(dis.readLong());
 
-	javaint fieldcount = dis.readInt();
-	if (fieldcount < 0)
+	jint fieldCount = dis.readInt();
+	if (fieldCount < 0)
 		throw IOException("field count < 0");
 
-	for (javaint i = 0; i < fieldcount; i++)
+	for (jint i = 0; i < fieldCount; i++)
 	{
-		bytearray fenc;
+		jint type = dis.readInt();
+		jint fieldSize = dis.readInt();
 
-		javaint type = dis.readInt();
-		javaint size = dis.readInt();
+		if (fieldSize < 0)
+			throw IOException("field size < 0");
 
-		fenc.resize(size);
+		bytearray fenc(fieldSize);
 
 		dis.readFully(fenc);
 
@@ -396,7 +340,7 @@ BeeCertificate::BeeCertificate(InputStream& in) throw (IOException) : Certificat
 		try
 		{
 			f->decode(fis);
-			fields.push_back(f);
+			fields.add(f);
 		}
 		catch (...)
 		{
@@ -405,37 +349,37 @@ BeeCertificate::BeeCertificate(InputStream& in) throw (IOException) : Certificat
 		}
 	}
 
-	dis.readUTF(signature_algorithm);
+	signatureAlgorithm = dis.readUTF();
 
-	javaint siglength = dis.readInt();
+	jint sigSize = dis.readInt();
+	if (sigSize < 0)
+		throw IOException("signature size < 0");
 
-	if (siglength < 0)
-		throw IOException("signature length < 0");
-
-	if (siglength > 0)
+	if (sigSize > 0)
 	{
-		signature.resize(siglength);
+		signature.resize(sigSize);
 		dis.readFully(signature);
 	}
 }
 
-BeeCertificate::BeeCertificate(const BeeCertificate& copy) : Certificate("BEE")
+BeeCertificate::BeeCertificate(const BeeCertificate& copy) throw (CloneNotSupportedException) : Certificate("BEE")
 {
 	issuer = copy.issuer;
 	subject = copy.subject;
 	created = copy.created;
 	expires = copy.expires;
-	for (fields_const_iterator it = copy.fields.begin(); it != copy.fields.end(); it++)
-		fields.push_back((*it)->clone());
-	signature_algorithm = copy.signature_algorithm;
+
+	for (int i = 0; i < copy.fields.size(); i++)
+		fields.add(copy.fields.get(i)->clone());
+
+	signatureAlgorithm = copy.signatureAlgorithm;
 	signature = copy.signature;
 	enc = 0;
 }
 
 BeeCertificate::~BeeCertificate()
 {
-	if (enc)
-		delete enc;
+	delete enc;
 }
 
 BeeCertificate* BeeCertificate::clone() const throw ()
@@ -443,46 +387,30 @@ BeeCertificate* BeeCertificate::clone() const throw ()
 	return new BeeCertificate(*this);
 }
 
-const bytearray& BeeCertificate::getEncoded() const
+const bytearray& BeeCertificate::getEncoded() const throw (CertificateEncodingException)
 {
 	if (!enc)
 	{
-		// The following sequence shouldn't throw an exception
 		ByteArrayOutputStream bos;
 		DataOutputStream dos(bos);
 
-		dos.writeUTF(issuer);
-		dos.writeUTF(subject);
-		dos.writeLong(created.getTime());
-		dos.writeLong(expires.getTime());
-		dos.writeInt(fields.size());
-
-		for (fields_vector::const_iterator it = fields.begin(); it != fields.end(); it++)
+		try
 		{
-			ByteArrayOutputStream bout;
-			DataOutputStream dout(bout);
+			encodeTBS(dos);
 
-			Field* f = (*it);
+			dos.writeUTF(signatureAlgorithm);
+			dos.writeInt(signature.size());
+			dos.write(signature);
 
-			f->encode(dout);
-			dout.close();
+			dos.close();
+			bos.close();
 
-			bytearray* fenc = bout.toByteArray();
-
-			dos.writeInt(f->type);
-			dos.writeInt(fenc->size());
-			dos.write(*fenc);
-
-			delete fenc;
+			enc = bos.toByteArray();
 		}
-
-		dos.writeUTF(signature_algorithm);
-		dos.writeInt(signature.size());
-		dos.write(signature);
-		dos.close();
-		bos.close();
-
-		enc = bos.toByteArray();
+		catch (IOException& e)
+		{
+			throw CertificateEncodingException().initCause(e);
+		}
 	}
 
 	return *enc;
@@ -490,147 +418,79 @@ const bytearray& BeeCertificate::getEncoded() const
 
 const PublicKey& BeeCertificate::getPublicKey() const
 {
-	for (fields_const_iterator it = fields.begin(); it != fields.end(); it++)
+	for (int i = 0; i < fields.size(); i++)
 	{
-		if ((*it)->type == PublicKeyField::FIELD_TYPE)
+		Field* f = fields.get(i);
+		if (f->type == PublicKeyField::FIELD_TYPE)
 		{
-			const PublicKeyField* f = dynamic_cast<const PublicKeyField*>(*it);
+			const PublicKeyField* pkf = dynamic_cast<const PublicKeyField*>(f);
 
-			if (f)
-				return *f->pub;
+			if (pkf)
+				return *pkf->pub;
 			else
 				throw GeneralSecurityException("Somebody's trying to cheat with a new Field subclass");
 		}
 	}
 
-	throw RuntimeException("no PublicKeyField in this certificate; test first with hasPublicKey()");
+	throw CertificateException("no PublicKeyField in this certificate; test first with hasPublicKey()");
 }
 
 const Certificate& BeeCertificate::getParentCertificate() const
 {
-	for (fields_const_iterator it = fields.begin(); it != fields.end(); it++)
+	for (int i = 0; i < fields.size(); i++)
 	{
-		if ((*it)->type == ParentCertificateField::FIELD_TYPE)
+		Field* f = fields.get(i);
+		if (f->type == ParentCertificateField::FIELD_TYPE)
 		{
-			const ParentCertificateField* f = dynamic_cast<const ParentCertificateField*>(*it);
+			const ParentCertificateField* pcf = dynamic_cast<const ParentCertificateField*>(f);
 
-			if (f)
-				return *f->parent;
+			if (pcf)
+				return *pcf->parent;
 			else
 				throw GeneralSecurityException("Somebody's trying to cheat with a new Field subclass");
 		}
 	}
 
-	throw RuntimeException("no ParentCertificateField in this certificate; test first with hasParentCertificate()");
+	throw CertificateException("no ParentCertificateField in this certificate; test first with hasParentCertificate()");
 }
 
 void BeeCertificate::verify(const PublicKey& pub) const throw (CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException)
 {
-	Signature* sig = Signature::getInstance(signature_algorithm);
+	auto_ptr<Signature> sig(Signature::getInstance(signatureAlgorithm));
+	auto_ptr<bytearray> tmp(encodeTBS());
 
-	try
-	{
-		sig->initVerify(pub);
-
-		bytearray* tmp = encodeTBS();
-
-		try
-		{
-			sig->update(*tmp);
-			delete tmp;
-		}
-		catch (...)
-		{
-			delete tmp;
-			throw;
-		}
-
-		if (!sig->verify(signature))
-			throw CertificateException("signature doesn't match");
-
-		delete sig;
-	}
-	catch (...)
-	{
-		delete sig;
-		throw;
-	}
+	sig->initVerify(pub);
+	sig->update(*tmp.get());
+	if (!sig->verify(signature))
+		throw CertificateException("signature doesn't match");
 }
 
 void BeeCertificate::verify(const PublicKey& pub, const String& sigProvider) const throw (CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException)
 {
-	Signature* sig = Signature::getInstance(signature_algorithm, sigProvider);
+	auto_ptr<Signature> sig(Signature::getInstance(signatureAlgorithm, sigProvider));
+	auto_ptr<bytearray> tmp(encodeTBS());
 
-	try
-	{
-		sig->initVerify(pub);
-
-		bytearray* tmp = encodeTBS();
-
-		try
-		{
-			sig->update(*tmp);
-			delete tmp;
-		}
-		catch (...)
-		{
-			delete tmp;
-			throw;
-		}
-
-		if (!sig->verify(signature))
-			throw CertificateException("signature doesn't match");
-
-		delete sig;
-	}
-	catch (...)
-	{
-		delete sig;
-		throw;
-	}
+	sig->initVerify(pub);
+	sig->update(*tmp.get());
+	if (!sig->verify(signature))
+		throw CertificateException("signature doesn't match");
 }
 
-const String& BeeCertificate::toString() const throw ()
+String BeeCertificate::toString() const throw ()
 {
-	if (!str)
-	{
-		str = new String();
+	StringBuilder tmp("Bee Certificate issued by ");
 
-		str->append("Bee Certificate");
-		str->append("\nIssuer: ");
-		str->append(issuer);
-		str->append("\nSubject: ");
-		str->append(subject);
-		str->append("\nValid from: ");
-		str->append(created.toString());
-		str->append(" until: ");
-		if (expires.equals(FOREVER))
-			str->append("-");
-		else
-			str->append(expires.toString());
+	tmp.append(issuer).append(" subject ").append(subject).append(" valid from ").append(created.toString()).append(" until ").append(expires.equals(FOREVER) ? "-" : expires.toString());
 
-		for (fields_const_iterator it = fields.begin(); it != fields.end(); it++)
-		{
-		}
-	}
-	
-	return *str;
+	/*!\todo add fields
+	*/
+
+	return tmp.toString();
 }
 
 void BeeCertificate::checkValidity() const throw (CertificateExpiredException, CertificateNotYetValidException)
 {
-	Date now;
-
-	checkValidity(now);
-
-	if (hasParentCertificate())
-	{
-		const BeeCertificate* tmp = dynamic_cast<const BeeCertificate*>(&getParentCertificate());
-		if (tmp)
-		{
-			tmp->checkValidity(now);
-		}
-	}
+	checkValidity(Date());
 }
 
 void BeeCertificate::checkValidity(const Date& at) const throw (CertificateExpiredException, CertificateNotYetValidException)
@@ -641,6 +501,14 @@ void BeeCertificate::checkValidity(const Date& at) const throw (CertificateExpir
 	if (!expires.equals(FOREVER))
 		if (at.after(expires))
 			throw CertificateExpiredException();
+
+	if (hasParentCertificate())
+	{
+		// parent certificate had to be valid when this one was created
+		const BeeCertificate* tmp = dynamic_cast<const BeeCertificate*>(&getParentCertificate());
+		if (tmp)
+			tmp->checkValidity(created);
+	}
 }
 
 const Date& BeeCertificate::getNotAfter() const throw ()
@@ -660,18 +528,18 @@ const bytearray& BeeCertificate::getSignature() const throw ()
 
 const String& BeeCertificate::getSigAlgName() const throw ()
 {
-	return signature_algorithm;
+	return signatureAlgorithm;
 }
 
 bool BeeCertificate::hasPublicKey() const
 {
-	for (fields_vector::const_iterator it = fields.begin(); it != fields.end(); it++)
+	for (int i = 0; i < fields.size(); i++)
 	{
-		switch ((*it)->type)
+		Field* f = fields.get(i);
+		if (f->type == PublicKeyField::FIELD_TYPE)
 		{
-		case PublicKeyField::FIELD_TYPE:
 			// do an extra check with dynamic_cast
-			if (dynamic_cast<PublicKeyField*>(*it))
+			if (dynamic_cast<PublicKeyField*>(f))
 				return true;
 			else
 				throw GeneralSecurityException("Somebody's trying to cheat with a new Field subclass");
@@ -682,13 +550,13 @@ bool BeeCertificate::hasPublicKey() const
 
 bool BeeCertificate::hasParentCertificate() const
 {
-	for (fields_vector::const_iterator it = fields.begin(); it != fields.end(); it++)
+	for (int i = 0; i < fields.size(); i++)
 	{
-		switch ((*it)->type)
+		Field* f = fields.get(i);
+		if (f->type == ParentCertificateField::FIELD_TYPE)
 		{
-		case ParentCertificateField::FIELD_TYPE:
 			// do an extra check with dynamic_cast
-			if (dynamic_cast<ParentCertificateField*>(*it))
+			if (dynamic_cast<ParentCertificateField*>(f))
 				return true;
 			else
 				throw GeneralSecurityException("Somebody's trying to cheat with a new Field subclass");
@@ -713,140 +581,123 @@ bool BeeCertificate::isSelfSignedCertificate() const
 
 		return true;
 	}
-	catch (Exception)
+	catch (Exception&)
 	{
 		return false;
 	}
 }
 
-bytearray* BeeCertificate::encodeTBS() const
+void BeeCertificate::encodeTBS(DataOutputStream& out) const throw (IOException)
+{
+	out.writeUTF(issuer);
+	out.writeUTF(subject);
+	out.writeLong(created.getTime());
+	out.writeLong(expires.getTime());
+	out.writeInt(fields.size());
+
+	for (int i = 0; i < fields.size(); i++)
+	{
+		ByteArrayOutputStream bout;
+		DataOutputStream dout(bout);
+
+		Field* f = fields.get(i);
+
+		f->encode(dout);
+		dout.close();
+
+		bytearray fenc;
+
+		bout.toByteArray(fenc);
+
+		out.writeInt(f->type);
+		out.writeInt(fenc.size());
+		out.write(fenc);
+	}
+}
+
+bytearray* BeeCertificate::encodeTBS() const throw (CertificateEncodingException)
 {
 	ByteArrayOutputStream bos;
 	DataOutputStream dos(bos);
 
-	dos.writeUTF(issuer);
-	dos.writeUTF(subject);
-	dos.writeLong(created.getTime());
-	dos.writeLong(expires.getTime());
-	dos.writeInt(fields.size());
-	for (fields_vector::const_iterator it = fields.begin(); it != fields.end(); it++)
+	try
 	{
-		Field* f = (*it);
-
-		dos.writeInt(f->type);
-		f->encode(dos);
+		encodeTBS(dos);
+		dos.close();
+	}
+	catch (IOException& e)
+	{
+		throw CertificateEncodingException().initCause(e);
 	}
 
-	dos.close();
-	bos.close();
 	return bos.toByteArray();
 }
 
-BeeCertificate* BeeCertificate::self(const PublicKey& pub, const PrivateKey& pri, const String& signatureAlgorithm) throw (InvalidKeyException, NoSuchAlgorithmException)
+BeeCertificate* BeeCertificate::self(const PublicKey& pub, const PrivateKey& pri, const String& signatureAlgorithm) throw (InvalidKeyException, CertificateEncodingException, SignatureException, NoSuchAlgorithmException)
 {
 	// if the public key doesn't have an encoding, it's not worth going through the effort
 	if (!pub.getEncoded())
 		throw InvalidKeyException("PublicKey doesn't have an encoding");
 
-	Signature* sig = Signature::getInstance(signatureAlgorithm);
+	auto_ptr<Signature> sig(Signature::getInstance(signatureAlgorithm));
+
+	sig->initSign(pri);
+
+	BeeCertificate* cert = new BeeCertificate();
 
 	try
 	{
-		sig->initSign(pri);
+		// issuer is kept blank
+		cert->subject = String("Public Key Certificate");
+		cert->expires = FOREVER;
+		cert->signatureAlgorithm = signatureAlgorithm;
+		cert->fields.add(new PublicKeyField(pub));
 
-		BeeCertificate* cert = new BeeCertificate();
+		auto_ptr<bytearray> tmp(cert->encodeTBS());
 
-		try
-		{
-			// issuer is kept blank
-			cert->subject = "Public Key Certificate";
-			cert->expires = FOREVER;
-			cert->signature_algorithm = signatureAlgorithm;
-			cert->fields.push_back(new PublicKeyField(pub));
-
-			bytearray* tmp = cert->encodeTBS();
-
-			try
-			{
-				sig->update(*tmp);
-				delete tmp;
-			}
-			catch (...)
-			{
-				delete tmp;
-				throw;
-			}
-
-			sig->sign(cert->signature);
-		}
-		catch (...)
-		{
-			delete cert;
-			throw;
-		}
-
-		delete sig;
-
-		return cert;
+		sig->update(*tmp.get());
+		sig->sign(cert->signature);
 	}
 	catch (...)
 	{
-		delete sig;
+		delete cert;
 		throw;
 	}
+
+	return cert;
 }
 
-BeeCertificate* BeeCertificate::make(const PublicKey& pub, const PrivateKey& pri, const String& signatureAlgorithm, const Certificate& parent) throw (InvalidKeyException, NoSuchAlgorithmException)
+BeeCertificate* BeeCertificate::make(const PublicKey& pub, const PrivateKey& pri, const String& signatureAlgorithm, const Certificate& parent) throw (InvalidKeyException, CertificateEncodingException, SignatureException, NoSuchAlgorithmException)
 {
 	// if the public key doesn't have an encoding, it's not worth going through the effort
 	if (!pub.getEncoded())
 		throw InvalidKeyException("PublicKey doesn't have an encoding");
 
-	Signature* sig = Signature::getInstance(signatureAlgorithm);
+	auto_ptr<Signature> sig(Signature::getInstance(signatureAlgorithm));
+
+	sig->initSign(pri);
+
+	BeeCertificate* cert = new BeeCertificate();
 
 	try
 	{
-		sig->initSign(pri);
+		// issuer is kept blank
+		cert->subject = String("Public Key Certificate");
+		cert->expires = FOREVER;
+		cert->signatureAlgorithm = signatureAlgorithm;
+		cert->fields.add(new PublicKeyField(pub));
+		cert->fields.add(new ParentCertificateField(parent));
 
-		BeeCertificate* cert = new BeeCertificate();
+		auto_ptr<bytearray> tmp(cert->encodeTBS());
 
-		try
-		{
-			// issuer is kept blank
-			cert->subject = "Public Key Certificate";
-			cert->expires = FOREVER;
-			cert->signature_algorithm = signatureAlgorithm;
-			cert->fields.push_back(new PublicKeyField(pub));
-			cert->fields.push_back(new ParentCertificateField(parent));
-
-			bytearray* tmp = cert->encodeTBS();
-
-			try
-			{
-				sig->update(*tmp);
-				delete tmp;
-			}
-			catch (...)
-			{
-				delete tmp;
-				throw;
-			}
-
-			sig->sign(cert->signature);
-		}
-		catch (...)
-		{
-			delete cert;
-			throw;
-		}
-
-		delete sig;
-
-		return cert;
+		sig->update(*tmp);
+		sig->sign(cert->signature);
 	}
 	catch (...)
 	{
-		delete sig;
+		delete cert;
 		throw;
 	}
+
+	return cert;
 }

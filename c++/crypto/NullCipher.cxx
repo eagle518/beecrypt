@@ -26,7 +26,7 @@
 
 using namespace beecrypt::crypto;
 
-bytearray* NullCipher::NullCipherSpi::engineDoFinal(const byte* input, size_t inputOffset, size_t inputLength) throw (IllegalBlockSizeException, BadPaddingException)
+bytearray* NullCipher::NullCipherSpi::engineDoFinal(const byte* input, int inputOffset, int inputLength) throw (IllegalBlockSizeException, BadPaddingException)
 {
 	if (inputLength == 0)
 		return 0;
@@ -34,20 +34,20 @@ bytearray* NullCipher::NullCipherSpi::engineDoFinal(const byte* input, size_t in
 	return new bytearray(input+inputOffset, inputLength);
 }
 
-size_t NullCipher::NullCipherSpi::engineDoFinal(const byte* input, size_t inputOffset, size_t inputLength, bytearray& output, size_t outputOffset) throw (ShortBufferException, IllegalBlockSizeException, BadPaddingException)
+int NullCipher::NullCipherSpi::engineDoFinal(const byte* input, int inputOffset, int inputLength, bytearray& output, int outputOffset) throw (ShortBufferException, IllegalBlockSizeException, BadPaddingException)
 {
 	if (inputLength > 0)
 	{
 		if (output.size() - outputOffset > inputLength)
 			throw ShortBufferException("output buffer too short");
 
-		memcpy(output.data() + outputOffset, input+inputOffset, inputLength);
+		memmove(output.data() + outputOffset, input+inputOffset, inputLength);
 	}
 
 	return inputLength;
 }
 
-size_t NullCipher::NullCipherSpi::engineGetBlockSize() const throw ()
+int NullCipher::NullCipherSpi::engineGetBlockSize() const throw ()
 {
 	return 1;
 }
@@ -57,7 +57,7 @@ bytearray* NullCipher::NullCipherSpi::engineGetIV()
 	return 0;
 }
 
-size_t NullCipher::NullCipherSpi::engineGetOutputSize(size_t inputLength) throw ()
+int NullCipher::NullCipherSpi::engineGetOutputSize(int inputLength) throw ()
 {
 	return inputLength;
 }
@@ -87,7 +87,7 @@ void NullCipher::NullCipherSpi::engineSetPadding(const String& mode) throw (NoSu
 {
 }
 
-bytearray* NullCipher::NullCipherSpi::engineUpdate(const byte* input, size_t inputOffset, size_t inputLength)
+bytearray* NullCipher::NullCipherSpi::engineUpdate(const byte* input, int inputOffset, int inputLength)
 {
 	if (inputLength == 0)
 		return 0;
@@ -95,14 +95,14 @@ bytearray* NullCipher::NullCipherSpi::engineUpdate(const byte* input, size_t inp
 	return new bytearray(input+inputOffset, inputLength);
 }
 
-size_t NullCipher::NullCipherSpi::engineUpdate(const byte* input, size_t inputOffset, size_t inputLength, bytearray& output, size_t outputOffset) throw (ShortBufferException)
+int NullCipher::NullCipherSpi::engineUpdate(const byte* input, int inputOffset, int inputLength, bytearray& output, int outputOffset) throw (ShortBufferException)
 {
 	if (inputLength > 0)
 	{
 		if (output.size() - outputOffset > inputLength)
 			throw ShortBufferException("output buffer too short");
 
-		memcpy(output.data() + outputOffset, input+inputOffset, inputLength);
+		memmove(output.data() + outputOffset, input+inputOffset, inputLength);
 	}
 
 	return inputLength;

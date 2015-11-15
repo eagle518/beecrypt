@@ -42,7 +42,7 @@ const ByteOrder& ByteOrder::nativeOrder()
 	#endif
 }
 
-const String& ByteOrder::toString() const
+String ByteOrder::toString() const throw ()
 {
 	return _name;
 }

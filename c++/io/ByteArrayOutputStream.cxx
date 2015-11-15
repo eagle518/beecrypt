@@ -30,19 +30,16 @@ using namespace beecrypt::io;
 
 ByteArrayOutputStream::ByteArrayOutputStream() : buf(32)
 {
-	_lock.init();
 	count = 0;
 }
 
-ByteArrayOutputStream::ByteArrayOutputStream(size_t size) : buf(size)
+ByteArrayOutputStream::ByteArrayOutputStream(jint size) : buf(size)
 {
-	_lock.init();
 	count = 0;
 }
 
 ByteArrayOutputStream::~ByteArrayOutputStream()
 {
-	_lock.destroy();
 }
 
 void ByteArrayOutputStream::reset() throw ()
@@ -50,7 +47,7 @@ void ByteArrayOutputStream::reset() throw ()
 	count = 0;
 }
 
-size_t ByteArrayOutputStream::size() throw ()
+jint ByteArrayOutputStream::size() throw ()
 {
 	return count;
 }
@@ -66,24 +63,22 @@ bytearray* ByteArrayOutputStream::toByteArray()
 
 void ByteArrayOutputStream::toByteArray(bytearray& b)
 {
-	_lock.lock();
-
-	b.resize(count);
-	memcpy(b.data(), buf.data(), count);
-
-	_lock.unlock();
+	synchronized (this)
+	{
+		b.resize(count);
+		memcpy(b.data(), buf.data(), count);
+	}
 }
 
-void ByteArrayOutputStream::toByteArray(byte* data, size_t offset, size_t length)
+void ByteArrayOutputStream::toByteArray(byte* data, jint offset, jint length)
 {
 	if (!data)
 		throw NullPointerException();
 
-	_lock.lock();
-
-	memcpy(data+offset, buf.data(), length < count ? length : count);
-
-	_lock.unlock();
+	synchronized (this)
+	{
+		memcpy(data+offset, buf.data(), length < count ? length : count);
+	}
 }
 
 void ByteArrayOutputStream::close() throw (IOException)
@@ -96,44 +91,41 @@ void ByteArrayOutputStream::flush() throw (IOException)
 
 void ByteArrayOutputStream::write(byte b) throw (IOException)
 {
-	_lock.lock();
-
-	size_t newcount = count+1;
-	size_t actualsz = buf.size();
-
-	if (actualsz < newcount)
+	synchronized (this)
 	{
-		if (actualsz == 0)
-			buf.resize(32);
-		else
-			buf.resize(actualsz << 1);
+		jint newcount = count+1;
+		jint actualsz = buf.size();
+
+		if (actualsz < newcount)
+		{
+			if (actualsz == 0)
+				buf.resize(32);
+			else
+				buf.resize(actualsz << 1);
+		}
+
+		buf[count++] = b;
 	}
-
-	buf[count++] = b;
-
-	_lock.unlock();
 }
 
-void ByteArrayOutputStream::write(const byte* data, size_t offset, size_t length) throw (IOException)
+void ByteArrayOutputStream::write(const byte* data, jint offset, jint length) throw (IOException)
 {
 	if (length)
 	{
 		if (!data)
 			throw NullPointerException();
 
-		_lock.lock();
-
-		size_t newcount = count + length;
-		size_t actualsz = buf.size();
-
-		if (newcount > actualsz)
+		synchronized (this)
 		{
-			buf.resize(newcount > (actualsz << 1) ? newcount : (actualsz << 1));
-		}
-		memcpy(buf.data()+count, data, length);
-		count += length;
+			jint newcount = count + length;
+			jint actualsz = buf.size();
 
-		_lock.unlock();
+			if (newcount > actualsz)
+				buf.resize(newcount > (actualsz << 1) ? newcount : (actualsz << 1));
+	
+			memcpy(buf.data()+count, data, length);
+			count += length;
+		}
 	}
 }
 
@@ -146,10 +138,9 @@ void ByteArrayOutputStream::writeTo(OutputStream& out) throw (IOException)
 {
 	if (count)
 	{
-		_lock.lock();
-
-		out.write(buf.data(), 0, count);
-
-		_lock.unlock();
+		synchronized (this)
+		{
+			out.write(buf.data(), 0, count);
+		}
 	}
 }

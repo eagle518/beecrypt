@@ -29,7 +29,3 @@ using namespace beecrypt::provider;
 SHA256withRSASignature::SHA256withRSASignature() : PKCS1RSASignature(&sha256)
 {
 }
-
-SHA256withRSASignature::~SHA256withRSASignature()
-{
-}

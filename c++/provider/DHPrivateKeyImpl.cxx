@@ -21,9 +21,17 @@
 #endif
 
 #include "beecrypt/c++/provider/DHPrivateKeyImpl.h"
-#include "beecrypt/c++/provider/BeeKeyFactory.h"
+#include "beecrypt/c++/io/ByteArrayOutputStream.h"
+using beecrypt::io::ByteArrayOutputStream;
+#include "beecrypt/c++/beeyond/BeeOutputStream.h"
+using beecrypt::beeyond::BeeOutputStream;
 
 using namespace beecrypt::provider;
+
+namespace {
+	const String FORMAT_BEE("BEE");
+	const String ALGORITHM_DH("DH");
+}
 
 DHPrivateKeyImpl::DHPrivateKeyImpl(const DHPrivateKey& copy) : _x(copy.getX())
 {
@@ -38,7 +46,7 @@ DHPrivateKeyImpl::DHPrivateKeyImpl(const DHPrivateKeyImpl& copy) : _x(copy._x)
 	_enc = 0;
 }
 
-DHPrivateKeyImpl::DHPrivateKeyImpl(const DHParams& params, const mpnumber& x) : _x(x)
+DHPrivateKeyImpl::DHPrivateKeyImpl(const DHParams& params, const BigInteger& x) : _x(x)
 {
 	_params = new DHParameterSpec(params.getP(), params.getG(), params.getL());
 	_enc = 0;
@@ -46,11 +54,11 @@ DHPrivateKeyImpl::DHPrivateKeyImpl(const DHParams& params, const mpnumber& x) : 
 
 DHPrivateKeyImpl::DHPrivateKeyImpl(const dhparam& params, const mpnumber& x) : _x(x)
 {
-	_params = new DHParameterSpec(params.p, params.g);
+	_params = new DHParameterSpec(BigInteger(params.p), BigInteger(params.g));
 	_enc = 0;
 }
 
-DHPrivateKeyImpl::DHPrivateKeyImpl(const mpbarrett& p, const mpnumber& g, const mpnumber& x) : _x(x)
+DHPrivateKeyImpl::DHPrivateKeyImpl(const BigInteger& p, const BigInteger& g, const BigInteger& x) : _x(x)
 {
 	_params = new DHParameterSpec(p, g);
 	_enc = 0;
@@ -59,9 +67,7 @@ DHPrivateKeyImpl::DHPrivateKeyImpl(const mpbarrett& p, const mpnumber& g, const 
 DHPrivateKeyImpl::~DHPrivateKeyImpl()
 {
 	delete _params;
-	_x.wipe();
-	if (_enc);
-		delete _enc;
+	delete _enc;
 }
 
 DHPrivateKeyImpl* DHPrivateKeyImpl::clone() const throw ()
@@ -69,12 +75,12 @@ DHPrivateKeyImpl* DHPrivateKeyImpl::clone() const throw ()
 	return new DHPrivateKeyImpl(*this);
 }
 
-bool DHPrivateKeyImpl::equals(const Object& compare) const throw ()
+bool DHPrivateKeyImpl::equals(const Object* obj) const throw ()
 {
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const DHPrivateKey* pri = dynamic_cast<const DHPrivateKey*>(&compare);
+	const DHPrivateKey* pri = dynamic_cast<const DHPrivateKey*>(obj);
 	if (pri)
 	{
 		if (pri->getParams().getP() != _params->getP())
@@ -97,27 +103,41 @@ const DHParams& DHPrivateKeyImpl::getParams() const throw ()
 	return *_params;
 }
 
-const mpnumber& DHPrivateKeyImpl::getX() const throw ()
+const BigInteger& DHPrivateKeyImpl::getX() const throw ()
 {
 	return _x;
 }
 
-const bytearray* DHPrivateKeyImpl::getEncoded() const
+const bytearray* DHPrivateKeyImpl::getEncoded() const throw ()
 {
 	if (!_enc)
-		_enc = BeeKeyFactory::encode(*this);
+	{
+		try
+		{
+			ByteArrayOutputStream bos;
+			BeeOutputStream bee(bos);
+
+			bee.writeBigInteger(_params->getP());
+			bee.writeBigInteger(_params->getG());
+			bee.writeBigInteger(_x);
+			bee.close();
+
+			_enc = bos.toByteArray();
+		}
+		catch (IOException&)
+		{
+        }
+	}
 
 	return _enc;
 }
 
 const String& DHPrivateKeyImpl::getAlgorithm() const throw ()
 {
-	static const String ALGORITHM = UNICODE_STRING_SIMPLE("DH");
-	return ALGORITHM;
+	return ALGORITHM_DH;
 }
 
 const String* DHPrivateKeyImpl::getFormat() const throw ()
 {
-	static const String FORMAT = UNICODE_STRING_SIMPLE("BEE");
-	return &FORMAT;
+	return &FORMAT_BEE;
 }

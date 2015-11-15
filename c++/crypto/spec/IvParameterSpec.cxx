@@ -34,10 +34,6 @@ IvParameterSpec::IvParameterSpec(const bytearray& iv) : _iv(iv)
 {
 }
 
-IvParameterSpec::~IvParameterSpec()
-{
-}
-
 const bytearray& IvParameterSpec::getIV() const throw ()
 {
 	return _iv;

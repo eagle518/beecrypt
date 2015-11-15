@@ -41,17 +41,17 @@ SecureRandomSpi* BeeSecureRandom::create()
 	return new BeeSecureRandom();
 }
 
-void BeeSecureRandom::engineGenerateSeed(byte* data, size_t size)
+void BeeSecureRandom::engineGenerateSeed(byte* data, int size)
 {
 	entropyGatherNext(data, size);
 }
 
-void BeeSecureRandom::engineNextBytes(byte* data, size_t size)
+void BeeSecureRandom::engineNextBytes(byte* data, int size)
 {
 	randomGeneratorContextNext(&_rngc, data, size);
 }
 
-void BeeSecureRandom::engineSetSeed(const byte* data, size_t size)
+void BeeSecureRandom::engineSetSeed(const byte* data, int size)
 {
 	randomGeneratorContextSeed(&_rngc, data, size);
 }

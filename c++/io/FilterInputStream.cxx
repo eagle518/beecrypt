@@ -28,15 +28,13 @@ using namespace beecrypt::io;
 
 FilterInputStream::FilterInputStream(InputStream& in) : in(in)
 {
-	_lock.init();
 }
 
 FilterInputStream::~FilterInputStream()
 {
-	_lock.destroy();
 }
 
-off_t FilterInputStream::available() throw (IOException)
+int FilterInputStream::available() throw (IOException)
 {
 	return in.available();
 }
@@ -46,11 +44,12 @@ void FilterInputStream::close() throw (IOException)
 	in.close();
 }
 
-void FilterInputStream::mark(off_t readlimit) throw ()
+void FilterInputStream::mark(int readlimit) throw ()
 {
-	_lock.lock();
-	in.mark(readlimit);
-	_lock.unlock();
+	synchronized (this)
+	{
+		in.mark(readlimit);
+	}
 }
 
 bool FilterInputStream::markSupported() throw ()
@@ -63,7 +62,7 @@ int FilterInputStream::read() throw (IOException)
 	return in.read();
 }
 
-int FilterInputStream::read(byte* data, size_t offset, size_t len) throw (IOException)
+int FilterInputStream::read(byte* data, int offset, int len) throw (IOException)
 {
 	return in.read(data, offset, len);
 }
@@ -75,12 +74,13 @@ int FilterInputStream::read(bytearray& b) throw (IOException)
 
 void FilterInputStream::reset() throw (IOException)
 {
-	_lock.lock();
-	in.reset();
-	_lock.unlock();
+	synchronized (this)
+	{
+		in.reset();
+	}
 }
 
-off_t FilterInputStream::skip(off_t n) throw (IOException)
+int FilterInputStream::skip(int n) throw (IOException)
 {
 	return in.skip(n);
 }

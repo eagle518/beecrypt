@@ -34,19 +34,8 @@ using namespace beecrypt::provider;
 
 RSAKeyPairGenerator::RSAKeyPairGenerator()
 {
-	_size = 0;
-	_spec = 0;
-	_srng = 0;
-}
-
-RSAKeyPairGenerator::~RSAKeyPairGenerator()
-{
-	_size = 0;
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	_size = 1024;
+	_e = RSAKeyGenParameterSpec::F4;
 	_srng = 0;
 }
 
@@ -54,7 +43,9 @@ KeyPair* RSAKeyPairGenerator::genpair(randomGeneratorContext* rngc)
 {
 	rsakp _pair;
 
-	if (rsakpMake(&_pair, rngc, _spec ? _spec->getKeysize() : (_size ? _size : 1024)))
+	transform(_pair.e, _e);
+
+	if (rsakpMake(&_pair, rngc, _size ? _size : 1024))
 		throw ProviderException("unexpected error in rsakpMake");
 
 	return new KeyPair(new RSAPublicKeyImpl(_pair.n, _pair.e), new RSAPrivateCrtKeyImpl(_pair.n, _pair.e, _pair.d, _pair.p, _pair.q, _pair.dp, _pair.dq, _pair.qi));
@@ -82,25 +73,19 @@ void RSAKeyPairGenerator::engineInitialize(const AlgorithmParameterSpec& spec, S
 
 	if (rsaspec)
 	{
-		if (_spec)
-			delete _spec;
-
-		_spec = new RSAKeyGenParameterSpec(rsaspec->getKeysize(), rsaspec->getPublicExponent());
+		_size = rsaspec->getKeysize();
+		_e = rsaspec->getPublicExponent();
 	}
 	else
 		throw InvalidAlgorithmParameterException("not an RSAKeyGenParameterSpec");
 }
 
-void RSAKeyPairGenerator::engineInitialize(size_t keysize, SecureRandom* random) throw (InvalidParameterException)
+void RSAKeyPairGenerator::engineInitialize(int keysize, SecureRandom* random) throw (InvalidParameterException)
 {
 	if (keysize < 512)
 		throw InvalidParameterException("Modulus size must be at least 512 bits");
 
 	_size = keysize;
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	_e = RSAKeyGenParameterSpec::F4;
 	_srng = random;
 }

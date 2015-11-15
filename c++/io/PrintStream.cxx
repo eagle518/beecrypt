@@ -23,6 +23,8 @@
 #endif
 
 #include "beecrypt/c++/io/PrintStream.h"
+#include "beecrypt/c++/lang/String.h"
+using beecrypt::lang::String;
 #include "beecrypt/c++/lang/IllegalArgumentException.h"
 using beecrypt::lang::IllegalArgumentException;
 
@@ -55,7 +57,7 @@ void PrintStream::close() throw ()
 		out.close();
 		_closed = true;
 	}
-	catch (IOException)
+	catch (IOException&)
 	{
 		_error = true;
 	}
@@ -69,7 +71,7 @@ void PrintStream::flush() throw ()
 		{
 			out.flush();
 		}
-		catch (IOException)
+		catch (IOException&)
 		{
 			_error = true;
 		}
@@ -84,7 +86,7 @@ void PrintStream::write(byte b) throw ()
 		{
 			out.write(b);
 		}
-		catch (IOException)
+		catch (IOException&)
 		{
 			_error = true;
 		}
@@ -99,7 +101,7 @@ void PrintStream::write(const byte* data, size_t offset, size_t length) throw ()
 		{
 			out.write(data, offset, length);
 		}
-		catch (IOException)
+		catch (IOException&)
 		{
 			_error = true;
 		}
@@ -141,13 +143,13 @@ void PrintStream::print(const UChar* str, size_t length) throw ()
 
 				delete[] buffer;
 			}
-			catch (IOException)
+			catch (IOException&)
 			{
 				delete[] buffer;
 				throw;
 			}
 		}
-		catch (IOException)
+		catch (IOException&)
 		{
 			_error = true;
 		}
@@ -178,7 +180,7 @@ void PrintStream::print(bool b) throw ()
 	}
 }
 
-void PrintStream::print(javachar ch) throw ()
+void PrintStream::print(jchar ch) throw ()
 {
 	if (!_closed)
 	{
@@ -199,14 +201,14 @@ void PrintStream::print(javachar ch) throw ()
 			if (_flush && ch == 0xA)
 				out.flush();
 		}
-		catch (IOException)
+		catch (IOException&)
 		{
 			_error = true;
 		}
 	}
 }
 
-void PrintStream::print(javashort x) throw ()
+void PrintStream::print(jshort x) throw ()
 {
 	if (!_closed)
 	{
@@ -224,7 +226,7 @@ void PrintStream::print(javashort x) throw ()
 	}
 }
 
-void PrintStream::print(javaint x) throw ()
+void PrintStream::print(jint x) throw ()
 {
 	if (!_closed)
 	{
@@ -242,7 +244,7 @@ void PrintStream::print(javaint x) throw ()
 	}
 }
 
-void PrintStream::print(javalong x) throw ()
+void PrintStream::print(jlong x) throw ()
 {
 	if (!_closed)
 	{
@@ -264,14 +266,16 @@ void PrintStream::print(javalong x) throw ()
 	}
 }
 
-void PrintStream::print(const array<javachar>& chars) throw ()
+void PrintStream::print(const array<jchar>& chars) throw ()
 {
 	print(chars.data(), chars.size());
 }
 
 void PrintStream::print(const String& str) throw ()
 {
-	print(str.getBuffer(), str.length());
+	const array<jchar>& tmp = str.toCharArray();
+
+	print(tmp.data(), tmp.size());
 }
 
 void PrintStream::println() throw ()
@@ -279,10 +283,10 @@ void PrintStream::println() throw ()
 	if (!_closed)
 	{
 		#if WIN32
-		print((javachar) 0xD);
-		print((javachar) 0xA);
+		print((jchar) 0xD);
+		print((jchar) 0xA);
 		#else
-		print((javachar) 0xA);
+		print((jchar) 0xA);
 		#endif
 	}
 }
@@ -296,7 +300,7 @@ void PrintStream::println(bool b) throw ()
 	}
 }
 
-void PrintStream::println(javashort x) throw ()
+void PrintStream::println(jshort x) throw ()
 {
 	if (!_closed)
 	{
@@ -305,7 +309,7 @@ void PrintStream::println(javashort x) throw ()
 	}
 }
 
-void PrintStream::println(javaint x) throw ()
+void PrintStream::println(jint x) throw ()
 {
 	if (!_closed)
 	{
@@ -314,7 +318,7 @@ void PrintStream::println(javaint x) throw ()
 	}
 }
 
-void PrintStream::println(javalong x) throw ()
+void PrintStream::println(jlong x) throw ()
 {
 	if (!_closed)
 	{
@@ -323,7 +327,7 @@ void PrintStream::println(javalong x) throw ()
 	}
 }
 
-void PrintStream::println(const array<javachar>& chars) throw ()
+void PrintStream::println(const array<jchar>& chars) throw ()
 {
 	if (!_closed)
 	{

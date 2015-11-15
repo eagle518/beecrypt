@@ -2,7 +2,7 @@ dnl  x86.m4
 dnl
 dnl  Copyright (c) 2003 Bob Deblier
 dnl 
-dnl  Author: Bob Deblier <bob.deblier@pandora.be>
+dnl  Author: Bob Deblier <bob.deblier@telenet.be>
 dnl 
 dnl  This library is free software; you can redistribute it and/or
 dnl  modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,13 @@ define(USE_BSWAP)
 ')
 ifelse(ASM_ARCH,i686,`
 define(USE_BSWAP)
+')
+ifelse(ASM_ARCH,pentium-m,`
+undefine(`ALIGN')
+define(ALIGN,`.p2align 4')
+define(USE_MMX)
+define(USE_SSE)
+define(USE_SSE2)
 ')
 ifelse(ASM_ARCH,pentium-mmx,`
 define(USE_MMX)

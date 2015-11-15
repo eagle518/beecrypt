@@ -34,10 +34,6 @@ SecretKeySpec::SecretKeySpec(const bytearray& b, const String& algorithm) : _dat
 {
 }
 
-SecretKeySpec::~SecretKeySpec()
-{
-}
-
 const String& SecretKeySpec::getAlgorithm() const throw ()
 {
 	return _algo;
@@ -53,13 +49,4 @@ const String* SecretKeySpec::getFormat() const throw ()
 const bytearray* SecretKeySpec::getEncoded() const throw ()
 {
 	return &_data;
-}
-
-bool SecretKeySpec::operator==(const Key& compare) const throw ()
-{
-	const SecretKeySpec* cmp = dynamic_cast<const SecretKeySpec*>(&compare);
-	if (cmp)
-		return (_algo.caseCompare(cmp->_algo, 0) == 0) && (_data == cmp->_data);
-	else
-		return false;
 }

@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/MessageDigest.h"
 #include "beecrypt/c++/security/Security.h"
 
@@ -47,9 +43,7 @@ MessageDigest* MessageDigest::getInstance(const String& algorithm) throw (NoSuch
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "MessageDigest");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<MessageDigestSpi*>((MessageDigestSpi*) tmp->cspi));
-	#endif
 
 	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -62,9 +56,7 @@ MessageDigest* MessageDigest::getInstance(const String& algorithm, const String&
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "MessageDigest", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<MessageDigestSpi*>((MessageDigestSpi*) tmp->cspi));
-	#endif
 
 	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -77,9 +69,7 @@ MessageDigest* MessageDigest::getInstance(const String& algorithm, const Provide
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "MessageDigest", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<MessageDigestSpi*>((MessageDigestSpi*) tmp->cspi));
-	#endif
 
 	MessageDigest* result = new MessageDigest((MessageDigestSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -109,12 +99,12 @@ const bytearray& MessageDigest::digest(const bytearray& b)
 	return _mspi->engineDigest();
 }
 
-size_t MessageDigest::digest(byte* data, size_t offset, size_t length) throw (ShortBufferException)
+int MessageDigest::digest(byte* data, int offset, int length) throw (ShortBufferException)
 {
 	return _mspi->engineDigest(data, offset, length);
 }
 
-size_t MessageDigest::getDigestLength()
+int MessageDigest::getDigestLength()
 {
 	return _mspi->engineGetDigestLength();
 }
@@ -134,7 +124,7 @@ void MessageDigest::update(const bytearray& b)
 	_mspi->engineUpdate(b.data(), 0, b.size());
 }
 
-void MessageDigest::update(const byte* data, size_t offset, size_t length)
+void MessageDigest::update(const byte* data, int offset, int length)
 {
 	_mspi->engineUpdate(data, offset, length);
 }

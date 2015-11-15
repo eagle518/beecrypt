@@ -22,15 +22,13 @@
 
 #include "beecrypt/c++/beeyond/BeeCertificate.h"
 using beecrypt::beeyond::BeeCertificate;
+#include "beecrypt/c++/util/ArrayList.h"
+using beecrypt::util::ArrayList;
 #include "beecrypt/c++/provider/BeeCertificateFactory.h"
 
 using namespace beecrypt::provider;
 
 BeeCertificateFactory::BeeCertificateFactory()
-{
-}
-
-BeeCertificateFactory::~BeeCertificateFactory()
 {
 }
 
@@ -40,21 +38,21 @@ Certificate* BeeCertificateFactory::engineGenerateCertificate(InputStream& in) t
 	{
 		return new BeeCertificate(in);
 	}
-	catch (Exception& ex)
+	catch (Exception& e)
 	{
-		throw CertificateException(ex.getMessage());
+		throw CertificateException().initCause(e);
 	}
 }
 
-vector<Certificate*>* BeeCertificateFactory::engineGenerateCertificates(InputStream& in) throw (CertificateException)
+Collection<Certificate>* BeeCertificateFactory::engineGenerateCertificates(InputStream& in) throw (CertificateException)
 {
-	vector<Certificate*>* result = new vector<Certificate*>;
+	ArrayList<Certificate>* result = new ArrayList<Certificate>();
 
 	try
 	{
 		while (in.available())
 		{
-			result->push_back(new BeeCertificate(in));
+			result->add(new BeeCertificate(in));
 		}
 	}
 	catch (...)

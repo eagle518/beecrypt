@@ -28,20 +28,12 @@ using beecrypt::lang::String;
 
 #include <unicode/numfmt.h>
 
-namespace {
-	#if WIN32
-	__declspec(thread) String* result = 0;
-	#else
-	__thread String* result = 0;
-	#endif
-};
-
 using namespace beecrypt::lang;
 
-const javalong Long::MIN_VALUE = (((javalong) 1) << 63);
-const javalong Long::MAX_VALUE = ~MIN_VALUE;
+const jlong Long::MIN_VALUE = (((jlong) 1) << 63);
+const jlong Long::MAX_VALUE = ~MIN_VALUE;
 
-const String& Long::toString(javalong l) throw ()
+String Long::toString(jlong l) throw ()
 {
 	char tmp[21];
 
@@ -55,15 +47,10 @@ const String& Long::toString(javalong l) throw ()
 	# error
 	#endif
 
-	if (result)
-		delete result;
-
-	result = new String(tmp);
-
-	return *result;
+	return String(tmp);
 }
 
-const String& Long::toHexString(javalong l) throw ()
+String Long::toHexString(jlong l) throw ()
 {
 	char tmp[18];
 
@@ -77,15 +64,10 @@ const String& Long::toHexString(javalong l) throw ()
 	# error
 	#endif
 
-	if (result)
-		delete result;
-
-	result = new String(tmp);
-
-	return *result;
+	return String(tmp);
 }
 
-const String& Long::toOctalString(javalong l) throw ()
+String Long::toOctalString(jlong l) throw ()
 {
 	char tmp[23];
 
@@ -99,15 +81,10 @@ const String& Long::toOctalString(javalong l) throw ()
 	# error
 	#endif
 
-	if (result)
-		delete result;
-
-	result = new String(tmp);
-
-	return *result;
+	return String(tmp);
 }
 
-javalong Long::parseLong(const String& s) throw (NumberFormatException)
+jlong Long::parseLong(const String& s) throw (NumberFormatException)
 {
 	UErrorCode status = U_ZERO_ERROR;
 
@@ -117,12 +94,12 @@ javalong Long::parseLong(const String& s) throw (NumberFormatException)
 	{
 		Formattable fmt((int64_t) 0);
 
-		nf->parse(s, fmt, status);
+		nf->parse(s.toUnicodeString(), fmt, status);
 
 		delete nf;
 
 		if (U_FAILURE(status))
-			throw NumberFormatException("unable to parse string to javalong value");
+			throw NumberFormatException("unable to parse string to jlong value");
 
 		return fmt.getInt64();
 	}
@@ -130,37 +107,40 @@ javalong Long::parseLong(const String& s) throw (NumberFormatException)
 		throw RuntimeException("unable to create ICU NumberFormat instance");
 }
 
-Long::Long(javalong value)
+Long::Long(jlong value) throw () : _val(value)
 {
-	_val = value;
 }
 
-Long::Long(const String& s) throw (NumberFormatException)
+Long::Long(const String& s) throw (NumberFormatException) : _val(parseLong(s))
 {
-	_val = parseLong(s);
 }
 
-javabyte Long::byteValue() const throw ()
+jint Long::hashCode() const throw ()
 {
-	return (javabyte) _val;
+	return (jint) _val ^ (jint)(_val >> 32);
 }
 
-javashort Long::shortValue() const throw ()
+jbyte Long::byteValue() const throw ()
 {
-	return (javashort) _val;
+	return (jbyte) _val;
 }
 
-javaint Long::intValue() const throw ()
+jshort Long::shortValue() const throw ()
 {
-	return (javaint) _val;
+	return (jshort) _val;
 }
 
-javalong Long::longValue() const throw ()
+jint Long::intValue() const throw ()
+{
+	return (jint) _val;
+}
+
+jlong Long::longValue() const throw ()
 {
 	return _val;
 }
 
-int Long::compareTo(const Long& l) const throw ()
+jint Long::compareTo(const Long& l) const throw ()
 {
 	if (_val == l._val)
 		return 0;
@@ -168,4 +148,21 @@ int Long::compareTo(const Long& l) const throw ()
 		return -1;
 	else
 		return 1;
+}
+
+String Long::toString() const throw ()
+{
+	char tmp[21];
+
+	#if WIN32
+	sprintf(tmp, "%I64d", _val);
+	#elif SIZE_LONG == 8
+	sprintf(tmp, "%ld", _val);
+	#elif HAVE_LONG_LONG
+	sprintf(tmp, "%lld", _val);
+	#else
+	# error
+	#endif
+
+	return String(tmp);
 }

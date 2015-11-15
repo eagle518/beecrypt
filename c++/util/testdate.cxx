@@ -22,7 +22,7 @@
 # include "config.h"
 #endif
 
-#include "c++/util/Date.h"
+#include "beecrypt/c++/util/Date.h"
 using beecrypt::util::Date;
 
 #include <unicode/ustream.h>
@@ -33,5 +33,7 @@ int main(int argc, char* argv[])
 {
 	Date now;
 
-	cout << now.toString() << endl;
+//	cout << now.toString() << endl;
+
+	
 }

@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/Signature.h"
 #include "beecrypt/c++/security/Security.h"
 
@@ -47,9 +43,7 @@ Signature* Signature::getInstance(const String& algorithm) throw (NoSuchAlgorith
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Signature");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SignatureSpi*>((SignatureSpi*) tmp->cspi));
-	#endif
 
 	Signature* result = new Signature((SignatureSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -62,9 +56,7 @@ Signature* Signature::getInstance(const String& algorithm, const String& provide
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Signature", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SignatureSpi*>((SignatureSpi*) tmp->cspi));
-	#endif
 
 	Signature* result = new Signature((SignatureSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -77,9 +69,7 @@ Signature* Signature::getInstance(const String& algorithm, const Provider& provi
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "Signature", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SignatureSpi*>((SignatureSpi*) tmp->cspi));
-	#endif
 
 	Signature* result = new Signature((SignatureSpi*) tmp->cspi, tmp->prov, tmp->name);
 
@@ -127,7 +117,7 @@ bytearray* Signature::sign() throw (IllegalStateException, SignatureException)
 	return _sspi->engineSign();
 }
 
-size_t Signature::sign(byte* outbuf, size_t offset, size_t len) throw (ShortBufferException, IllegalStateException, SignatureException)
+int Signature::sign(byte* outbuf, int offset, int len) throw (ShortBufferException, IllegalStateException, SignatureException)
 {
 	if (state != SIGN)
 		throw IllegalStateException("object not initialized for signing");
@@ -135,7 +125,7 @@ size_t Signature::sign(byte* outbuf, size_t offset, size_t len) throw (ShortBuff
 	return _sspi->engineSign(outbuf, offset, len);
 }
 
-size_t Signature::sign(bytearray& out) throw (IllegalStateException, SignatureException)
+int Signature::sign(bytearray& out) throw (IllegalStateException, SignatureException)
 {
 	if (state != SIGN)
 		throw IllegalStateException("object not initialized for signing");
@@ -148,7 +138,7 @@ bool Signature::verify(const bytearray& signature) throw (IllegalStateException,
 	return verify(signature.data(), 0, signature.size());
 }
 
-bool Signature::verify(const byte* signature, size_t offset, size_t len) throw (IllegalStateException, SignatureException)
+bool Signature::verify(const byte* signature, int offset, int len) throw (IllegalStateException, SignatureException)
 {
 	if (state != VERIFY)
 		throw IllegalStateException("object not initialized for verification");
@@ -164,7 +154,7 @@ void Signature::update(byte b) throw (IllegalStateException)
 	_sspi->engineUpdate(b);
 }
 
-void Signature::update(const byte* data, size_t offset, size_t len) throw (IllegalStateException)
+void Signature::update(const byte* data, int offset, int len) throw (IllegalStateException)
 {
 	if (state == UNINITIALIZED)
 		throw IllegalStateException("object not initialized for signing or verification");

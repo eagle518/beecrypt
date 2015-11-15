@@ -39,12 +39,12 @@ CertPathValidatorResult* BeeCertPathValidator::engineValidate(const CertPath& pa
 	const BeeCertPathParameters* beeparams = dynamic_cast<const BeeCertPathParameters*>(&params);
 	if (beeparams)
 	{
-		const vector<const Certificate*>* certs = &path.getCertificates();
-		const vector<const Certificate*>* roots = &beeparams->getTrustedCertificates();
+		const List<Certificate>& cert = path.getCertificates();
+		const List<Certificate>& root = beeparams->getTrustedCertificates();
 
-		for (vector<const Certificate*>::const_iterator cit = certs->begin(); cit != certs->end(); cit++)
+		for (int i = 0; i < cert.size(); i++)
 		{
-			const BeeCertificate* beecert = dynamic_cast<const BeeCertificate*>(*cit);
+			const BeeCertificate* beecert = dynamic_cast<const BeeCertificate*>(cert.get(i));
 			if (beecert)
 			{
 				const BeeCertificate* tmp = beecert;
@@ -70,29 +70,29 @@ CertPathValidatorResult* BeeCertPathValidator::engineValidate(const CertPath& pa
 						else
 							throw CertPathValidatorException("Parent is not a BeeCertificate");
 					}
-					catch (CertificateExpiredException)
+					catch (CertificateExpiredException&)
 					{
 						throw CertPathValidatorException("Parent expired before certificate was created");
 					}
-					catch (CertificateNotYetValidException)
+					catch (CertificateNotYetValidException&)
 					{
 						throw CertPathValidatorException("Certificate was created before its parent");
 					}
-					catch (CertPathValidatorException)
+					catch (CertPathValidatorException&)
 					{
 						throw;
 					}
-					catch (Exception e)
+					catch (Exception& e)
 					{
 						// on any exception, the certificate path failed to validate
-						throw CertPathValidatorException(e.getMessage());
+						throw CertPathValidatorException().initCause(e);
 					}
 				}
 
 				// check if the final certificate we have is one of the root certificates
-				for (vector<const Certificate*>::const_iterator rit = roots->begin(); rit != roots->end(); rit++)
+				for (int j = 0; j < root.size(); j++)
 				{
-					if (tmp->equals(**rit))
+					if (tmp->equals(root.get(j)))
 						return new BeeCertPathValidatorResult(*tmp, beecert->getPublicKey());
 				}
 			}

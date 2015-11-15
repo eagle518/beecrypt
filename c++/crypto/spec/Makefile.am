@@ -1,6 +1,6 @@
-INCLUDES = -I$(top_srcdir)/..
+INCLUDES = -I$(top_srcdir)/include
 
-AUTOMAKE_OPTIONS = gnu no-dependencies
+AUTOMAKE_OPTIONS = gnu
 
 noinst_LTLIBRARIES = libcxxcryptospec.la
 
@@ -13,11 +13,3 @@ DHPublicKeySpec.cxx \
 IvParameterSpec.cxx \
 PBEKeySpec.cxx \
 SecretKeySpec.cxx
-
-cxxcryptospec_HEADERS =\
-DHParameterSpec.h \
-DHPrivateKeySpec.h \
-DHPublicKeySpec.h \
-IvParameterSpec.h \
-PBEKeySpec.h \
-SecretKeySpec.h

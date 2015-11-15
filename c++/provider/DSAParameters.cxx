@@ -33,11 +33,12 @@ DSAParameters::DSAParameters()
 
 DSAParameters::~DSAParameters()
 {
-	if (_spec)
-	{
-		delete _spec;
-		_spec = 0;
-	}
+	delete _spec;
+}
+
+const bytearray& DSAParameters::engineGetEncoded(const String* format) throw (IOException)
+{
+	throw IOException("not implemented");
 }
 
 AlgorithmParameterSpec* DSAParameters::engineGetParameterSpec(const type_info& info) throw (InvalidParameterSpecException)
@@ -72,12 +73,12 @@ void DSAParameters::engineInit(const AlgorithmParameterSpec& spec) throw (Invali
 		throw InvalidParameterSpecException("expected a DSAParameterSpec");
 }
 
-void DSAParameters::engineInit(const byte*, size_t)
+void DSAParameters::engineInit(const byte*, int, const String* format)
 {
 	throw ProviderException("not implemented");
 }
 
-void DSAParameters::engineInit(const byte*, size_t, const String& format)
+String DSAParameters::engineToString() throw ()
 {
-	throw ProviderException("not implemented");
+	return String("(not implemented");
 }

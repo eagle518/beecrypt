@@ -9,9 +9,7 @@ SUBDIRS = test
 EXTRA_DIST = debug-py.c
 
 INCLUDES = -I. \
-	-I$(top_srcdir)/.. @PYTHONINC@
-
-noinst_HEADERS = mpw-py.h rng-py.h
+	-I$(top_srcdir)/include @PYTHONINC@
 
 mylibs = $(top_builddir)/libbeecrypt.la
 

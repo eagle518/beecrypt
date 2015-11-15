@@ -20,25 +20,72 @@
 # include "config.h"
 #endif
 
+#include "beecrypt/c++/provider/DHKeyFactory.h"
+#include "beecrypt/c++/provider/DHPrivateKeyImpl.h"
+#include "beecrypt/c++/provider/DHPublicKeyImpl.h"
+#include "beecrypt/c++/io/ByteArrayInputStream.h"
+using beecrypt::io::ByteArrayInputStream;
+#include "beecrypt/c++/security/KeyFactory.h"
+using beecrypt::security::KeyFactory;
 #include "beecrypt/c++/crypto/spec/DHPrivateKeySpec.h"
 using beecrypt::crypto::spec::DHPrivateKeySpec;
 #include "beecrypt/c++/crypto/spec/DHPublicKeySpec.h"
 using beecrypt::crypto::spec::DHPublicKeySpec;
-#include "beecrypt/c++/provider/DHKeyFactory.h"
-#include "beecrypt/c++/provider/DHPrivateKeyImpl.h"
-#include "beecrypt/c++/provider/DHPublicKeyImpl.h"
-#include "beecrypt/c++/security/KeyFactory.h"
-using beecrypt::security::KeyFactory;
-#include "beecrypt/c++/security/spec/EncodedKeySpec.h"
-using beecrypt::security::spec::EncodedKeySpec;
+#include "beecrypt/c++/beeyond/AnyEncodedKeySpec.h"
+using beecrypt::beeyond::AnyEncodedKeySpec;
+#include "beecrypt/c++/beeyond/BeeInputStream.h"
+using beecrypt::beeyond::BeeInputStream;
 
 using namespace beecrypt::provider;
 
-DHKeyFactory::DHKeyFactory()
-{
+namespace {
+	const String FORMAT_BEE("BEE");
+	const String ALGORITHM_DH("DH");
+
+	DHPrivateKey* generatePrivate(const bytearray& enc)
+	{
+		try
+		{
+			ByteArrayInputStream bis(enc);
+			BeeInputStream bee(bis);
+
+			BigInteger p, g, x;
+
+			p = bee.readBigInteger();
+			g = bee.readBigInteger();
+			x = bee.readBigInteger();
+
+			return new DHPrivateKeyImpl(p, g, x);
+		}
+		catch (IOException&)
+		{
+		}
+		return 0;
+	}
+
+	DHPublicKey* generatePublic(const bytearray& enc)
+	{
+		try
+		{
+			ByteArrayInputStream bis(enc);
+			BeeInputStream bee(bis);
+
+			BigInteger p, g, y;
+
+			p = bee.readBigInteger();
+			g = bee.readBigInteger();
+			y = bee.readBigInteger();
+
+			return new DHPublicKeyImpl(p, g, y);
+		}
+		catch (IOException&)
+		{
+		}
+		return 0;
+	}
 }
 
-DHKeyFactory::~DHKeyFactory()
+DHKeyFactory::DHKeyFactory()
 {
 }
 
@@ -53,25 +100,15 @@ PrivateKey* DHKeyFactory::engineGeneratePrivate(const KeySpec& spec) throw (Inva
 	const EncodedKeySpec* enc = dynamic_cast<const EncodedKeySpec*>(&spec);
 	if (enc)
 	{
-		try
+		if (enc->getFormat().equals(FORMAT_BEE))
 		{
-			KeyFactory* kf = KeyFactory::getInstance(enc->getFormat());
-			try
-			{
-				PrivateKey* pri = kf->generatePrivate(*enc);
-				delete kf;
+			DHPrivateKey* pri = generatePrivate(enc->getEncoded());
+			if (pri)
 				return pri;
-			}
-			catch (...)
-			{
-				delete kf;
-				throw;
-			}
+
+			throw InvalidKeySpecException("Invalid KeySpec encoding");
 		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw InvalidKeySpecException("Unsupported KeySpec encoding format");
-		}
+		throw InvalidKeySpecException("Unsupported KeySpec format");
 	}
 	throw InvalidKeySpecException("Unsupported KeySpec type");
 }
@@ -87,25 +124,15 @@ PublicKey* DHKeyFactory::engineGeneratePublic(const KeySpec& spec) throw (Invali
 	const EncodedKeySpec* enc = dynamic_cast<const EncodedKeySpec*>(&spec);
 	if (enc)
 	{
-		try
+		if (enc->getFormat().equals(FORMAT_BEE))
 		{
-			KeyFactory* kf = KeyFactory::getInstance(enc->getFormat());
-			try
-			{
-				PublicKey* pub = kf->generatePublic(*enc);
-				delete kf;
+			DHPublicKey* pub = generatePublic(enc->getEncoded());
+			if (pub)
 				return pub;
-			}
-			catch (...)
-			{
-				delete kf;
-				throw;
-			}
+
+			throw InvalidKeySpecException("Invalid KeySpec encoding");
 		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw InvalidKeySpecException("Unsupported KeySpec encoding format");
-		}
+		throw InvalidKeySpecException("Unsupported KeySpec format");
 	}
 	throw InvalidKeySpecException("Unsupported KeySpec type");
 }
@@ -115,19 +142,22 @@ KeySpec* DHKeyFactory::engineGetKeySpec(const Key& key, const type_info& info) t
 	const DHPublicKey* pub = dynamic_cast<const DHPublicKey*>(&key);
 	if (pub)
 	{
-		if (info == typeid(KeySpec) || info == typeid(DHPrivateKeySpec))
+		if (info == typeid(KeySpec) || info == typeid(DHPublicKeySpec))
 		{
 			const DHParams& params = pub->getParams();
 
-			return new DHPublicKeySpec(params.getP(), params.getG(), pub->getY());
+			return new DHPublicKeySpec(pub->getY(), params.getP(), params.getG());
 		}
-		/*!\todo also support EncodedKeySpec
-		 */
-		/*
 		if (info == typeid(EncodedKeySpec))
 		{
+			const String* format = pub->getFormat();
+			if (format)
+			{
+				const bytearray* enc = pub->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
+			}
 		}
-		*/
 
 		throw InvalidKeySpecException("Unsupported KeySpec type");
 	}
@@ -135,19 +165,22 @@ KeySpec* DHKeyFactory::engineGetKeySpec(const Key& key, const type_info& info) t
 	const DHPrivateKey* pri = dynamic_cast<const DHPrivateKey*>(&key);
 	if (pri)
 	{
-		if (info == typeid(KeySpec) || info == typeid(DHPublicKeySpec))
+		if (info == typeid(KeySpec) || info == typeid(DHPrivateKeySpec))
 		{
 			const DHParams& params = pri->getParams();
 
-			return new DHPrivateKeySpec(params.getP(), params.getG(), pri->getX());
+			return new DHPrivateKeySpec(pri->getX(), params.getP(), params.getG());
 		}
-		/*!\todo also support EncodedKeySpec
-		 */
-		/*
 		if (info == typeid(EncodedKeySpec))
 		{
+			const String* format = pri->getFormat();
+			if (format)
+			{
+				const bytearray* enc = pri->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
+			}
 		}
-		*/
 
 		throw InvalidKeySpecException("Unsupported KeySpec type");
 	}

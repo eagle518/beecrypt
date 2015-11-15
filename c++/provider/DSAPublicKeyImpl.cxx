@@ -21,9 +21,17 @@
 #endif
 
 #include "beecrypt/c++/provider/DSAPublicKeyImpl.h"
-#include "beecrypt/c++/provider/BeeKeyFactory.h"
+#include "beecrypt/c++/io/ByteArrayOutputStream.h"
+using beecrypt::io::ByteArrayOutputStream;
+#include "beecrypt/c++/beeyond/BeeOutputStream.h"
+using beecrypt::beeyond::BeeOutputStream;
 
 using namespace beecrypt::provider;
+
+namespace {
+    const String FORMAT_BEE("BEE");
+    const String ALGORITHM_DSA("DSA");
+}
 
 DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAPublicKey& copy)
 {
@@ -32,28 +40,25 @@ DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAPublicKey& copy)
 	_enc = 0;
 }
 
-DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAPublicKeyImpl& copy)
+DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAPublicKeyImpl& copy) : _y(copy._y)
 {
 	_params = new DSAParameterSpec(*copy._params);
-	_y = copy._y;
 	_enc = 0;
 }
 
-DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAParams& params, const mpnumber& y)
+DSAPublicKeyImpl::DSAPublicKeyImpl(const DSAParams& params, const BigInteger& y) : _y(y)
 {
 	_params = new DSAParameterSpec(params.getP(), params.getQ(), params.getG());
-	_y = y;
 	_enc = 0;
 }
 
-DSAPublicKeyImpl::DSAPublicKeyImpl(const dsaparam& params, const mpnumber& y)
+DSAPublicKeyImpl::DSAPublicKeyImpl(const dsaparam& params, const mpnumber& y) : _y(y)
 {
-	_params = new DSAParameterSpec(params.p, params.q, params.g);
-	_y = y;
+	_params = new DSAParameterSpec(BigInteger(params.p), BigInteger(params.q), BigInteger(params.g));
 	_enc = 0;
 }
 
-DSAPublicKeyImpl::DSAPublicKeyImpl(const mpbarrett& p, const mpbarrett& q, const mpnumber& g, const mpnumber& y)
+DSAPublicKeyImpl::DSAPublicKeyImpl(const BigInteger& p, const BigInteger& q, const BigInteger& g, const BigInteger& y)
 {
 	_params = new DSAParameterSpec(p, q, g);
 	_y = y;
@@ -63,8 +68,7 @@ DSAPublicKeyImpl::DSAPublicKeyImpl(const mpbarrett& p, const mpbarrett& q, const
 DSAPublicKeyImpl::~DSAPublicKeyImpl()
 {
 	delete _params;
-	if (_enc)
-		delete _enc;
+	delete _enc;
 }
 
 DSAPublicKeyImpl* DSAPublicKeyImpl::clone() const throw ()
@@ -72,27 +76,30 @@ DSAPublicKeyImpl* DSAPublicKeyImpl::clone() const throw ()
 	return new DSAPublicKeyImpl(*this);
 }
 
-bool DSAPublicKeyImpl::equals(const Object& compare) const throw ()
+bool DSAPublicKeyImpl::equals(const Object* obj) const throw ()
 {
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const DSAPublicKey* pub = dynamic_cast<const DSAPublicKey*>(&compare);
-	if (pub)
+	if (obj)
 	{
-		if (pub->getParams().getP() != _params->getP())
-			return false;
+		const DSAPublicKey* pub = dynamic_cast<const DSAPublicKey*>(obj);
+		if (pub)
+		{
+			if (pub->getParams().getP() != _params->getP())
+				return false;
 
-		if (pub->getParams().getQ() != _params->getQ())
-			return false;
+			if (pub->getParams().getQ() != _params->getQ())
+				return false;
 
-		if (pub->getParams().getG() != _params->getG())
-			return false;
+			if (pub->getParams().getG() != _params->getG())
+				return false;
 
-		if (pub->getY() != _y)
-			return false;
+			if (pub->getY() != _y)
+				return false;
 
-		return true;
+			return true;
+		}
 	}
 
 	return false;
@@ -103,27 +110,42 @@ const DSAParams& DSAPublicKeyImpl::getParams() const throw ()
 	return *_params;
 }
 
-const mpnumber& DSAPublicKeyImpl::getY() const throw ()
+const BigInteger& DSAPublicKeyImpl::getY() const throw ()
 {
 	return _y;
 }
 
-const bytearray* DSAPublicKeyImpl::getEncoded() const
+const bytearray* DSAPublicKeyImpl::getEncoded() const throw ()
 {
 	if (!_enc)
-		_enc = BeeKeyFactory::encode(*this);
+	{
+		try
+		{
+			ByteArrayOutputStream bos;
+			BeeOutputStream bee(bos);
+
+			bee.writeBigInteger(_params->getP());
+			bee.writeBigInteger(_params->getQ());
+			bee.writeBigInteger(_params->getG());
+			bee.writeBigInteger(_y);
+			bee.close();
+
+			_enc = bos.toByteArray();
+		}
+		catch (IOException&)
+		{
+		}
+	}
 
 	return _enc;
 }
 
 const String& DSAPublicKeyImpl::getAlgorithm() const throw ()
 {
-	static const String ALGORITHM = UNICODE_STRING_SIMPLE("DSA");
-	return ALGORITHM;
+	return ALGORITHM_DSA;
 }
 
 const String* DSAPublicKeyImpl::getFormat() const throw ()
 {
-	static const String FORMAT = UNICODE_STRING_SIMPLE("BEE");
-	return &FORMAT;
+	return &FORMAT_BEE;
 }

@@ -20,14 +20,14 @@
 /*!\file testsha1.c
  * \brief Unit test program for the SHA-1 algorithm ; it tests all but one of
  *        the vectors specified by FIPS PUB 180-1.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "sha1.h"
-#include "memchunk.h"
+#include "beecrypt/sha1.h"
+#include "beecrypt/memchunk.h"
 
 struct vector
 {

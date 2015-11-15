@@ -26,20 +26,20 @@
 #include "beecrypt/c++/security/Security.h"
 #include "beecrypt/c++/io/FileInputStream.h"
 using beecrypt::io::FileInputStream;
-
-// #include <iostream>
-// #include <unicode/ustream.h>
+#include "beecrypt/c++/lang/Integer.h"
+using beecrypt::lang::Integer;
+#include "beecrypt/c++/lang/NullPointerException.h"
+using beecrypt::lang::NullPointerException;
 
 using namespace beecrypt::security;
 
 namespace {
-	const String KEYSTORE_DEFAULT_TYPE = UNICODE_STRING_SIMPLE("BEE");
+	const String KEYSTORE_DEFAULT_TYPE("BEE");
 }
 
 bool Security::_init = false;
-mutex Security::_lock;
 Properties Security::_props;
-Security::provider_vector Security::_providers;
+ArrayList<Provider> Security::_providers;
 
 /* Have to use lazy initialization here; static initialization doesn't work.
  * Initialization adds a provider, apparently in another copy of Security,
@@ -57,10 +57,10 @@ Security::provider_vector Security::_providers;
 
 void Security::initialize()
 {
-	_lock.init();
-	_lock.lock();
-	_init = true;
-	_lock.unlock();
+	synchronized (_providers)
+	{
+		_init = true;
+	}
 
 	/* get the configuration file here and load providers */
 	const char* path = getenv("BEECRYPT_CONF_FILE");
@@ -82,26 +82,39 @@ void Security::initialize()
 
 		try
 		{
+			UErrorCode status;
+			UConverter* _loc = 0;
+
 			// load properties from fis
 			_props.load(fis);
 
-			for (int32_t index = 1; true; index++)
+			for (jint index = 1; true; index++)
 			{
-				char num[32];
-
-				sprintf(num, "provider.%d", index);
-
-				String key(num);
-
-				const String* value = _props.getProperty(key);
+				const String* value = _props.getProperty(String("provider.") + Integer::toString(index));
 
 				if (value)
 				{
-					int32_t reqlen = value->extract(0, value->length(), (char*) 0, (const char*) 0);
+					if (!_loc)
+					{
+						status = U_ZERO_ERROR;
+						_loc = ucnv_open(0, &status);
+						if (U_FAILURE(status))
+							throw RuntimeException("ucnv_open failed");
+					}
 
-					char* shared_library = new char[reqlen+1];
+					const array<jchar>& src = value->toCharArray();
 
-					value->extract(0, value->length(), shared_library, (const char*) 0);
+					int need = ucnv_fromUChars(_loc, 0, 0, src.data(), src.size(), &status);
+					if (U_FAILURE(status))
+						if (status != U_BUFFER_OVERFLOW_ERROR)
+							throw RuntimeException("ucnv_fromUChars failed");
+
+					char* shared_library = new char[need+1];
+
+					status = U_ZERO_ERROR;
+					ucnv_fromUChars(_loc, shared_library, need+1, src.data(), src.size(), &status);
+					if (U_FAILURE(status))
+						throw RuntimeException("ucnv_fromUChars failed");
 
 					#if WIN32
 					HANDLE handle = LoadLibraryEx(shared_library, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
@@ -114,9 +127,9 @@ void Security::initialize()
 					if (handle)
 					{
 						#if WIN32
-						const Provider& (*inst)(void*) = (const Provider& (*)(void*)) GetProcAddress((HMODULE) handle, "provider_const_ref");
+						Provider* (*inst)(void*) = (Provider* (*)(void*)) GetProcAddress((HMODULE) handle, "provider_instantiate");
 						#elif HAVE_PTHREAD_H
-						const Provider& (*inst)(void*) = (const Provider& (*)(void*)) dlsym(handle, "provider_const_ref");
+						Provider* (*inst)(void*) = (Provider* (*)(void*)) dlsym(handle, "provider_instantiate");
 						#else
 						# error
 						#endif
@@ -147,7 +160,7 @@ void Security::initialize()
 					break;
 			}
 		}
-		catch (IOException)
+		catch (IOException&)
 		{
 		}
 	}
@@ -159,177 +172,153 @@ Security::spi::spi(Object* cspi, const Provider* prov, const String& name) : csp
 
 Security::spi* Security::getSpi(const String& name, const String& type) throw (NoSuchAlgorithmException)
 {
+	Object* inst = 0;
+
+	const Provider* p = 0;
+
 	if (!_init)
 		initialize();
 
 	String afind = type + "." + name;
 	String alias = "Alg.Alias." + type + "." + name;
 
-	_lock.lock();
-	for (size_t i = 0; i < _providers.size(); i++)
+	synchronized (_providers)
 	{
-		Provider::instantiator inst = 0;
-
-		const Provider* p = _providers[i];
-
-		if (p->getProperty(afind))
+		for (int i = 0; i < _providers.size(); i++)
 		{
-			inst = p->getInstantiator(afind);
-		}
-		else
-		{
-			const String* alias_of = p->getProperty(alias);
+			p = _providers.get(i);
 
-			if (alias_of)
-				inst = p->getInstantiator(*alias_of);
-		}
+			if (p->getProperty(afind))
+			{
+				if ((inst = p->instantiate(afind)))
+					break;
+			}
+			else
+			{
+				const String* alias_of = p->getProperty(alias);
 
-		if (inst)
-		{
-			/* MUST unlock before instantiating:
-			 * if (ctor) of spi calls another getSpi this would cause a deadlock
-			 * it is safe to do so as we no longer need the array of providers
-			 */
-			_lock.unlock();
-
-			return new spi(inst(), p, name);
+				if (alias_of && (inst = p->instantiate(*alias_of)))
+					break;
+			}
 		}
 	}
 
-	_lock.unlock();
+	if (inst)
+		return new spi(inst, p, name);
 
 	throw NoSuchAlgorithmException(name + " " + type + " not available");
 }
 
 Security::spi* Security::getSpi(const String& name, const String& type, const String& provider) throw (NoSuchAlgorithmException, NoSuchProviderException)
 {
+	Object* inst = 0;
+
+	const Provider* p = 0;
+
 	if (!_init)
 		initialize();
 
 	String afind = type + "." + name;
 	String alias = "Alg.Alias." + type + "." + name;
 
-	_lock.lock();
-	for (size_t i = 0; i < _providers.size(); i++)
+	synchronized (_providers)
 	{
-		const Provider* p = _providers[i];
-
-		if (p->getName() == provider)
+		for (int i = 0; i < _providers.size(); i++)
 		{
-			Provider::instantiator inst = 0;
+			p = _providers.get(i);
 
-			const Provider* p = _providers[i];
-
-			if (p->getProperty(afind))
+			if (p->getName().equals(provider))
 			{
-				inst = p->getInstantiator(afind);
-			}
-			else
-			{
-				const String* alias_of = p->getProperty(alias);
-
-				if (alias_of)
+				if (p->getProperty(afind))
 				{
-					inst = p->getInstantiator(*alias_of);
+					if ((inst = p->instantiate(afind)))
+						break;
 				}
+				else
+				{
+					const String* alias_of = p->getProperty(alias);
+
+					if (alias_of && (inst = p->instantiate(*alias_of)))
+						break;
+				}
+
+				throw NoSuchAlgorithmException(name + " " + type + " not available");
 			}
-
-			if (inst)
-			{
-				/* MUST unlock before instantiating:
-				 * if (ctor) of spi calls another getSpi this would cause a deadlock
-				 * it is safe to do so as we no longer need the array of providers
-				 */
-				_lock.unlock();
-
-				return new spi(inst(), p, name);
-			}
-
-			_lock.unlock();
-
-			throw NoSuchAlgorithmException(name + " " + type + " not available");
 		}
 	}
 
-	_lock.unlock();
+	if (inst)
+		return new spi(inst, p, name);
 
 	throw NoSuchProviderException(provider + " Provider not available");
 }
 
 Security::spi* Security::getSpi(const String& name, const String& type, const Provider& provider) throw (NoSuchAlgorithmException)
 {
+	Object* inst;
+
 	if (!_init)
 		initialize();
 
 	String afind = type + "." + name;
 	String alias = "Alg.Alias." + type + "." + name;
 
-	Provider::instantiator inst = 0;
-	
 	if (provider.getProperty(afind))
 	{
-		inst = provider.getInstantiator(afind);
+		inst = provider.instantiate(afind);
 	}
 	else
 	{
 		const String* alias_of = provider.getProperty(alias);
 
 		if (alias_of)
-			inst = provider.getInstantiator(*alias_of);
+			inst = provider.instantiate(*alias_of);
 	}
 
 	if (inst)
-		return new spi(inst(), &provider, name);
+		return new spi(inst, &provider, name);
 
 	throw NoSuchAlgorithmException(name + " " + type + " not available");
 }
 
 Security::spi* Security::getFirstSpi(const String& type)
 {
+	Object* inst = 0;
+
+	const Provider* p = 0;
+
 	if (!_init)
 		initialize();
 
 	String afind = type + ".";
 
-	_lock.lock();
-	for (size_t i = 0; i < _providers.size(); i++)
+	synchronized (_providers)
 	{
-		const Provider* p = _providers[i];
-
-		Enumeration* e = p->propertyNames();
-
-		while (e->hasMoreElements())
+		for (int i = 0; i < _providers.size(); i++)
 		{
-			const String* s = (const String*) e->nextElement();
+			p = _providers.get(i);
 
-			if (s->startsWith(afind))
+			Iterator<class Map<Object,Object>::Entry>* it = p->entrySet().iterator();
+			assert(it != 0);
+			while (it->hasNext())
 			{
-				String name;
+				const String* s = dynamic_cast<const String*>(it->next()->getKey());
 
-				name.setTo(*s, afind.length());
-
-				Provider::instantiator inst = p->getInstantiator(*s);
-
-				if (inst)
+				if (s->startsWith(afind))
 				{
-					/* MUST unlock before instantiating:
-					 * if (ctor) of spi calls another getSpi this would cause a deadlock
-					 * it is safe to do so as we no longer need the array of providers
-					 */
-					_lock.unlock();
+					if ((inst = p->instantiate(*s)))
+					{
+						String name(*s);
 
-					delete e;
+						delete it;
 
-					return new spi(inst(), p, name);
+						return new spi(inst, p, name);
+					}
 				}
 			}
+			delete it;
 		}
-
-		delete e;
 	}
-
-	_lock.unlock();
-
 	return 0;
 }
 
@@ -338,45 +327,46 @@ const String& Security::getKeyStoreDefault()
 	return *_props.getProperty("keystore.default", KEYSTORE_DEFAULT_TYPE);
 }
 
-int Security::addProvider(const Provider& provider)
+int Security::addProvider(Provider* provider)
 {
+	if (!provider)
+		throw NullPointerException();
+
+	int rc;
+
 	if (!_init)
 		initialize();
 
-	if (getProvider(provider.getName()))
+	if (getProvider(provider->getName()))
 		return -1;
 
-	_lock.lock();
+	synchronized (_providers)
+	{
+		rc = (int) _providers.size();
 
-	size_t rc = (int) _providers.size();
-
-	_providers.push_back(&provider);
-
-	_lock.unlock();
+		_providers.add(provider);
+	}
 
 	return rc;
 }
 
-int Security::insertProviderAt(const Provider& provider, size_t position)
+int Security::insertProviderAt(Provider* provider, int position) throw (IndexOutOfBoundsException)
 {
+	if (!provider)
+		throw NullPointerException();
+
 	if (!_init)
 		initialize();
 
-	if (getProvider(provider.getName()))
+	if (getProvider(provider->getName()))
 		return -1;
 
-	_lock.lock();
+	synchronized (_providers)
+	{
+		_providers.add(position, provider);
+	}
 
-	size_t size = _providers.size();
-
-	if (position > size || position <= 0)
-		position = size+1;
-
-	_providers.insert(_providers.begin()+position-1, &provider);
-
-	_lock.unlock();
-
-	return (int) position;
+	return position;
 }
 
 void Security::removeProvider(const String& name)
@@ -384,40 +374,39 @@ void Security::removeProvider(const String& name)
 	if (!_init)
 		initialize();
 
-	_lock.lock();
-	for (provider_vector_iterator it = _providers.begin(); it != _providers.end(); it++)
+	synchronized (_providers)
 	{
-		const Provider* p = *it;
-
-		if (p->getName() == name)
+		for (int i = 0; i < _providers.size(); i++)
 		{
-			_providers.erase(it);
-			_lock.unlock();
-			return;
+			const Provider* p = _providers.get(i);
+
+			if (p->getName().equals(name))
+			{
+				_providers.remove(i);
+				return;
+			}
 		}
 	}
-	_lock.unlock();
 }
 
-const Security::provider_vector& Security::getProviders()
+array<Provider*> Security::getProviders()
 {
 	if (!_init)
 		initialize();
 
-	return _providers;
+	return _providers.toArray();
 }
 
-const Provider* Security::getProvider(const String& name)
+Provider* Security::getProvider(const String& name)
 {
 	if (!_init)
 		initialize();
 
-	for (size_t i = 0; i < _providers.size(); i++)
+	for (int i = 0; i < _providers.size(); i++)
 	{
-		const Provider* tmp = _providers[i];
-
-		if (tmp->getName() == name)
-			return _providers[i];
+		Provider* tmp = _providers.get(i);
+		if (tmp->getName().equals(name))
+			return tmp;
 	}
 
 	return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 1999, 2000, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 1998, 1999, 2000, 2002 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 
 /*!\file fips186.c
  * \brief FIPS 186 pseudo-random number generator.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup PRNG_m PRNG_fips186_m
  */
 

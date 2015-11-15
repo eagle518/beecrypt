@@ -26,22 +26,18 @@
 
 using namespace beecrypt::security::spec;
 
-RSAPublicKeySpec::RSAPublicKeySpec(const mpbarrett& modulus, const mpnumber& publicExponent)
+RSAPublicKeySpec::RSAPublicKeySpec(const BigInteger& modulus, const BigInteger& publicExponent)
 {
 	_n = modulus;
 	_e = publicExponent;
 }
 
-RSAPublicKeySpec::~RSAPublicKeySpec()
-{
-}
-
-const mpbarrett& RSAPublicKeySpec::getModulus() const throw ()
+const BigInteger& RSAPublicKeySpec::getModulus() const throw ()
 {
 	return _n;
 }
 
-const mpnumber& RSAPublicKeySpec::getPublicExponent() const throw ()
+const BigInteger& RSAPublicKeySpec::getPublicExponent() const throw ()
 {
 	return _e;
 }

@@ -24,6 +24,8 @@
 
 #include "beecrypt/c++/util/Properties.h"
 using beecrypt::util::Properties;
+#include "beecrypt/c++/util/Date.h"
+using beecrypt::util::Date;
 #include "beecrypt/c++/io/DataInputStream.h"
 using beecrypt::io::DataInputStream;
 #include "beecrypt/c++/io/PrintStream.h"
@@ -31,141 +33,196 @@ using beecrypt::io::PrintStream;
 
 using namespace beecrypt::util;
 
-Properties::PropEnum::PropEnum(const properties_map& _map) throw ()
+Properties::Names::Names(Hashtable<Object,Object>& h) : _list(h.size())
 {
-	_it = _map.begin();
-	_end = _map.end();
+	Iterator<class Map<Object,Object>::Entry>* it = h.entrySet().iterator();
+
+	_pos = 0;
+	while (it->hasNext())
+	{
+		const String* name = dynamic_cast<String*>(it->next()->getKey());
+		if (name)
+			_list[_pos++] = new String(*name);
+		else
+			_list[_pos++] = 0;
+	}
+	_pos = 0;
 }
 
-Properties::PropEnum::~PropEnum() throw ()
+Properties::Names::~Names()
 {
+	for (int i = 0; i < _list.size(); i++)
+		delete _list[i];
 }
 
-bool Properties::PropEnum::hasMoreElements() throw ()
+bool Properties::Names::hasMoreElements() throw ()
 {
-	return _it != _end;
+	return _pos < _list.size();
 }
 
-const void* Properties::PropEnum::nextElement() throw (NoSuchElementException)
+const String* Properties::Names::nextElement() throw (NoSuchElementException)
 {
-	if (_it == _end)
+	if (_pos >= _list.size())
 		throw NoSuchElementException();
 
-	return (const void*) &((_it++)->first);
+	return _list[_pos++];
 }
 
 Properties::Properties()
 {
-	_lock.init();
 	defaults = 0;
 }
 
 Properties::Properties(const Properties& copy)
 {
-	_lock.init();
-	/* copy every item in the map */
-	_pmap = copy._pmap;
 	defaults = copy.defaults;
+
+	putAll(copy);
 }
 
 Properties::Properties(const Properties* defaults) : defaults(defaults)
 {
-	_lock.init();
 }
 
-Properties::~Properties()
+void Properties::enumerate(Hashtable<Object,Object>& h) const
 {
-	_lock.destroy();
+	if (defaults)
+		defaults->enumerate(h);
+
+	Iterator<class Map<Object,Object>::Entry>* it = entrySet().iterator();
+	assert(it != 0);
+	while (it->hasNext())
+	{
+		class Map<Object,Object>::Entry* p = it->next();
+
+		const String* key = dynamic_cast<const String*>(p->getKey());
+		if (key)
+		{
+			const String* value = dynamic_cast<const String*>(p->getValue());
+			if (value)
+			{
+				String* newKey = new String(*key);
+				String* newValue = new String(*value);
+				Object* oldValue = h.put(newKey, newValue);
+				if (oldValue)
+				{
+					delete newKey;
+					delete oldValue;
+				}
+			}
+		}
+	}
+	delete it;
 }
 
 const String* Properties::getProperty(const String& key) const throw ()
 {
-	properties_map::const_iterator it = _pmap.find(key);
-
-	if (it != _pmap.end())
-		return &(it->second);
-	else if (defaults)
+	const String* result = dynamic_cast<const String*>(Hashtable<Object,Object>::get(&key));
+	if (!result && defaults)
 		return defaults->getProperty(key);
-
-	return 0;
+	else
+		return result;
 }
 
 const String* Properties::getProperty(const String& key, const String& defaultValue) const throw ()
 {
 	const String* result = getProperty(key);
-
 	if (result)
 		return result;
 	else
 		return &defaultValue;
 }
 
-void Properties::setProperty(const String& key, const String& value) throw ()
+Object* Properties::setProperty(const String& key, const String& value)
 {
-	_lock.lock();
-	_pmap[key] = value;
-	_lock.unlock();
+	String* tmp = new String(key);
+
+	Object* result = put(tmp, new String(value));
+	if (result) // Hashtable already contained key tmp; we can free it
+		delete tmp;
+
+	return result;
 }
 
-Enumeration* Properties::propertyNames() const
+Enumeration<const String>* Properties::propertyNames() const
 {
-	return new PropEnum(_pmap);
+	Hashtable<Object,Object> h;
+
+	enumerate(h);
+
+	return new Names(h);
 }
 
 void Properties::load(InputStream& in) throw (IOException)
 {
 	String line;
-	String key;
-	String value;
 
 	DataInputStream dis(in);
 
-	_lock.lock();
 	try
 	{
-		while (dis.available())
+		synchronized (this)
 		{
-			dis.readLine(line);
-
-			if (line.indexOf((UChar) 0x23) != 0)
+			while (dis.available())
 			{
-				// more advanced parsing can come later
-				// see if we can find an '=' somewhere inside the string
-				int32_t eqidx = line.indexOf((UChar) 0x3D);
-				if (eqidx >= 0)
+				line = dis.readLine();
+
+				if (line.indexOf((UChar) 0x23) != 0)
 				{
-					// we can split the line into two parts
-					key.setTo(line, 0, eqidx);
-					value.setTo(line, eqidx+1);
-					_pmap[key] = value;
+					// more advanced parsing can come later
+					// see if we can find an '=' somewhere inside the string
+					int32_t eqidx = line.indexOf((UChar) 0x3D);
+					if (eqidx >= 0)
+					{
+						// we can split the line into two parts
+						Object* tmp = put(new String(line.substring(0, eqidx)), new String(line.substring(eqidx+1)));
+						if (tmp)
+							delete tmp;
+					}
 				}
+				// else it's a comment line which we discard
 			}
-			// else it's a comment line which we discard
 		}
-		_lock.unlock();
 	}
-	catch (IOException)
+	catch (IOException&)
 	{
-		_lock.unlock();
 		throw;
 	}
 }
 
 void Properties::store(OutputStream& out, const String& header) throw (IOException)
 {
-	properties_map::const_iterator pit;
+	/*!\todo first enumerate (recursively) into a new Hashtable, then get all the keys from it
+	 */
+
+	Date now;
+
+	/*!\todo use an OutputWriter instead of a PrintStream
+	 */
 	PrintStream ps(out);
 
 	ps.println("# " + header);
+	ps.println("# " + now.toString());
 
-	_lock.lock();
-
-	for (pit = _pmap.begin(); pit != _pmap.end(); ++pit)
+	synchronized (this)
 	{
-		ps.print(pit->first);
-		ps.print((javachar) 0x3D);
-		ps.println(pit->second);
-	}
+		Iterator<class Map<Object,Object>::Entry>* it = entrySet().iterator();
+		assert (it != 0);
+		while (it->hasNext())
+		{
+			class Map<Object,Object>::Entry* p = it->next();
 
-	_lock.unlock();
+			const String* key = dynamic_cast<const String*>(p->getKey());
+			if (key)
+			{
+				const String* value = dynamic_cast<const String*>(p->getValue());
+				if (value)
+				{
+					ps.print(*key);
+					ps.print((jchar) 0x3D);
+					ps.println(*value);
+				}
+			}
+		}
+	}
 }

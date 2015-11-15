@@ -22,10 +22,6 @@
 # include "config.h"
 #endif
 
-#if HAVE_ASSERT_H
-# include <assert.h>
-#endif
-
 #include "beecrypt/c++/security/SecureRandom.h"
 #include "beecrypt/c++/security/SecureRandomSpi.h"
 #include "beecrypt/c++/security/Security.h"
@@ -36,9 +32,7 @@ SecureRandom* SecureRandom::getInstance(const String& algorithm) throw (NoSuchAl
 {
 	Security::spi* tmp = Security::getSpi(algorithm, "SecureRandom");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecureRandomSpi*>(tmp->cspi));
-	#endif
 
 	SecureRandom* result = new SecureRandom(reinterpret_cast<SecureRandomSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -51,9 +45,7 @@ SecureRandom* SecureRandom::getInstance(const String& type, const String& provid
 {
 	Security::spi* tmp = Security::getSpi(type, "SecureRandom", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecureRandomSpi*>(tmp->cspi));
-	#endif
 
 	SecureRandom* result = new SecureRandom(reinterpret_cast<SecureRandomSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -66,9 +58,7 @@ SecureRandom* SecureRandom::getInstance(const String& type, const Provider& prov
 {
 	Security::spi* tmp = Security::getSpi(type, "SecureRandom", provider);
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecureRandomSpi*>(tmp->cspi));
-	#endif
 
 	SecureRandom* result = new SecureRandom(reinterpret_cast<SecureRandomSpi*>(tmp->cspi), tmp->prov, tmp->name);
 
@@ -77,7 +67,7 @@ SecureRandom* SecureRandom::getInstance(const String& type, const Provider& prov
 	return result;
 }
 
-void SecureRandom::getSeed(byte* data, size_t size)
+void SecureRandom::getSeed(byte* data, int size)
 {
 	entropyGatherNext(data, size);
 }
@@ -86,9 +76,7 @@ SecureRandom::SecureRandom()
 {
 	Security::spi* tmp = Security::getFirstSpi("SecureRandom");
 
-	#if HAVE_ASSERT_H
 	assert(dynamic_cast<SecureRandomSpi*>((SecureRandomSpi*) tmp->cspi));
-	#endif
 
 	_rspi = (SecureRandomSpi*) tmp->cspi;
 	_type = tmp->name;
@@ -109,17 +97,17 @@ SecureRandom::~SecureRandom()
 	delete _rspi;
 }
 
-void SecureRandom::generateSeed(byte* data, size_t size)
+void SecureRandom::generateSeed(byte* data, int size)
 {
 	_rspi->engineGenerateSeed(data, size);
 }
 
-void SecureRandom::setSeed(const byte* data, size_t size)
+void SecureRandom::setSeed(const byte* data, int size)
 {
 	_rspi->engineSetSeed(data, size);
 }
 
-void SecureRandom::nextBytes(byte* data, size_t size)
+void SecureRandom::nextBytes(byte* data, int size)
 {
 	_rspi->engineNextBytes(data, size);
 }

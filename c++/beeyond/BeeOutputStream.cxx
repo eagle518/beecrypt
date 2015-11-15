@@ -34,48 +34,12 @@ BeeOutputStream::~BeeOutputStream()
 {
 }
 
-void BeeOutputStream::write(const mpnumber& n) throw (IOException)
+void BeeOutputStream::writeBigInteger(const BigInteger& n) throw (IOException)
 {
-	size_t bits = n.bitlength();
-	size_t length = ((bits + 7) >> 3) + (((bits & 7) == 0) ? 1 : 0);
+	bytearray data;
 
-	byte* buffer = new byte[length];
+	n.toByteArray(data);
 
-	try
-	{
-		i2osp(buffer, length, n.data, n.size);
-
-		DataOutputStream::writeInt(length);
-		DataOutputStream::write(buffer, 0, length);
-
-		delete[] buffer;
-	}
-	catch (IOException)
-	{
-		delete[] buffer;
-		throw;
-	}
-}
-
-void BeeOutputStream::write(const mpbarrett& b) throw (IOException)
-{
-	size_t bits = b.bitlength();
-	size_t length = ((bits + 7) >> 3) + (((bits & 7) == 0) ? 1 : 0);
-
-	byte* buffer = new byte[length];
-
-	try
-	{
-		i2osp(buffer, length, b.modl, b.size);
-
-		DataOutputStream::writeInt(length);
-		DataOutputStream::write(buffer, 0, length);
-
-		delete[] buffer;
-	}
-	catch (IOException)
-	{
-		delete[] buffer;
-		throw;
-	}
+	writeInt(data.size());
+	write(data);
 }

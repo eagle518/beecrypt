@@ -19,11 +19,11 @@
 
 /*!\file benchbc.c
  * \brief Benchmark program for Block Ciphers.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  */
 
-#include "beecrypt.h"
-#include "timestamp.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/timestamp.h"
 
 #include <stdio.h>
 
@@ -69,7 +69,7 @@ int benchmark(const blockCipher* bc, int keybits, int size)
 	if (cleartext && ciphertext)
 	{
 		double exact, speed;
-		javalong start, now;
+		jlong start, now;
 		int iterations, nblocks;
 
 		/* calculcate how many block we need to process */
@@ -125,6 +125,28 @@ int benchmark(const blockCipher* bc, int keybits, int size)
 		speed = (iterations * size) / exact;
 
 		printf("CBC encrypted %d KB in %.2f seconds = %.2f KB/s\n", iterations * size, exact, speed);
+
+		/* CTR encrypt */
+		iterations = 0;
+		start = timestamp();
+		do
+		{
+			if (blockCipherContextCTR(&bcc, ciphertext, cleartext, nblocks))
+			{
+				fprintf(stderr, "blockCipherContextCBC failed\n");
+				return -1;
+			}
+
+			now = timestamp();
+			iterations++;
+		} while (now < (start + (SECONDS * ONE_SECOND)));
+
+		exact = (now - start);
+		exact /= ONE_SECOND;
+
+		speed = (iterations * size) / exact;
+
+		printf("CTR encrypted %d KB in %.2f seconds = %.2f KB/s\n", iterations * size, exact, speed);
 
 		/* set up for decryption */
 		if (blockCipherContextSetup(&bcc, key, keybits, DECRYPT))

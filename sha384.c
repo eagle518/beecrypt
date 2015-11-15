@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 Beeyond Software Holding BV
+ * Copyright (c) 2004 X-Way Rights BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@
 #endif
 
 #include "beecrypt/sha384.h"
-#include "beecrypt/sha_k.h"
+#include "beecrypt/sha2k64.h"
 #include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_sha384_m
@@ -66,7 +66,15 @@ static const uint64_t hinit[8] = {
 	#endif
 };
 
-const hashFunction sha384 = { "SHA-384", sizeof(sha384Param), 96, 64, (hashFunctionReset) sha384Reset, (hashFunctionUpdate) sha384Update, (hashFunctionDigest) sha384Digest };
+const hashFunction sha384 = {
+	.name = "SHA-384",
+	.paramsize = sizeof(sha384Param),
+	.blocksize = 128,
+	.digestsize = 48,
+	.reset = (hashFunctionReset) sha384Reset,
+	.update = (hashFunctionUpdate) sha384Update,
+	.digest = (hashFunctionDigest) sha384Digest
+};
 
 int sha384Reset(register sha384Param* sp)
 {
@@ -121,10 +129,11 @@ int sha384Reset(register sha384Param* sp)
 void sha384Process(register sha384Param* sp)
 {
 	#ifdef OPTIMIZE_SSE2 
-	# if defined(__GNUC__)
-	static const __m64 MASK = { 0x00FF00FF, 0x00FF00FF };
-	# elif defined(_MSC_VER)
+	
+	# if defined(_MSC_VER) || defined (__INTEL_COMPILER)
 	static const __m64 MASK = { 0x00FF00FF00FF00FF00 };
+	# elif defined(__GNUC__)
+	static const __m64 MASK = { 0x00FF00FF, 0x00FF00FF };
 	# else
 	#  error
 	# endif
@@ -310,7 +319,7 @@ int sha384Update(register sha384Param* sp, const byte* data, size_t size)
 	mpadd(2, sp->length, add);
 	#elif (MP_WBITS == 32)
 	mpw add[4];
-	mpsetw(4, add, size);
+	mpsetws(4, add, size);
 	mplshift(4, add, 3);
 	mpadd(4, sp->length, add);
 	#else

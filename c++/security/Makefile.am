@@ -1,8 +1,8 @@
-INCLUDES = -I$(top_srcdir)/..
+INCLUDES = -I$(top_srcdir)/include
 
-AUTOMAKE_OPTIONS = gnu no-dependencies
+AUTOMAKE_OPTIONS = gnu
 
-SUBDIRS = cert interfaces spec
+SUBDIRS = auth cert spec
 
 noinst_LTLIBRARIES = libcxxsecurity.la
 
@@ -13,63 +13,14 @@ AlgorithmParameterGenerator.cxx \
 AlgorithmParameters.cxx \
 DigestInputStream.cxx \
 DigestOutputStream.cxx \
-GeneralSecurityException.cxx \
-InvalidAlgorithmParameterException.cxx \
-InvalidKeyException.cxx \
-InvalidParameterException.cxx \
-KeyException.cxx \
 KeyFactory.cxx \
 KeyPair.cxx \
 KeyPairGenerator.cxx \
 KeyStore.cxx \
-KeyStoreException.cxx \
 MessageDigest.cxx \
-NoSuchAlgorithmException.cxx \
-NoSuchProviderException.cxx \
 Provider.cxx \
-ProviderException.cxx \
 SecureRandom.cxx \
 Security.cxx \
-ShortBufferException.cxx \
-Signature.cxx \
-SignatureException.cxx \
-UnrecoverableKeyException.cxx
-libcxxsecurity_la_LIBADD = cert/libcxxsecuritycert.la spec/libcxxsecurityspec.la
+Signature.cxx
 
-cxxsecurity_HEADERS =\
-AlgorithmParameterGenerator.h \
-AlgorithmParameterGeneratorSpi.h \
-AlgorithmParameters.h \
-AlgorithmParametersSpi.h \
-DigestInputStream.h \
-DigestOutputStream.h \
-GeneralSecurityException.h \
-InvalidAlgorithmParameterException.h \
-InvalidKeyException.h \
-InvalidParameterException.h \
-KeyFactory.h \
-KeyFactorySpi.h \
-Key.h \
-KeyException.h \
-KeyPairGenerator.h \
-KeyPairGeneratorSpi.h \
-KeyPair.h \
-KeyStoreException.h \
-KeyStore.h \
-KeyStoreSpi.h \
-MessageDigest.h \
-MessageDigestSpi.h \
-NoSuchAlgorithmException.h \
-NoSuchProviderException.h \
-PrivateKey.h \
-Provider.h \
-ProviderException.h \
-PublicKey.h \
-SecureRandom.h \
-SecureRandomSpi.h \
-Security.h \
-ShortBufferException.h \
-Signature.h \
-SignatureException.h \
-SignatureSpi.h \
-UnrecoverableKeyException.h
+libcxxsecurity_la_LIBADD = cert/libcxxsecuritycert.la spec/libcxxsecurityspec.la

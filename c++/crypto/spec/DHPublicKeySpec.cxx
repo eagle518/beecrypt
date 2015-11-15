@@ -18,32 +18,29 @@
 
 #define BEECRYPT_CXX_DLL_EXPORT
 
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "beecrypt/c++/crypto/spec/DHPublicKeySpec.h"
 
 using namespace beecrypt::crypto::spec;
 
-DHPublicKeySpec::DHPublicKeySpec(const mpbarrett& p, const mpnumber& g, const mpnumber& y)
-{
-	_p = p;
-	_g = g;
-	_y = y;
-}
-
-DHPublicKeySpec::~DHPublicKeySpec()
+DHPublicKeySpec::DHPublicKeySpec(const BigInteger& y, const BigInteger& p, const BigInteger& g) : _p(p), _g(g), _y(y)
 {
 }
 
-const mpbarrett& DHPublicKeySpec::getP() const throw ()
+const BigInteger& DHPublicKeySpec::getP() const throw ()
 {
 	return _p;
 }
 
-const mpnumber& DHPublicKeySpec::getG() const throw ()
+const BigInteger& DHPublicKeySpec::getG() const throw ()
 {
 	return _g;
 }
 
-const mpnumber& DHPublicKeySpec::getY() const throw ()
+const BigInteger& DHPublicKeySpec::getY() const throw ()
 {
 	return _y;
 }

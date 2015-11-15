@@ -21,9 +21,17 @@
 #endif
 
 #include "beecrypt/c++/provider/RSAPublicKeyImpl.h"
-#include "beecrypt/c++/provider/BeeKeyFactory.h"
+#include "beecrypt/c++/io/ByteArrayOutputStream.h"
+using beecrypt::io::ByteArrayOutputStream;
+#include "beecrypt/c++/beeyond/BeeOutputStream.h"
+using beecrypt::beeyond::BeeOutputStream;
 
 using namespace beecrypt::provider;
+
+namespace {
+    const String FORMAT_BEE("BEE");
+    const String ALGORITHM_RSA("RSA");
+}
 
 RSAPublicKeyImpl::RSAPublicKeyImpl(const RSAPublicKey& copy) : _n(copy.getModulus()), _e(copy.getPublicExponent())
 {
@@ -35,15 +43,14 @@ RSAPublicKeyImpl::RSAPublicKeyImpl(const RSAPublicKeyImpl& copy) : _n(copy._n), 
 	_enc = 0;
 }
 
-RSAPublicKeyImpl::RSAPublicKeyImpl(const mpbarrett& n, const mpnumber& e) : _n(n), _e(e)
+RSAPublicKeyImpl::RSAPublicKeyImpl(const BigInteger& n, const BigInteger& e) : _n(n), _e(e)
 {
 	_enc = 0;
 }
 
 RSAPublicKeyImpl::~RSAPublicKeyImpl()
 {
-	if (_enc)
-		delete _enc;
+	delete _enc;
 }
 
 RSAPublicKeyImpl* RSAPublicKeyImpl::clone() const throw ()
@@ -51,51 +58,67 @@ RSAPublicKeyImpl* RSAPublicKeyImpl::clone() const throw ()
 	return new RSAPublicKeyImpl(*this);
 }
 
-bool RSAPublicKeyImpl::equals(const Object& compare) const throw ()
+bool RSAPublicKeyImpl::equals(const Object* obj) const throw ()
 {
-	if (this == &compare)
+	if (this == obj)
 		return true;
 
-	const RSAPublicKey* pub = dynamic_cast<const RSAPublicKey*>(&compare);
-	if (pub)
+	if (obj)
 	{
-		if (pub->getModulus() != _n)
-			return false;
+		const RSAPublicKey* pub = dynamic_cast<const RSAPublicKey*>(obj);
+		if (pub)
+		{
+			if (pub->getModulus() != _n)
+				return false;
 
-		if (pub->getPublicExponent() != _e)
-			return false;
+			if (pub->getPublicExponent() != _e)
+				return false;
 
-		return true;
+			return true;
+		}
 	}
 	return false;
 }
 
-const mpbarrett& RSAPublicKeyImpl::getModulus() const throw ()
+const BigInteger& RSAPublicKeyImpl::getModulus() const throw ()
 {
 	return _n;
 }
 
-const mpnumber& RSAPublicKeyImpl::getPublicExponent() const throw ()
+const BigInteger& RSAPublicKeyImpl::getPublicExponent() const throw ()
 {
 	return _e;
 }
 
-const bytearray* RSAPublicKeyImpl::getEncoded() const
+const bytearray* RSAPublicKeyImpl::getEncoded() const throw ()
 {
 	if (!_enc)
-		_enc = BeeKeyFactory::encode(*this);
+	{
+		try
+		{
+			ByteArrayOutputStream bos;
+			BeeOutputStream bee(bos);
+
+			bee.writeBigInteger(_n);
+			bee.writeBigInteger(_e);
+			bee.close();
+
+			_enc = bos.toByteArray();
+		}
+		catch (IOException&)
+		{
+        }
+	}
 
 	return _enc;
 }
 
 const String& RSAPublicKeyImpl::getAlgorithm() const throw ()
 {
-	static const String ALGORITHM = UNICODE_STRING_SIMPLE("RSA");
-	return ALGORITHM;
+	return ALGORITHM_RSA;
 }
 
 const String* RSAPublicKeyImpl::getFormat() const throw ()
 {
-	static const String FORMAT = UNICODE_STRING_SIMPLE("BEE");
-	return &FORMAT;
+	return &FORMAT_BEE;
 }

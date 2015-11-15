@@ -19,15 +19,15 @@
 
 /*!\file testdsa.c
  * \brief Unit test program for the DSA algorithm.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup UNIT_m
  */
 
 #include <stdio.h>
 
-#include "beecrypt.h"
-#include "dlkp.h"
-#include "dsa.h"
+#include "beecrypt/beecrypt.h"
+#include "beecrypt/dlkp.h"
+#include "beecrypt/dsa.h"
 
 struct vector
 {

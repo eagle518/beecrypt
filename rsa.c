@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2000, 2001, 2002 Virtual Unlimited B.V.
+ * Copyright (c) 2000, 2001, 2002 X-Way Rights BV
+ * Copyright (c) 2009 Bob Deblier
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +20,7 @@
 
 /*!\file rsa.c
  * \brief RSA algorithm.
- * \author Bob Deblier <bob.deblier@pandora.be>
+ * \author Bob Deblier <bob.deblier@telenet.be>
  * \ingroup IF_m IF_rsa_m
  */
 
@@ -102,23 +103,32 @@ int rsapricrt(const mpbarrett* n, const mpbarrett* p, const mpbarrett* q,
 		return -1;
 	}
 
-	/* resize c for powmod p */
-	mpsetx(psize*2, ptemp, c->size, c->data);
+	#pragma omp parallel sections
+	{
+		#pragma omp section
+		{
+		/* resize c for powmod p */
+		mpsetx(psize*2, ptemp, c->size, c->data);
 
-	/* reduce modulo p before we powmod */
-	mpbmod_w(p, ptemp, ptemp+psize, ptemp+2*psize);
+		/* reduce modulo p before we powmod */
+		mpbmod_w(p, ptemp, ptemp+psize, ptemp+2*psize);
 
-	/* compute j1 = c^dp mod p, store @ ptemp */
-	mpbpowmod_w(p, psize, ptemp+psize, dp->size, dp->data, ptemp, ptemp+2*psize);
+		/* compute j1 = c^dp mod p, store @ ptemp */
+		mpbpowmod_w(p, psize, ptemp+psize, dp->size, dp->data, ptemp, ptemp+2*psize);
+		}
 
-	/* resize c for powmod q */
-	mpsetx(qsize*2, qtemp, c->size, c->data);
+		#pragma omp section
+		{
+		/* resize c for powmod q */
+		mpsetx(qsize*2, qtemp, c->size, c->data);
 
-	/* reduce modulo q before we powmod */
-	mpbmod_w(q, qtemp, qtemp+qsize, qtemp+2*qsize);
+		/* reduce modulo q before we powmod */
+		mpbmod_w(q, qtemp, qtemp+qsize, qtemp+2*qsize);
 
-	/* compute j2 = c^dq mod q, store @ qtemp */
-	mpbpowmod_w(q, qsize, qtemp+qsize, dq->size, dq->data, qtemp, qtemp+2*qsize);
+		/* compute j2 = c^dq mod q, store @ qtemp */
+		mpbpowmod_w(q, qsize, qtemp+qsize, dq->size, dq->data, qtemp, qtemp+2*qsize);
+		}
+	}
 
 	/* compute j1-j2 mod p, store @ ptemp */
 	mpbsubmod_w(p, psize, ptemp, qsize, qtemp, ptemp, ptemp+2*psize);
@@ -142,19 +152,18 @@ int rsapricrt(const mpbarrett* n, const mpbarrett* p, const mpbarrett* q,
 int rsavrfy(const mpbarrett* n, const mpnumber* e,
             const mpnumber* m, const mpnumber* c)
 {
-	int rc;
+	int rc = 0;
 	register size_t size = n->size;
 
 	register mpw* temp;
 
 	if (mpgex(m->size, m->data, n->size, n->modl))
-		return -1;
+		return rc;
 
 	if (mpgex(c->size, c->data, n->size, n->modl))
-		return 0;
+		return rc;
 
 	temp = (mpw*) malloc((5*size+2)*sizeof(mpw));
-
 	if (temp)
 	{
 		mpbpowmod_w(n, m->size, m->data, e->size, e->data, temp, temp+size);
@@ -162,9 +171,7 @@ int rsavrfy(const mpbarrett* n, const mpnumber* e,
 		rc = mpeqx(size, temp, c->size, c->data);
 
 		free(temp);
-
-		return rc;
 	}
 
-	return 0;
+	return rc;
 }

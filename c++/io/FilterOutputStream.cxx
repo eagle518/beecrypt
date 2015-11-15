@@ -57,7 +57,7 @@ void FilterOutputStream::write(byte b) throw (IOException)
 	out.write(b);
 }
 
-void FilterOutputStream::write(const byte* data, size_t offset, size_t len) throw (IOException)
+void FilterOutputStream::write(const byte* data, int offset, int len) throw (IOException)
 {
 	out.write(data, offset, len);
 }

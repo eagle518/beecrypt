@@ -22,22 +22,21 @@
 # include "config.h"
 #endif
 
-#include "c++/io/ByteArrayInputStream.h"
+#include "beecrypt/c++/io/ByteArrayInputStream.h"
 using beecrypt::io::ByteArrayInputStream;
-#include "c++/io/ByteArrayOutputStream.h"
+#include "beecrypt/c++/io/ByteArrayOutputStream.h"
 using beecrypt::io::ByteArrayOutputStream;
-#include "c++/io/DataInputStream.h"
+#include "beecrypt/c++/io/DataInputStream.h"
 using beecrypt::io::DataInputStream;
-#include "c++/io/DataOutputStream.h"
+#include "beecrypt/c++/io/DataOutputStream.h"
 using beecrypt::io::DataOutputStream;
 
 #include <iostream>
-#include <unicode/ustream.h>
 using namespace std;
 
 int main(int argc, char* argv[])
 {
-	String input = UNICODE_STRING_SIMPLE("The quick brown fox jumps over the lazy dog");
+	String input("The quick brown fox jumps over the lazy dog");
 
 	int failures = 0;
 
@@ -64,9 +63,9 @@ int main(int argc, char* argv[])
 
 			String test;
 
-			din.readUTF(test);
+			test = din.readUTF();
 
-			if (input != test)
+			if (!input.equals(test))
 			{
 				cerr << "failed test 2" << endl;
 				failures++;
@@ -88,7 +87,7 @@ int main(int argc, char* argv[])
 			failures++;
 		}
 	}
-	catch (IOException& ex)
+	catch (IOException&)
 	{
 		cerr << "failed structural 2" << endl;
 		failures++;

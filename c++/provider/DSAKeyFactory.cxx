@@ -23,22 +23,71 @@
 #include "beecrypt/c++/provider/DSAKeyFactory.h"
 #include "beecrypt/c++/provider/DSAPrivateKeyImpl.h"
 #include "beecrypt/c++/provider/DSAPublicKeyImpl.h"
+#include "beecrypt/c++/io/ByteArrayInputStream.h"
+using beecrypt::io::ByteArrayInputStream;
 #include "beecrypt/c++/security/KeyFactory.h"
 using beecrypt::security::KeyFactory;
 #include "beecrypt/c++/security/spec/DSAPrivateKeySpec.h"
 using beecrypt::security::spec::DSAPrivateKeySpec;
 #include "beecrypt/c++/security/spec/DSAPublicKeySpec.h"
 using beecrypt::security::spec::DSAPublicKeySpec;
-#include "beecrypt/c++/security/spec/EncodedKeySpec.h"
-using beecrypt::security::spec::EncodedKeySpec;
+#include "beecrypt/c++/beeyond/AnyEncodedKeySpec.h"
+using beecrypt::beeyond::AnyEncodedKeySpec;
+#include "beecrypt/c++/beeyond/BeeInputStream.h"
+using beecrypt::beeyond::BeeInputStream;
 
 using namespace beecrypt::provider;
 
-DSAKeyFactory::DSAKeyFactory()
-{
+namespace {
+	const String FORMAT_BEE("BEE");
+	const String ALGORITHM_DSA("DSA");
+
+	DSAPrivateKey* generatePrivate(const bytearray& enc)
+	{
+		try
+		{
+			ByteArrayInputStream bis(enc);
+			BeeInputStream bee(bis);
+
+			BigInteger p, q, g, x;
+
+			p = bee.readBigInteger();
+			q = bee.readBigInteger();
+			g = bee.readBigInteger();
+			x = bee.readBigInteger();
+
+			return new DSAPrivateKeyImpl(p, q, g, x);
+		}
+		catch (IOException&)
+		{
+		}
+		return 0;
+	}
+
+	DSAPublicKey* generatePublic(const bytearray& enc)
+	{
+		try
+		{
+			ByteArrayInputStream bis(enc);
+			BeeInputStream bee(bis);
+
+			BigInteger p, q, g, y;
+
+			p = bee.readBigInteger();
+			q = bee.readBigInteger();
+			g = bee.readBigInteger();
+			y = bee.readBigInteger();
+
+			return new DSAPublicKeyImpl(p, q, g, y);
+		}
+		catch (IOException&)
+		{
+		}
+		return 0;
+	}
 }
 
-DSAKeyFactory::~DSAKeyFactory()
+DSAKeyFactory::DSAKeyFactory()
 {
 }
 
@@ -53,25 +102,15 @@ PrivateKey* DSAKeyFactory::engineGeneratePrivate(const KeySpec& spec) throw (Inv
 	const EncodedKeySpec* enc = dynamic_cast<const EncodedKeySpec*>(&spec);
 	if (enc)
 	{
-		try
+		if (enc->getFormat().equals(FORMAT_BEE))
 		{
-			KeyFactory* kf = KeyFactory::getInstance(enc->getFormat());
-			try
-			{
-				PrivateKey* pri = kf->generatePrivate(*enc);
-				delete kf;
+			DSAPrivateKey* pri = generatePrivate(enc->getEncoded());
+			if (pri)
 				return pri;
-			}
-			catch (...)
-			{
-				delete kf;
-				throw;
-			}
+
+			throw InvalidKeySpecException("Invalid KeySpec encoding");
 		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw InvalidKeySpecException("Unsupported KeySpec encoding format");
-		}
+		throw InvalidKeySpecException("Unsupported KeySpec format");
 	}
 	throw InvalidKeySpecException("Unsupported KeySpec type");
 }
@@ -87,25 +126,15 @@ PublicKey* DSAKeyFactory::engineGeneratePublic(const KeySpec& spec) throw (Inval
 	const EncodedKeySpec* enc = dynamic_cast<const EncodedKeySpec*>(&spec);
 	if (enc)
 	{
-		try
+		if (enc->getFormat().equals(FORMAT_BEE))
 		{
-			KeyFactory* kf = KeyFactory::getInstance(enc->getFormat());
-			try
-			{
-				PublicKey* pub = kf->generatePublic(*enc);
-				delete kf;
+			DSAPublicKey* pub = generatePublic(enc->getEncoded());
+			if (pub)
 				return pub;
-			}
-			catch (...)
-			{
-				delete kf;
-				throw;
-			}
+
+			throw InvalidKeySpecException("Invalid KeySpec encoding");
 		}
-		catch (NoSuchAlgorithmException)
-		{
-			throw InvalidKeySpecException("Unsupported KeySpec encoding format");
-		}
+		throw InvalidKeySpecException("Unsupported KeySpec format");
 	}
 	throw InvalidKeySpecException("Unsupported KeySpec type");
 }
@@ -113,43 +142,47 @@ PublicKey* DSAKeyFactory::engineGeneratePublic(const KeySpec& spec) throw (Inval
 KeySpec* DSAKeyFactory::engineGetKeySpec(const Key& key, const type_info& info) throw (InvalidKeySpecException)
 {
 	const DSAPublicKey* pub = dynamic_cast<const DSAPublicKey*>(&key);
-
 	if (pub)
 	{
 		if (info == typeid(KeySpec) || info == typeid(DSAPublicKeySpec))
 		{
 			const DSAParams& params = pub->getParams();
 
-			return new DSAPublicKeySpec(params.getP(), params.getQ(), params.getG(), pub->getY());
+			return new DSAPublicKeySpec(pub->getY(), params.getP(), params.getQ(), params.getG());
 		}
-		/*!\todo also support EncodeKeySpec
-		 */
-		/*
 		if (info == typeid(EncodedKeySpec))
 		{
+			const String* format = pub->getFormat();
+			if (format)
+			{
+				const bytearray* enc = pub->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
+			}
 		}
-		*/
 
 		throw InvalidKeySpecException("Unsupported KeySpec type");
 	}
 
 	const DSAPrivateKey* pri = dynamic_cast<const DSAPrivateKey*>(&key);
-
 	if (pri)
 	{
 		if (info == typeid(KeySpec) || info == typeid(DSAPrivateKeySpec))
 		{
 			const DSAParams& params = pri->getParams();
 
-			return new DSAPrivateKeySpec(params.getP(), params.getQ(), params.getG(), pri->getX());
+			return new DSAPrivateKeySpec(pri->getX(), params.getP(), params.getQ(), params.getG());
 		}
-		/*!\todo also support EncodeKeySpec
-		 */
-		/*
 		if (info == typeid(EncodedKeySpec))
 		{
+			const String* format = pri->getFormat();
+			if (format)
+			{
+				const bytearray* enc = pri->getEncoded();
+				if (enc)
+					return new AnyEncodedKeySpec(*format, *enc);
+			}
 		}
-		*/
 
 		throw InvalidKeySpecException("Unsupported KeySpec type");
 	}

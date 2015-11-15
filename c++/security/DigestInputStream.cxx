@@ -33,10 +33,6 @@ DigestInputStream::DigestInputStream(InputStream& in, MessageDigest& m) : Filter
 	_on = true;
 }
 
-DigestInputStream::~DigestInputStream()
-{
-}
-
 int DigestInputStream::read() throw (IOException)
 {
 	int rc = in.read();
@@ -45,7 +41,7 @@ int DigestInputStream::read() throw (IOException)
 	return rc;
 }
 
-int DigestInputStream::read(byte *data, size_t offset, size_t length) throw (IOException)
+int DigestInputStream::read(byte *data, int offset, int length) throw (IOException)
 {
 	if (!data)
 		throw NullPointerException();

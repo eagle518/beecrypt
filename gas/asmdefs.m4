@@ -2,7 +2,7 @@ dnl  asmdefs.m4
 dnl
 dnl  Copyright (c) 2003 Bob Deblier
 dnl 
-dnl  Author: Bob Deblier <bob.deblier@pandora.be>
+dnl  Author: Bob Deblier <bob.deblier@telenet.be>
 dnl 
 dnl  This library is free software; you can redistribute it and/or
 dnl  modify it under the terms of the GNU Lesser General Public
