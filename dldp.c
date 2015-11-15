@@ -177,13 +177,17 @@ void dldp_pgoqGenerator(dldp_p* dp, randomGeneratorContext* rc)
 	 */
 
 	register uint32  psize = dp->p.size;
-	register uint32* hdata = dp->p.data+psize*4+2;
+	register uint32* hdata = dp->p.wksp+psize*4+2;
 
 	while (1)
 	{
 		mp32brndres(&dp->p, hdata, rc);
 
+		/* first compute h^r mod p */
 		mp32bpowmod(&dp->p, psize, hdata, dp->r.size, dp->r.data);
+		/* then square to get h^(2r) mod p */
+		mp32bsqrmod(&dp->p, psize, dp->p.data);
+
 		if (mp32isone(psize, dp->p.data))
 			continue;
 
@@ -251,7 +255,7 @@ void dldp_pgonMakeSafe(dldp_p* dp, randomGeneratorContext* rc, uint32 psize)
 void dldp_pgonGenerator(dldp_p* dp, randomGeneratorContext* rc)
 {
 	register uint32  psize = dp->p.size;
-	register uint32* gdata = dp->p.data+psize*4+2;
+	register uint32* gdata = dp->p.wksp+psize*4+2;
 
 	while (1)
 	{

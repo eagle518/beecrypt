@@ -117,6 +117,11 @@ EXPORTS
  keyedHashFunctionDefault
  keyedHashFunctionFind
  keyedHashFunctionGet
+ md5 data
+ md5Process
+ md5Reset
+ md5Update
+ md5Digest
  ;mp32copy
  ;mp32move
  mp32zero

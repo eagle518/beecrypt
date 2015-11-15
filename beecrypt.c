@@ -44,6 +44,7 @@
 #include "entropy.h"
 #include "fips180.h"
 #include "fips186.h"
+#include "md5.h"
 #include "mp32.h"
 #include "mtprng.h"
 #include "sha1hmac.h"
@@ -173,7 +174,7 @@ void randomGeneratorContextFree(randomGeneratorContext* ctxt)
 
 static const hashFunction* hashFunctionList[] =
 {
-	&sha1
+	&sha1, &md5
 };
 
 #define HASHFUNCTIONS (sizeof(hashFunctionList) / sizeof(hashFunction*))

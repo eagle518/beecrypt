@@ -7,6 +7,7 @@ Note: on Solaris 2.7, the compiler used was the WorkShop Compiler C 4.2
 Note: on RedHat Linux 6.2, the compiler used was egcs-2.91.66
 Note: on YellowDog Linux 1.2, the compiler used was gcc-2.95.2
 Note: on Windows, the compiler used was Metrowerks CodeWarrior Pro 5.3
+Note: on Tru64 Unix, the compiler used was Compaq's Alpha compiler 6.3.9.126
 
 The tests:
 

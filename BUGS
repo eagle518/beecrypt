@@ -2,7 +2,10 @@ Legend:
 	- = open bug
 	* = fixed bug
 
+1.1.2:
+	
 1.1.1:
+	* discrete logarithm domain parameter generator calculations contains bugs - was detected in this release but present since the first release.
 
 1.1.0:
 	* The javaglue produces a NullPointerException when initializing with a null IV; this should be treated correctly, i.e. as an all zero IV.

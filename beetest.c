@@ -28,6 +28,7 @@
 #include "mp32barrett.h"
 #include "dldp.h"
 #include "fips180.h"
+#include "md5.h"
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
@@ -78,6 +79,36 @@ int testVectorExpMod()
 	return mp32eqx(y.size, y.data, tmp.size, tmp.data);
 }
 
+int testVectorDLDP()
+{
+	/* try generating dldp_p parameters, then see if the order of the generator is okay */
+	randomGeneratorContext rc;
+	dldp_p dp;
+
+	memset(&dp, 0, sizeof(dldp_p));
+
+	randomGeneratorContextInit(&rc, randomGeneratorDefault());
+
+	if (rc.rng && rc.param)
+	{
+		if (rc.rng->setup(rc.param) == 0)
+		{
+			register int result;
+	
+			dldp_pgoqMake(&dp, &rc, 768 >> 5, 512 >> 5, 1);
+
+			/* we have the parameters, now see if g^q == 1 */
+			mp32bpowmod(&dp.p, dp.g.size, dp.g.data, dp.q.size, dp.q.modl);
+			result = mp32isone(dp.p.size, dp.p.data);
+
+			dldp_pFree(&dp);
+
+			return result;
+		}
+	}
+	return 0;
+}
+
 int testVectorSHA()
 {
 	uint32 expect[5] = { 0xA9993E36, 0x4706816A, 0xBA3E2571, 0x7850C26C, 0x9CD0D89D };
@@ -85,10 +116,23 @@ int testVectorSHA()
 	sha1Param param;
 	
 	sha1Reset(&param);
-	sha1Update(&param, (const unsigned char *) "abc", 3);
+	sha1Update(&param, (const unsigned char*) "abc", 3);
 	sha1Digest(&param, digest);
 
 	return mp32eq(5, expect, digest);
+}
+
+int testVectorMD5()
+{
+	uint32 expect[4] = { 0x90015098, 0x3cd24fb0, 0xd6963f7d, 0x28e17f72 };
+	uint32 digest[4];
+	md5Param param;
+
+	md5Reset(&param);
+	md5Update(&param, (const unsigned char*) "abc", 3);
+	md5Digest(&param, digest);
+
+	return mp32eq(4, expect, digest);
 }
 
 uint32 keyValue[] = 
@@ -461,8 +505,18 @@ int main()
 	else
 		exit(1);
 
+	if (testVectorMD5())
+		printf("MD5 works!\n");
+	else
+		exit(1);
+
 	if (testVectorExpMod())
 		printf("ExpMod works!\n");
+	else
+		exit(1);
+
+	if (testVectorDLDP())
+		printf("dldp with generator of order q works!\n");
 	else
 		exit(1);
 }

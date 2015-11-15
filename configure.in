@@ -56,6 +56,15 @@ if test "$ac_cv_prog_gcc" != yes; then
 #endif
 ], ac_cv_prog_SUNPRO_CC=yes, ac_cv_prog_SUNPRO_CC=no)
   AC_MSG_RESULT($ac_cv_prog_SUNPRO_CC)
+  if test "ac_cv_prog_SUNPRO_CC" != yes; then
+    AC_MSG_CHECKING([whether we are using Compaq's C compiler])
+    AC_EGREP_CPP(yes,
+[ #ifdef __DECC
+  yes;
+#endif
+], ac_cv_prog_DECC=yes, ac_cv_prog_DECC=no)
+    AC_MSG_RESULT($ac_cv_prog_DECC)
+  fi
 fi
 
 dnl Check if we have the necessary java components installed
@@ -141,7 +150,7 @@ AC_ARG_ENABLE(debug, [  --enable-debug	creates debugging code [default=no]],
 
 dnl Product and version
 MAJOR=1
-VERSION=$MAJOR.1.1
+VERSION=$MAJOR.1.2
 PRODUCT=beecrypt
 SHARED_LIBRARY=lib$PRODUCT.so
 SHARED_LIBRARY_NAME=$SHARED_LIBRARY.$MAJOR

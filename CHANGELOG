@@ -1,3 +1,8 @@
+
+1.1.2:
+	- Fixed bugs in discrete logarithm domain parameter generator. The code to make a generator of order q and (p-1) was wrong. This was pointed out by Susumu Yamamoto.
+	- Added MD5 hash function.
+
 1.1.1:
 	- Changed autoconfig script for easier porting.
 	- Changed sources for easier compilation on Microsoft Visual C++; no assembler-optimization on this platform yet.

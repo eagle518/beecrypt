@@ -87,6 +87,7 @@ OBJFILES = \
 	fips186.o \
 	$(JAVAGLUE) \
 	hmac.o \
+	md5.o \
 	mp32.o \
 	mp32barrett.o \
 	mp32number.o \
@@ -118,6 +119,7 @@ DISTFILES = \
 	fips186.h fips186.c \
 	hmac.h hmac.c \
 	javaglue.h javaglue.c \
+	md5.h md5.c \
 	mp32barrett.h mp32barrett.c \
 	mp32.h mp32.c \
 	mp32number.h mp32number.c \
@@ -185,6 +187,7 @@ install-headers:
 	$(INSTALL_DATA) ${srcdir}/fips180opt.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/fips186.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/hmac.h ${includedir}/beecrypt
+	$(INSTALL_DATA) ${srcdir}/md5.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mp32.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mp32barrett.h ${includedir}/beecrypt
 	$(INSTALL_DATA) ${srcdir}/mp32number.h ${includedir}/beecrypt
