@@ -149,6 +149,8 @@ AC_DEFUN([BEECRYPT_INT_TYPES],[
   bc_typedef_size_t=
   if test $ac_cv_type_size_t != yes; then
     bc_typedef_size_t="typedef unsigned size_t;"
+  else
+    AC_CHECK_SIZEOF([size_t])
   fi
   AC_SUBST(TYPEDEF_SIZE_T,$bc_typedef_size_t)
   if test $ac_cv_header_inttypes_h = yes; then
@@ -280,83 +282,82 @@ AC_DEFUN([BEECRYPT_WORKING_AIO],[
         cat > conftest.aio << EOF
 The quick brown fox jumps over the lazy dog.
 EOF
-        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if HAVE_ERRNO_H
-# include <errno.h>
-#endif
-#if HAVE_FCNTL_H
-# include <fcntl.h>
-#endif
-#if HAVE_STRING_H
-# include <string.h>
-#endif
-#if HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#include <stdio.h>
-#include <aio.h>
+        AC_LANG_PUSH(C)
+        AC_RUN_IFELSE([
+          AC_LANG_PROGRAM([[
+            #if HAVE_ERRNO_H
+            # include <errno.h>
+            #endif
+            #if HAVE_FCNTL_H
+            # include <fcntl.h>
+            #endif
+            #if HAVE_STRING_H
+            # include <string.h>
+            #endif
+            #if HAVE_UNISTD_H
+            # include <unistd.h>
+            #endif
+            #include <stdio.h>
+            #include <aio.h>
+            ]],[[
+                    struct aiocb    a;
+              const struct aiocb*   a_list = &a;
+                    struct timespec a_timeout;
 
-main()
-{
-        struct aiocb    a;
-  const struct aiocb*   a_list = &a;
-        struct timespec a_timeout;
+              char buffer[32];
 
-  char buffer[32];
+              int i, rc, fd = open("conftest.aio", O_RDONLY);
 
-  int i, rc, fd = open("conftest.aio", O_RDONLY);
+              if (fd < 0)
+                exit(1);
 
-  if (fd < 0)
-    exit(1);
+              memset(&a, 0, sizeof(struct aiocb));
 
-  memset(&a, 0, sizeof(struct aiocb));
+              a.aio_fildes = fd;
+              a.aio_offset = 0;
+              a.aio_reqprio = 0;
+              a.aio_buf = buffer;
+              a.aio_nbytes = sizeof(buffer);
+              a.aio_sigevent.sigev_notify = SIGEV_NONE;
 
-  a.aio_fildes = fd;
-  a.aio_offset = 0;
-  a.aio_reqprio = 0;
-  a.aio_buf = buffer;
-  a.aio_nbytes = sizeof(buffer);
-  a.aio_sigevent.sigev_notify = SIGEV_NONE;
+              a_timeout.tv_sec = 1;
+              a_timeout.tv_nsec = 0;
 
-  a_timeout.tv_sec = 1;
-  a_timeout.tv_nsec = 0;
+              if (aio_read(&a) < 0)
+              {
+                perror("aio_read");
+                exit(1);
+              }
+              if (aio_suspend(&a_list, 1, &a_timeout) < 0)
+              {
+                #if HAVE_ERRNO_H
+                /* some linux systems don't await timeout and return instantly */
+                if (errno == EAGAIN)
+                {
+                  nanosleep(&a_timeout, (struct timespec*) 0);
 
-  if (aio_read(&a) < 0)
-  {
-    perror("aio_read");
-    exit(1);
-  }
-  if (aio_suspend(&a_list, 1, &a_timeout) < 0)
-  {
-    #if HAVE_ERRNO_H
-    /* some linux systems don't await timeout and return instantly */
-    if (errno == EAGAIN)
-    {
-      nanosleep(&a_timeout, (struct timespec*) 0);
+                  if (aio_suspend(&a_list, 1, &a_timeout) < 0)
+                  {
+                    perror("aio_suspend");
+                    exit(1);
+                  }
+                }
+                else
+                {
+                  perror("aio_suspend");
+                  exit(1);
+                }
+                #else
+                exit(1);
+                #endif
+              }
+              if (aio_error(&a) < 0)
+                exit(1);
 
-      if (aio_suspend(&a_list, 1, &a_timeout) < 0)
-      {
-        perror("aio_suspend");
-        exit(1);
-      }
-    }
-    else
-    {
-      perror("aio_suspend");
-      exit(1);
-    }
-    #else
-    exit(1);
-    #endif
-  }
-  if (aio_error(&a) < 0)
-    exit(1);
+              if (aio_return(&a) < 0)
+                exit(1);
 
-  if (aio_return(&a) < 0)
-    exit(1);
-
-  exit(0);
-}
+              exit(0);
           ]])],[bc_cv_working_aio=yes],[bc_cv_working_aio=no],[
             case $target_os in
               linux* | solaris*)
@@ -368,6 +369,7 @@ main()
         ],[
         bc_cv_working_aio=no
         ])
+        AC_LANG_POP(C)
       ])
     rm -fr conftest.aio
   fi
@@ -894,17 +896,17 @@ AC_DEFUN([BEECRYPT_CXX],[
 dnl BEECRYPT_NOEXECSTACK
 AC_DEFUN([BEECRYPT_NOEXECSTACK],[
   AC_CACHE_CHECK([whether the assembler can use noexecstack],bc_cv_as_noexecstack,[
-    cat > conftest.c << EOF
-void foo(void) { }
-EOF
     CFLAGS_save=$CFLAGS
     CFLAGS="$CFLAGS -Wa,--noexecstack"
     CXXFLAGS_save=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -Wa,--noexecstack"
-	AC_LANG_PUSH(C)
-    AC_TRY_COMPILE([],[{}],[
+    AC_LANG_PUSH(C)
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[][]])],[
       bc_cv_as_noexecstack=yes
-      bc_gnu_stack='.section .note.GNU-stack,"",@progbits; .previous'
+      # convert conftest.c to conftest.s
+      $CCAS $CFLAGS -S conftest.c
+      # use egrep to find GNU-stack in in the output assembler
+      bc_gnu_stack=`$EGREP -e '\.section[[:space:]]+\.note\.GNU-stack' conftest.s`
       ],[
       CFLAGS=$CFLAGS_save
       CXXFLAGS=$CXXFLAGS_save

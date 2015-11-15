@@ -33,6 +33,10 @@ define(USE_TYPE_DIRECTIVE,yes)
 define(SYMTYPE,`
 	.def SYMNAME($1); .scl 2; .type 32; .endef
 ')
+define(C_FUNCTION_END,`
+	.section .drectve
+	.ascii " -export:$1"
+')
 ')
 
 define(SYMNAME,`GSYM_PREFIX`$1'')
@@ -70,6 +74,7 @@ SYMNAME($1):
 ')
 ')
 
+ifdef(C_FUNCTION_END,`',`
 ifelse(USE_SIZE_DIRECTIVE,yes,`
 define(C_FUNCTION_END,`
 LOCAL($1)_size:
@@ -77,4 +82,5 @@ LOCAL($1)_size:
 ')
 ',`
 define(C_FUNCTION_END,`')
+')
 ')

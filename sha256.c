@@ -30,6 +30,11 @@
 #endif
 
 #include "beecrypt/sha256.h"
+
+#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
+# include <endian.h>
+#endif
+
 #include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_sha256_m

@@ -29,6 +29,11 @@
 #endif
 
 #include "beecrypt/base64.h"
+
+#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
+# include <endian.h>
+#endif
+
 #include "beecrypt/endianness.h"
 
 #if HAVE_CTYPE_H

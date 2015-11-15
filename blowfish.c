@@ -30,6 +30,11 @@
 #endif
 
 #include "beecrypt/blowfish.h"
+
+#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
+# include <endian.h>
+#endif
+
 #include "beecrypt/endianness.h"
 
 #ifdef ASM_BLOWFISHENCRYPTECB

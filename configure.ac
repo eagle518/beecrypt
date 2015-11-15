@@ -1,13 +1,13 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([beecrypt],[4.1.1],[bob.deblier@telenet.be])
+AC_INIT([beecrypt],[4.1.2],[bob.deblier@telenet.be])
 AM_INIT_AUTOMAKE
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR(beecrypt.h)
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for package options
-AC_ARG_ENABLE(debug, [  --enable-debug          creates debugging code [default=no]],[
+AC_ARG_ENABLE(debug, [  --enable-debug          creates debugging code [[default=no]]],[
   if test "$enableval" = no; then
     ac_enable_debug=no
   else
@@ -27,7 +27,7 @@ AC_ARG_WITH(arch,[  --with-arch             optimize for specific architecture (
   BEECRYPT_WITHOUT_ARCH
   ])
 
-AC_ARG_ENABLE(threads,[  --enable-threads        enables multithread support [default=yes]],[
+AC_ARG_ENABLE(threads,[  --enable-threads        enables multithread support [[default=yes]]],[
   if test "$enableval" = no; then
     ac_enable_threads=no
   else
@@ -35,7 +35,7 @@ AC_ARG_ENABLE(threads,[  --enable-threads        enables multithread support [de
   fi
   ],[ ac_enable_threads=yes])
 
-AC_ARG_ENABLE(aio,[  --enable-aio            enables asynchronous i/o for entropy gathering [default=yes]],[
+AC_ARG_ENABLE(aio,[  --enable-aio            enables asynchronous i/o for entropy gathering [[default=yes]]],[
   if test "$enableval" = no; then
     ac_enable_aio=no
   else
@@ -45,7 +45,7 @@ AC_ARG_ENABLE(aio,[  --enable-aio            enables asynchronous i/o for entrop
 
 AH_TEMPLATE([ENABLE_AIO],[Define to 1 if you want to enable asynchronous I/O support])
 
-AC_ARG_WITH(mtmalloc,[  --with-mtmalloc         links against the mtmalloc library [default=no]],[
+AC_ARG_WITH(mtmalloc,[  --with-mtmalloc         links against the mtmalloc library [[default=no]]],[
   if test "$withval" = no; then
     ac_with_mtmalloc=no
   else
@@ -53,7 +53,7 @@ AC_ARG_WITH(mtmalloc,[  --with-mtmalloc         links against the mtmalloc libra
   fi
   ],[ac_with_mtmalloc=no])
 
-AC_ARG_WITH(cplusplus,[  --with-cplusplus        creates the C++ API code [default=yes]],[
+AC_ARG_WITH(cplusplus,[  --with-cplusplus        creates the C++ API code [[default=yes]]],[
   if test "$withval" = no; then
     ac_with_cplusplus=no
   else
@@ -61,7 +61,7 @@ AC_ARG_WITH(cplusplus,[  --with-cplusplus        creates the C++ API code [defau
   fi
   ],[ac_with_cplusplus=yes])
 
-AC_ARG_WITH(java,[  --with-java             creates the java glue code [default=yes]],[
+AC_ARG_WITH(java,[  --with-java             creates the Java glue code [[default=yes]]],[
   if test "$withval" = no; then
     ac_with_java=no
   else
@@ -69,7 +69,7 @@ AC_ARG_WITH(java,[  --with-java             creates the java glue code [default=
   fi
   ],[ac_with_java=yes])
 
-AC_ARG_WITH(python,[  --with-python           creates the python bindings code [default=yes]],[
+AC_ARG_WITH(python,[  --with-python           creates the Python module [[default=yes]]],[
   if test "$withval" = no; then
     ac_with_python=no
   else
@@ -85,9 +85,10 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_CXXCPP
+AM_PROG_AS
 AC_PROG_LD
 AC_PROG_LN_S
-AM_PROG_AS
+AC_PROG_EGREP
 
 # Checks for compiler characteristics and flags
 BEECRYPT_CC
@@ -139,7 +140,7 @@ AC_CHECK_HEADERS([time.h sys/time.h])
 AC_HEADER_TIME
 AC_CHECK_HEADERS([assert.h stdio.h ctype.h errno.h fcntl.h malloc.h termio.h termios.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/mman.h sys/audioio.h sys/soundcard.h])
-AC_CHECK_HEADERS([asm/byteorder.h])
+AC_CHECK_HEADERS([endian.h asm/byteorder.h])
 
 bc_include_stdio_h=
 bc_include_stdlib_h=
@@ -147,7 +148,6 @@ bc_include_malloc_h=
 bc_include_string_h=
 bc_include_unistd_h=
 bc_include_dlfcn_h=
-bc_include_asm_byteorder_h=
 if test "$ac_cv_header_stdio_h" = yes; then
   bc_include_stdio_h="#include <stdio.h>"
 fi
@@ -172,16 +172,12 @@ fi
 if test "$ac_cv_header_dlfcn_h" = yes; then
   bc_include_dlfcn_h="#include <dlfcn.h>"
 fi
-if test "$ac_cv_header_asm_byteorder_h" = yes; then
-  bc_include_asm_byteorder_h="#include <asm/byteorder.h>"
-fi
 AC_SUBST(INCLUDE_STDIO_H,$bc_include_stdio_h)
 AC_SUBST(INCLUDE_STDLIB_H,$bc_include_stdlib_h)
 AC_SUBST(INCLUDE_MALLOC_H,$bc_include_malloc_h)
 AC_SUBST(INCLUDE_STRING_H,$bc_include_string_h)
 AC_SUBST(INCLUDE_UNISTD_H,$bc_include_unistd_h)
 AC_SUBST(INCLUDE_DLFCN_H,$bc_include_dlfcn_h)
-AC_SUBST(INCLUDE_ASM_BYTEORDER_H,$bc_include_asm_byteorder_h)
 
 BEECRYPT_DLFCN
 BEECRYPT_MULTITHREAD
@@ -248,15 +244,29 @@ fi
 AH_TEMPLATE([CPPGLUE],[Define to 1 if you want to include the C++ code])
 
 if test "$ac_with_cplusplus" = yes; then
-  AC_MSG_CHECKING([for IBM's ICU library])
-  AC_TRY_LINK([#include <unicode/uversion.h> ],[
-    ],[
+  AC_MSG_CHECKING([for IBM's ICU library version >= 2.8])
+  AC_LANG_PUSH(C)
+  AC_RUN_IFELSE([
+    AC_LANG_PROGRAM([[#include <unicode/uversion.h>]],[[
+      #if U_ICU_VERSION_MAJOR_NUM < 2
+      exit(1);
+      #elif U_ICU_VERSION_MAJOR_NUM == 2
+      # if U_ICU_VERSION_MINOR_NUM < 8
+      exit(1);
+      # else
+      exit(0);
+      # endif
+      #else
+      exit(0);
+      #endif
+    ]])],[
     AC_MSG_RESULT([yes])
     ],[
     AC_MSG_RESULT([no])
     AC_MSG_WARN([disabling cplusplus])
     ac_with_cplusplus=no
     ])
+  AC_LANG_POP(C)
 fi
 
 if test "$ac_with_cplusplus" = yes ; then
@@ -386,8 +396,9 @@ if test "$ac_with_python" = yes ; then
     AC_CACHE_CHECK([for python headers], ac_cv_python_include, [
       ac_cv_python_include="-I`python -c 'import distutils.sysconfig; print distutils.sysconfig.get_python_inc()'`"
     ])
-    AC_CACHE_CHECK([for python libraries], ac_cv_python_libdir, [
-      ac_cv_python_libdir="`python -c 'import distutils.sysconfig; print distutils.sysconfig.get_python_lib()'`"
+    AC_CACHE_CHECK([where to install python libraries], ac_cv_python_libdir, [
+      echo "import distutils.sysconfig; print distutils.sysconfig.get_python_lib()" > conftest.py
+      ac_cv_python_libdir=`python conftest.py`
     ])
   else
     ac_with_python=no
@@ -402,7 +413,8 @@ fi
 
 
 # Checks for entropy sources.
-AS_MESSAGE(checking for specific entropy devices...)
+AC_MSG_CHECKING([for platform-specific entropy devices])
+AC_MSG_RESULT()
 case $target_os in
 cygwin*)
   AC_MSG_CHECKING([for wavein])
@@ -445,7 +457,8 @@ case $target_os in
 cygwin*)
   ;;
 *)
-  AS_MESSAGE(checking for generic entropy devices...)
+  AC_MSG_CHECKING([for generic entropy devices])
+  AC_MSG_RESULT()
   AC_CACHE_CHECK([for /dev/random],ac_cv_have_dev_random,[
     if test -r /dev/random; then
       ac_cv_have_dev_random=yes

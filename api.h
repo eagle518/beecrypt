@@ -29,8 +29,12 @@
 # define WIN32 1
 #endif
 
-#if WIN32 && !__CYGWIN32__
-# include "beecrypt/win.h"
+#if WIN32
+# if !__CYGWIN32__
+#  include "beecrypt/win.h"
+# else
+#  include "beecrypt/gnu.h"
+# endif
 # ifdef BEECRYPT_DLL_EXPORT
 #  define BEECRYPTAPI __declspec(dllexport)
 # else

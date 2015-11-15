@@ -30,6 +30,11 @@
 #endif
 
 #include "beecrypt/md5.h"
+
+#if HAVE_ENDIAN_H && HAVE_ASM_BYTEORDER_H
+# include <endian.h>
+#endif
+
 #include "beecrypt/endianness.h"
 
 /*!\addtogroup HASH_md5_m
@@ -200,7 +205,8 @@ int md5Update(md5Param* mp, const byte* data, size_t size)
 
 	while (size > 0)
 	{
-		proclength = ((mp->offset + size) > 64U) ? (64U - mp->offset) : size;
+		/* no truncation of data is possible here: maximum value returned is 64! */
+		proclength = (uint32_t) ((mp->offset + size) > 64U) ? (64U - mp->offset) : size;
 		memcpy(((byte *) mp->data) + mp->offset, data, proclength);
 		size -= proclength;
 		data += proclength;

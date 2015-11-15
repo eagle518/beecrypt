@@ -103,11 +103,17 @@ static inline uint64_t _swapu64(uint64_t n)
 # endif
 
 #else
+BEECRYPTAPI
  int16_t swap16 (int16_t);
+BEECRYPTAPI
 uint16_t swapu16(uint16_t);
+BEECRYPTAPI
  int32_t swap32 (int32_t);
+BEECRYPTAPI
 uint32_t swapu32(uint32_t);
+BEECRYPTAPI
  int64_t swap64 (int64_t);
+BEECRYPTAPI
 uint64_t swapu64(uint64_t);
 #endif
 

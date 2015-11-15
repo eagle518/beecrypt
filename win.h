@@ -134,6 +134,6 @@ typedef long off_t;
 
 typedef HANDLE bc_cond_t;
 typedef HANDLE bc_mutex_t;
-typedef DWORD  bc_thread_t;
+typedef HANDLE bc_thread_t;
 
 #endif

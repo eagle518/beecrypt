@@ -1,3 +1,10 @@
+4.1.2:
+	- Fixed Cygwin DLL missing symbols problem.
+	- Fixed GNU-stack assembler section on some platforms (Debian-ARM).
+	- Fixed problem cause by include of <asm/byteorder.h>.
+	- Fixed SHA-384 and SHA-512 code Visual C++ compatibility.
+	- Improved detection of IBM ICU library version; has to be >= 2.8.
+
 4.1.1:
 	- Fixed shared library version info.
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Bob Deblier
+ * Copyright (c) 2004 Beeyond Software Holding BV
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,51 +17,25 @@
  *
  */
 
-#ifndef _BEECRYPT_GNU_H
-#define _BEECRYPT_GNU_H
+/*!\file sha_k.h
+ * \brief SHA-512 and SHA-384 shared constants, headers.
+ * \author Bob Deblier <bob.deblier@telenet.be>
+ * \ingroup HASH_sha512_m HASH_sha384_m
+ */
 
-#include <inttypes.h>
-#include <stdint.h>
+#ifndef _SHA_K_H
+#define _SHA_K_H
 
+#include "beecrypt/beecrypt.h"
 
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <string.h>
-#include <unistd.h>
-#include <dlfcn.h>
-
-typedef pthread_cond_t bc_cond_t;
-typedef pthread_mutex_t bc_mutex_t;
-typedef pthread_t bc_thread_t;
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if defined(__GNUC__)
-# if !defined(__GNUC_PREREQ__)
-#  define __GNUC_PREREQ__(maj, min) (__GNUC__ > (maj) || __GNUC__ == (maj) && __GNUC_MINOR__ >= (min))
-# endif
-#else
-# define __GNUC__ 0
-# define __GNUC_PREREQ__(maj, min) 0
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-/* WARNING: overriding this value is dangerous; some assembler routines
- * make assumptions about the size set by the configure script
- */
-#if !defined(MP_WBITS)
-# define MP_WBITS	64U
+extern BEECRYPTAPI const uint64_t SHA2_64BIT_K[80];
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
